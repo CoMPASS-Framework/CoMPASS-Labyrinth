@@ -1,0 +1,176 @@
+---
+title: "HMM (Level 1) State Decoding"
+author: "Shreya Bangera"
+output:
+  pdf_document:
+    toc: true              # Enable table of contents
+    toc_depth: 3           # Number of header levels to include
+    number_sections: true  # Add numbering to sections
+---
+
+# 1. Setup
+```{r setup, include=FALSE}
+# Set global chunk options
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+# 2. Load Packages
+```{r Import_Packages}
+
+# Load required packages
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(moveHMM)
+library(momentuHMM)
+library(parallel)
+library(here)  # For portable file paths
+library(zoo)
+library(circular)
+
+library(momentuHMM)
+library(zoo)
+library(furrr)
+library(future)
+library(progressr)
+
+handlers(global = TRUE)
+plan(multisession, workers = 2)  # use plan(sequential) if still crashing
+
+
+```
+
+# 3. Import preprocessed file
+```{r Import_preprocessed_csv}
+
+BASE_PATH = '' # Manual entry of BASE_PATH  # here() will send you to the root directory of your local drive
+preproc_df <- read.csv(here(BASE_PATH, "csvs",'combined', "Preprocessed_combined_file_exclusions.csv"), stringsAsFactors = TRUE)
+
+```
+
+# 4. Data Cleaning and Processing
+```{r Additional_processing}
+
+# Create 'ID' variable as required by momentuHMM
+preproc_df$ID <- factor(preproc_df$Genotype)
+
+# Sort data by ID and sequence number
+preproc_df <- preproc_df %>%
+  arrange(ID,Session, S_no) %>%
+  filter(complete.cases(.))  # Remove rows with missing values
+
+```
+
+# 5. Prepare data for HMM
+```{r Prepare_HMM}
+
+## Format data using prepData for momentuHMM
+final_df <- prepData(preproc_df, type = "UTM", coordNames = c("x", "y"))
+
+# Ensure no missing values remain
+final_df <- final_df[complete.cases(final_df), ]
+
+```
+
+# 6. EDA
+## 6.1. Step Length Distribution
+```{r Best_Model}
+
+# Plot histogram of step lengths
+ggplot(final_df, aes(x = step)) +
+  geom_histogram(binwidth = 20, fill = "steelblue", color = "black") +
+  labs(
+    title = "Step Length Distribution",
+    x = "Step Length",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+```
+
+## 6.2. Turn Angle Distribution
+```{r Model_Evaluation}
+# Plot histogram of turning angles
+ggplot(final_df, aes(x = angle)) +
+  geom_histogram(binwidth = 0.1, fill = "darkorange", color = "black") +
+  labs(
+    title = "Turning Angle Distribution",
+    x = "Angle (radians)",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+```
+
+## 6.3. Summary Statistics
+```{r summary_stats}
+
+# Display basic summaries of the step and angle data
+summary(final_df$step)
+summary(final_df$angle)
+```
+
+# 7. Fit Hidden Markov Model (HMM)
+```{r hmm}
+# ------------------------------------------------------------
+#  Run 2-state HMM on preprocessed mouse trajectory data
+# ------------------------------------------------------------
+
+# Load utility functions
+source("hmm_utils.R")
+
+# Prepare your data:
+# 'preproc_df' must contain x, y coordinates with sufficient temporal resolution
+
+# Run HMM model selection with default settings
+hmm_result <- with_progress({
+  fit_best_hmm(preproc_df,     # your dataframe with x, y
+                         n_states = 2,  # number of behavioral states
+                         n_iter = 15,   # how many random initializations per config
+                         rolling_k = c(3,5,7),   # smoothing windows to test for step/angle
+                         opt_methods = c("BFGS", "L-BFGS-B", "Nelder-Mead", "nlm"),   # try both absolute angle and circular angle
+                         use_abs_angle = c(TRUE, FALSE),   # try both absolute angle and circular angle
+                         use_data_driven_ranges = TRUE,    # dynamically estimate param ranges using IQR/MAD
+                         angle_mean_biased = c(pi / 2, 0), # biased angle init (sharp vs straight turns)
+                         stationary_flag = "auto",         # fit stationary HMM
+                         session_col = "Session",
+                         seed = 123)})
+
+
+
+# Extract model and summary
+best_model <- hmm_result$model
+model_summary <- hmm_result$summary
+
+# Print characteristics of the best model
+print_hmm_summary(model_summary, best_model)
+
+# Make sure non-NAN in dataframe
+hmm_result$data <- hmm_result$data %>%
+     filter(complete.cases(.)) 
+
+```
+
+# 8. Visualize results
+```{r visualize}
+# Visualize results
+plot(best_model)
+plotPR(best_model)
+```
+
+# 9. Optional: access model fit records
+```{r optional}
+all_model_records <- hmm_result$records
+head(all_model_records)
+```
+
+# 10. Export csv
+```{r Export_csv}
+
+#write.csv(hmm_result$data, "C:\\Users\\...\\HMM_2state_file.csv", row.names=FALSE) 
+
+```

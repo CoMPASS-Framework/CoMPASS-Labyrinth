@@ -1,0 +1,48 @@
+name: compass-labyrinth
+channels:
+  - conda-forge
+  - r
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.12.8
+  - r-base=4.4.2
+  - pip
+  - jupyter
+  - jupyterlab>=4.3.5
+
+  # Python scientific stack
+  - numpy
+  - pandas
+  - scipy=1.16.1
+  - scikit-learn=1.7.1
+
+  # Visualization
+  - matplotlib
+  - seaborn=0.13.2
+  - geopandas=1.1.1
+  - shapely=2.1.1
+
+  # R packages available via conda
+  - r-dplyr=1.1.4
+  - r-ggplot2=3.5.2
+  - r-tidyverse=2.0.0
+  - r-readxl=1.4.5
+  - r-survival=3.8.3
+  - r-here=1.0.1
+  - r-zoo=1.8.14
+  - r-circular=0.5.0
+  - r-remotes
+  - r-devtools
+
+  # Python pip-only packages
+  - pip:
+      - hmmlearn==0.3.3
+      - mne==1.10.1
+      - opencv-python==4.12.0.88
+      - openpyxl==3.1.5
+      - pyedflib==0.1.42
+      - shap==0.48.0
+      - statsmodels==0.14.5
+      - umap-learn==0.5.9.post2
+      - xgboost==3.0.4
