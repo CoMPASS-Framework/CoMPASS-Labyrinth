@@ -4,10 +4,10 @@ CoMPASS-Labyrinth is a unified computational and behavioral framework for analyz
 
 
 <p align="center">
-  <img src="compass_logo.png" alt="CoMPASS Logo" width="300"/>
+  <img src="media/compass_logo.png" alt="CoMPASS Logo" width="300"/>
   &nbsp;&nbsp;&nbsp;
-  <a href="labyrinth_demo.mp4">
-    <img src="labyrinth_thumbnail.png" alt="Watch Demo" width="300"/>
+  <a href="media/labyrinth_demo.mp4">
+    <img src="media/labyrinth_thumbnail.png" alt="Watch Demo" width="300"/>
   </a>
 </p>
 
