@@ -3,7 +3,7 @@
 CoMPASS-Labyrinth is a unified computational and behavioral framework for analyzing goal-directed navigation in complex, ethologically valid maze environments using hierarchical probabilistic models. This project integrates behavioral modeling with neural data analysis to uncover latent cognitive states and their underlying neural dynamics during complex decision-making tasks.
 
 <p align="center">
-  <img src="compass_logo.png" alt="CoMPASS Logo" width="500"/>
+  <img src="compass_logo.png" alt="CoMPASS Logo" width="400"/>
 </p>
 
 
