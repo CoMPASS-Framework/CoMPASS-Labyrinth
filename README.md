@@ -13,8 +13,8 @@ CoMPASS-Labyrinth is a unified computational and behavioral framework for analyz
   <img src="media/maze_layout.png" alt="Maze Layout" width="220"/>
 </p>
 
-<hr style="height: 4px; border: none; background: linear-gradient(to right, #444, #ccc, #444); width:80%;">
-<p align="center">░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░</p>
+<hr style="height: 6px; border: none; background: linear-gradient(to right, #444, #ccc, #444); width:80%;">
+
 
 <p align="center">
   <img src="media/compass_framework.png" alt="Framework" width="900"/>
