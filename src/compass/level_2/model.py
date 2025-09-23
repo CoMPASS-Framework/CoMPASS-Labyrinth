@@ -349,7 +349,7 @@ def assign_hhmm_state(df , level_1_state_col = 'HMM_State' , level_2_state_col =
 # HHMM State sequence 
 ################################################################
 
-def plot_hhmm_state_sequence(df, session_col='Session', state_col='HHMM State', session_id=None, title_prefix='State Sequence',colors=colors):
+def plot_hhmm_state_sequence(df, session_col='Session', state_col='HHMM State', session_id=None, title_prefix='State Sequence',colors=None):
     """
     Plots a rectangular sequence of HHMM states for a given session.
 
