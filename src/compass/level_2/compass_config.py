@@ -1,25 +1,26 @@
+from pathlib import Path
+import os
+
 # =============================================================================
 # FILE PATHS/INITIALIZATIONS
 # =============================================================================
 
-BASE_PATH = r'C:\Users\PalopLabPortal\Gladstone Dropbox\Palop Lab\Shreya\Labyrinth Project Folders\TESTER FOR STREAMLINE_WT_DSI_Labyrinth'
+BASE_PATH = Path(os.getcwd()).parent.parent/ 'TEST_COMPASS'  # TODO: CHANGE THIS TO YOUR BASE PATH LOCATION
 
 # Metadata file paths
-METADATA_PATH = r'C:\Users\PalopLabPortal\Gladstone Dropbox\Palop Lab\Shreya\Labyrinth Project Folders\TESTER FOR STREAMLINE_WT_DSI_Labyrinth'
-METADATA_FILE = '20241028_WT_DSI_Labyrinth_DLC_InfoSheet_v1.xlsx'  
+METADATA_PATH = os.path.join(BASE_PATH, 'data', 'metadata') # Don't edit
+METADATA_FILE = os.path.join(METADATA_PATH,'20241028_WT_DSI_Labyrinth_DLC_InfoSheet_v1.xlsx') # TODO: EDIT
 
 # Trial configuration
-TRIAL_TYPE = 'Labyrinth_DSI' 
-
-# DLC scorer (DLC file subtext)
-DLC_SCORER = 'DLC_resnet50_LabyrinthMar13shuffle1_1000000'
+TRIAL_TYPE = 'Labyrinth_DSI' # TODO: EDIT
+FILE_EXT = '.csv'
+VIDEO_TYPE = '.mp4'
 
 # Specify color of plot in graph
 PALETTE = ['grey']
 
 # Specify Value map path # In the Resources folder, the file can be found
-VALUE_MAP_PATH = r"C:\Users\PalopLabPortal\Gladstone Dropbox\Palop Lab\Shreya\Reinforcement learning\Value_Function_perGridCell.csv"   
-
+VALUE_MAP_PATH = Path(os.getcwd()).parent.parent/ 'CoMPASS-Labyrinth' / 'resources' / 'Value_Function_perGridCell.csv'
 
 # =============================================================================
 # PRE-FIXED VALUES

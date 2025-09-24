@@ -202,12 +202,24 @@ def compute_euclidean_distance(df, center_x, center_y, out_col='Targeted_Distanc
 
 
 def merge_value_map(df, value_map_path):
-    """
-    Merge value map CSV by 'Grid.Number'.
-    """
     value_map = pd.read_csv(value_map_path)
-    df = pd.merge(df, value_map, on='Grid.Number')
+    print("Value map columns:", value_map.columns)  # Debug
+    
+    # Normalize "Value" column name
+    colmap = {c: "Value" for c in value_map.columns if c.lower().startswith("value")}
+    value_map = value_map.rename(columns=colmap)
+    
+    # Force Grid.Number to int in both
+    df['Grid.Number'] = df['Grid.Number'].astype(int)
+    value_map['Grid.Number'] = value_map['Grid.Number'].astype(int)
+    
+    df = pd.merge(df, value_map, on="Grid.Number", how="left")
+    
+    if 'Value' not in df.columns:
+        raise KeyError(f"'Value' column missing after merge. Columns: {df.columns.tolist()}")
+    
     return df
+
 
 
 def compute_weighted_and_normalized_distance(df, distance_col='Targeted_Distance',
