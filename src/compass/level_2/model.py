@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.mixture import BayesianGaussianMixture
 from hmmlearn.hmm import GMMHMM
+import matplotlib.patches as patches
 
 from .utils import * 
 
@@ -223,7 +224,7 @@ def plot_state_sequence_for_session(df_session, state_col='Level_2_States', colo
     df_session = df_session.reset_index(drop=True).copy()
     df_session['color'] = df_session[state_col].map(color_map)
 
-    fig, ax = plt.subplots(figsize=(10, 2))
+    fig, ax = plt.subplots(figsize=(10, 3))
     for idx, row in df_session.iterrows():
         rect = patches.Rectangle((idx, 0), 1, 1, color=row['color'])
         ax.add_patch(rect)
@@ -315,34 +316,42 @@ def assign_reward_orientation(df, angle_col='Targeted_Angle_smooth_abs', level_2
     return df
 
 
-def assign_hhmm_state(df , level_1_state_col = 'HMM_State' , level_2_state_col = 'Reward_Oriented'):
+
+def assign_hhmm_state(df, level_1_state_col, level_2_state_col):
     """
-    Assigns combined HHMM State based on Level 1 states (`HMM_State`) and Level 2 states (`Reward_Oriented`)
-
-    Parameters:
-        df (pd.DataFrame): Input dataframe with `HMM_State` and `Reward_Oriented`.
-
+    Assigns a final HHMM (Hierarchical Hidden Markov Model) state to the dataframe.
+    The final HHMM state is based on the combination of level 1 and level 2 states.
+    
+    Args:
+    - df: DataFrame containing the level_1_state_col and level_2_state_col columns.
+    - level_1_state_col: The name of the column representing the first-level HMM state.
+    - level_2_state_col: The name of the column representing the second-level state (reward-oriented or not).
+    
     Returns:
-        pd.DataFrame: Updated dataframe with new column `HHMM State`.
+    - df: DataFrame with an additional 'HHMM State' column indicating the final HHMM state.
     """
-    df = df.copy()
-    df['HHMM State'] = np.nan
-
+    
+    # Define the conditions for assigning the HHMM states
     conds = [
         (df[level_1_state_col] == 1) & (df[level_2_state_col] == 'Non-Reward Oriented'),
         (df[level_1_state_col] == 1) & (df[level_2_state_col] == 'Reward Oriented'),
         (df[level_1_state_col] == 2) & (df[level_2_state_col] == 'Non-Reward Oriented'),
         (df[level_1_state_col] == 2) & (df[level_2_state_col] == 'Reward Oriented'),
     ]
+    
+    # Define the labels for the corresponding HHMM states
     labels = [
         'Surveillance, Non-Reward Oriented',
         'Surveillance, Reward Oriented',
         'Ambulatory, Non-Reward Oriented',
         'Ambulatory, Reward Oriented'
     ]
-
-    df['HHMM State'] = np.select(conds, labels, default=np.nan)
+    
+    # Set the default value as 'NaN' (string) to match the data type of the labels
+    df['HHMM State'] = np.select(conds, labels, default='NaN')
+    
     return df
+
 
 
 ################################################################
@@ -371,7 +380,7 @@ def plot_hhmm_state_sequence(df, session_col='Session', state_col='HHMM State', 
         test = df.loc[df[session_col] == sess, [state_col]].reset_index(drop=True)
         test['color'] = test[state_col].map(colors)
 
-        fig, ax = plt.subplots(figsize=(10, 2))
+        fig, ax = plt.subplots(figsize=(10, 3))
         for idx, row in test.iterrows():
             rect = patches.Rectangle((idx, 0), 1, 1, color=row['color'])
             ax.add_patch(rect)
