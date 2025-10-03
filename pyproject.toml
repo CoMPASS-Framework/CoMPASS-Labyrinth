@@ -49,8 +49,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "jupyter",
     "jupyterlab>=4.3.5",
+    "ipykernel",
     "pytest>=7.0.0",
     "black>=23.0.0",
 ]
