@@ -51,4 +51,4 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest -v
+          pytest --cov=src/compass_labyrinth --cov-report=xml --cov-report=term-missing -vx
