@@ -49,6 +49,6 @@ jobs:
       - name: Test R installation
         run: Rscript -e 'print("hello")'
 
-      - name: Run tests (placeholder)
+      - name: Run tests
         run: |
-          echo "Tests not implemented yet. Replace this placeholder with the pytest command during the next iteration."
+          pytest -v
