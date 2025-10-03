@@ -61,9 +61,5 @@ renv/*
 .DS_Store
 Thumbs.db
 
-# Data files (uncomment if you want to ignore large data)
-# *.h5
-# *.hdf5
-# *.mat
-# *.csv
-# *.xlsx
+# Temporary
+notebooks/*

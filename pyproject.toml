@@ -1,5 +1,5 @@
 [project]
-name = "compass-labyrinth"
+name = "compass_labyrinth"
 version = "0.1.0"
 description = "A unified computational and behavioral framework for analyzing goal-directed navigation in complex maze environments using hierarchical probabilistic models."
 authors = [
