@@ -5,8 +5,26 @@ import pytest
 
 
 def test_r_packages():
-    """Test core R packages are installed."""
-    packages = ["dplyr", "ggplot2", "moveHMM", "momentuHMM"]
+    """Test all required R packages are installed."""
+    packages = [
+        "dplyr",
+        "ggplot2",
+        "tidyverse",
+        "readxl",
+        "survival",
+        "here",
+        "zoo",
+        "circular",
+        "remotes",
+        "devtools",
+        "DHARMa",
+        "moveHMM",
+        "momentuHMM",
+        "nhm",
+        "furrr",
+        "future",
+        "progressr"
+    ]
     
     for pkg in packages:
         result = subprocess.run(
