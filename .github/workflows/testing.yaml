@@ -46,8 +46,8 @@ jobs:
         with:
           r-version: ${{ matrix.R-version }}
 
-      - name: Test R installation
-        run: Rscript -e 'print("hello")'
+      - name: Install R packages via renv
+        run: Rscript init_renv.R
 
       - name: Run tests
         run: |
