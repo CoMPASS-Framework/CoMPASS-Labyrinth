@@ -26,25 +26,3 @@ def load_config(project_path: Path | str) -> dict:
         config = yaml.safe_load(file)
 
     return config
-
-
-def read_metadata(config: dict) -> dict:
-    """
-    Reads the project metadata from the Excel file specified in the configuration.
-
-    Parameters:
-    -----------
-    config: dict
-        The project's configuration dictionary.
-
-    Returns:
-    --------
-    metadata: pd.DataFrame
-        A DataFrame containing metadata information.
-    """
-    project_path = Path(config["project_path_full"]).resolve()
-    metadata_file_path = project_path / "metadata.xlsx"
-    if not metadata_file_path.exists():
-        raise FileNotFoundError(f"Metadata file not found at {metadata_file_path}")
-
-    return pd.read_excel(metadata_file_path)

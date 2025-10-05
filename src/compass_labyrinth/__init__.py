@@ -1,5 +1,5 @@
 from pathlib import Path
-import shutil
+import pandas as pd
 import yaml
 
 from .utils import load_config
@@ -72,9 +72,12 @@ def init_project(
     # Copy the user passed metadata to the project's path
     # TODO - later on, we will like to construct this metadata file automatically, instead of requesting from user
     user_metadata_file_path = Path(user_metadata_file_path).resolve()
-    metadata_file_path = project_path_full / "metadata.xlsx"
-    if not metadata_file_path.exists():
-        shutil.copy(user_metadata_file_path, metadata_file_path)
+    metadata_df = pd.read_excel(user_metadata_file_path)
+    # Consider only non-NA Sessions
+    metadata_df = metadata_df[~metadata_df['Session #'].isna()]
+    # Find the subset of trials need to be excluded
+    metadata_df = metadata_df.loc[metadata_df['Exclude Trial']!= 'yes'].reset_index(drop=True)
+    sessions_dict = metadata_df.to_dict(orient="records")
 
     config = {
         "project_name": project_name,
@@ -86,6 +89,7 @@ def init_project(
         "bodyparts": bodyparts,
         "experimental_groups": experimental_groups,
         "palette": palette,
+        "sessions": sessions_dict,
     }
 
     # Save config.yaml in project path
