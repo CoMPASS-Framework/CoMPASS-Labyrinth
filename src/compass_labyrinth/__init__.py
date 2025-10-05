@@ -1,10 +1,12 @@
 from pathlib import Path
 import shutil
-import os
 import yaml
+
+from .utils import load_config
 
 
 def init_config(
+    project_name: str,
     project_path: Path | str,
     user_metadata_file_path: Path | str,
     trial_type: str = "Labyrinth_DSI",
@@ -22,41 +24,58 @@ def init_config(
 
     Parameters:
     -----------
+    project_name: str
+        The name of the project.
     project_path: Path | str
         The path to the project directory.
     user_metadata_file_path: Path | str
         The path to the user metadata Excel file.
+
+    Returns:
+    --------
+    config: dict
+        A dictionary containing configuration parameters.
     """
+    # Project name checks should be alphanumeric and underscores only
+    if not project_name.replace("_", "").isalnum():
+        raise ValueError("Project name must be alphanumeric and can only contain underscores.")
+
     # Set up project's base path
-    project_path = Path(project_path)
-    if not project_path.exists():
-        project_path.mkdir(parents=True, exist_ok=True)
-        print(f"Project path does not exist. Creating directory at {project_path}")
-    
+    project_path = Path(project_path).resolve()
+    project_path_full = project_path / project_name
+    if not project_path_full.exists():
+        project_path_full.mkdir(parents=True, exist_ok=True)
+        print(f"Project path does not exist. Creating directory at {project_path_full}")
+    else:
+        print(f"Project already exists at {project_path_full}")
+        return load_config(project_path_full)
+
     # Central video location (where all videos are copied for processing)
-    videofile_path = project_path / "videos" / "original_videos"
+    videofile_path = project_path_full / "videos" / "original_videos"
     if not videofile_path.exists():
         videofile_path.mkdir(parents=True, exist_ok=True)
 
     # Pose estimation CSV outputs filepath
-    pose_est_csv_path = os.path.join(project_path, "data", "dlc_results")
-    if not os.path.exists(pose_est_csv_path):
-        os.makedirs(pose_est_csv_path)
+    pose_est_csv_path = project_path_full / "data" / "dlc_results"
+    if not pose_est_csv_path.exists():
+        pose_est_csv_path.mkdir(parents=True, exist_ok=True)
 
     # Path for all grid based files for a particular Session
     # as part of Level-1 Post-Analysis --> Plot 1: Heatmap Representations of HMM States
-    grid_path = os.path.join(project_path, "data", "grid_files")
-    if not os.path.exists(grid_path):
-        os.makedirs(grid_path)
-    
+    grid_path = project_path_full / "data" / "grid_files"
+    if not grid_path.exists():
+        grid_path.mkdir(parents=True, exist_ok=True)
+
     # Copy the user passed metadata to the project's path
     # TODO - later on, we will like to construct this metadata file automatically, instead of requesting from user
-    metadata_file_path = project_path / user_metadata_file_path.name
+    user_metadata_file_path = Path(user_metadata_file_path).resolve()
+    metadata_file_path = project_path_full / "metadata.xlsx"
     if not metadata_file_path.exists():
         shutil.copy(user_metadata_file_path, metadata_file_path)
 
     config = {
-        "project_path": project_path,
+        "project_name": project_name,
+        "project_path_full": str(project_path_full),
         "trial_type": trial_type,
         "file_ext": file_ext,
         "video_type": video_type,
@@ -66,22 +85,21 @@ def init_config(
         "palette": palette,
     }
 
-    # Save config.yml in project path
-    with open(project_path / "config.yml", "w") as config_file:
+    # Save config.yaml in project path
+    with open(project_path_full / "config.yaml", "w") as config_file:
         yaml.dump(config, config_file)
 
-    # Specific to Palop Lab, IGNORE FOR MOST CASES -----------------------------------------------------------------------
-    # Location of original raw video locations from 2 computers (Copy original videos to central VIDEOFILE_PATH location)
-    VIDEO_PATH_1 = ""
-    VIDEO_PATH_2 = ""
-    print(f"Location of Computer 1 Videos: {VIDEO_PATH_1}")
-    print(f"Location of Computer 2 Videos: {VIDEO_PATH_2}")
+    # # =============================================================================
+    # # Specific to Palop Lab, IGNORE FOR MOST CASES --------------------------------
+    # # Location of original raw video locations from 2 computers 
+    # # (Copy original videos to central VIDEOFILE_PATH location)
+    # VIDEO_PATH_1 = ""
+    # VIDEO_PATH_2 = ""
+    # print(f"Location of Computer 1 Videos: {VIDEO_PATH_1}")
+    # print(f"Location of Computer 2 Videos: {VIDEO_PATH_2}")
 
-    # DeepLabCut CONFIG PATH, if running DLC from Palop labyrinth 'supernetwork'
-    DLC_CONFIG_PATH = "" 
-
-    ## ------------------------------------------------------------------------------------------------------------------
-
+    # # DeepLabCut CONFIG PATH, if running DLC from Palop labyrinth 'supernetwork'
+    # DLC_CONFIG_PATH = "" 
 
     # =============================================================================
     # PRE-FIXED VALUES (DO NOT EDIT)
@@ -296,3 +314,5 @@ def init_config(
 
     Decision_3way = [20, 17, 39, 51, 63, 60, 77, 89, 115, 114, 110, 109, 98]
     Decision_4way = [32, 14]
+
+    return config
