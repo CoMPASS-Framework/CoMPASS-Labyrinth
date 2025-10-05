@@ -5,7 +5,7 @@ import yaml
 from .utils import load_config
 
 
-def init_config(
+def init_project(
     project_name: str,
     project_path: Path | str,
     user_metadata_file_path: Path | str,
@@ -20,7 +20,10 @@ def init_config(
     palette: str = "grey",
 ):
     """
-    Initializes configuration parameters for the CoMPASS-Labyrinth analysis.
+    Initializes project for the CoMPASS-Labyrinth analysis,  including:
+    - Setting up directory structure
+    - Copying user metadata file to project directory
+    - Creating a config.yaml file with project parameters
 
     Parameters:
     -----------
