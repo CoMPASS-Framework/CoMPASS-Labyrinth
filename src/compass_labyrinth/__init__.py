@@ -79,23 +79,6 @@ def init_project(
     metadata_df = metadata_df.loc[metadata_df['Exclude Trial']!= 'yes'].reset_index(drop=True)
     sessions_dict = metadata_df.to_dict(orient="records")
 
-    config = {
-        "project_name": project_name,
-        "project_path_full": str(project_path_full),
-        "trial_type": trial_type,
-        "file_ext": file_ext,
-        "video_type": video_type,
-        "dlc_scorer": dlc_scorer,
-        "bodyparts": bodyparts,
-        "experimental_groups": experimental_groups,
-        "palette": palette,
-        "sessions": sessions_dict,
-    }
-
-    # Save config.yaml in project path
-    with open(project_path_full / "config.yaml", "w") as config_file:
-        yaml.dump(config, config_file)
-
     # # =============================================================================
     # # Specific to Palop Lab, IGNORE FOR MOST CASES --------------------------------
     # # Location of original raw video locations from 2 computers 
@@ -114,9 +97,9 @@ def init_project(
     
     # -------------------- REGION---------------------------#
     # Map Grid Nodes to Regions
-    Target_Zone = [84, 85, 86]
-    Entry_Zone = [47, 46]
-    Loops = [
+    target_zone = [84, 85, 86]
+    entry_zone = [47, 46]
+    loops = [
         33,
         45,
         57,
@@ -167,16 +150,16 @@ def init_project(
         0,
         1,
     ]
-    Neutral_Zone = [107, 119, 131, 143]
+    neutral_zone = [107, 119, 131, 143]
 
     # P1, P2, P3 are the 3 sections of the Reward Path
-    P1 = [22, 21, 34, 20, 32, 31, 30, 29, 17, 5, 4, 3, 2, 14, 26]
-    P2 = [27, 39, 51, 63, 62, 61, 60, 72, 73, 74, 75, 76, 77, 89, 101]
-    P3 = [102, 103, 115, 114, 113, 125, 137, 136, 135, 123, 111, 110, 109, 108, 96, 97, 98]
-    Reward_Path = P1 + P2 + P3
+    p1 = [22, 21, 34, 20, 32, 31, 30, 29, 17, 5, 4, 3, 2, 14, 26]
+    p2 = [27, 39, 51, 63, 62, 61, 60, 72, 73, 74, 75, 76, 77, 89, 101]
+    p3 = [102, 103, 115, 114, 113, 125, 137, 136, 135, 123, 111, 110, 109, 108, 96, 97, 98]
+    reward_path = p1 + p2 + p3
 
-    Left_Dead_Ends = [10, 11, 23, 35, 9, 8, 6, 7, 19, 18, 15, 16, 28, 40, 50, 49, 48]  # Left Dead Ends
-    Right_Dead_Ends = [
+    left_dead_ends = [10, 11, 23, 35, 9, 8, 6, 7, 19, 18, 15, 16, 28, 40, 50, 49, 48]  # Left Dead Ends
+    right_dead_ends = [
         128,
         129,
         130,
@@ -200,35 +183,35 @@ def init_project(
         132,
         120,
     ]  # Right Dead Ends
-    Dead_Ends = Left_Dead_Ends + Right_Dead_Ends
+    dead_ends = left_dead_ends + right_dead_ends
     # ------------------------------------------------------#
 
     # -------CHOOSE REGION NAMES (KEY), MAPPED TO LIST OF GRID NODES IN THAT REGION (VALUE)--------#
     region_mapping = {
-        "Target Zone": Target_Zone,
-        "Entry Zone": Entry_Zone,
-        "Reward Path": Reward_Path,
-        "Dead Ends": Dead_Ends,
-        "Neutral Zone": Neutral_Zone,
-        "Loops": Loops,
+        "target_zone": target_zone,
+        "entry_zone": entry_zone,
+        "reward_path": reward_path,
+        "dead_ends": dead_ends,
+        "neutral_zone": neutral_zone,
+        "loops": loops,
     }
 
     # -------CHOOSE REGION NAMES (KEY), MAPPED TO LENGTH OF GRID NODES IN THAT REGION (VALUE)--------#
     region_lengths = {
-        "Entry Zone": len(Entry_Zone),
-        "Loops": len(Loops),
-        "Dead Ends": len(Dead_Ends),
-        "Neutral Zone": len(Neutral_Zone),
-        "Reward Path": len(Reward_Path),
-        "Target Zone": len(Target_Zone),
+        "entry_zone": len(entry_zone),
+        "loops": len(loops),
+        "dead_ends": len(dead_ends),
+        "neutral_zone": len(neutral_zone),
+        "reward_path": len(reward_path),
+        "target_zone": len(target_zone),
     }
 
     # ----------------NODE-TYPES-------------------------#
-    Decision_Reward = [20, 32, 17, 14, 39, 51, 63, 60, 77, 89, 115, 114, 110, 109, 98]
-    NonDecision_Reward = [34, 21, 31, 30, 4, 3, 62, 61, 73, 74, 75, 76, 102, 125, 136, 123, 97]
-    Corner_Reward = [22, 29, 5, 2, 26, 27, 72, 101, 103, 113, 137, 135, 111, 108, 96]
-    Decision_NonReward = [100, 71, 12, 24, 42, 106, 92, 119]
-    NonDecision_NonReward = [
+    decision_reward = [20, 32, 17, 14, 39, 51, 63, 60, 77, 89, 115, 114, 110, 109, 98]
+    nondecision_reward = [34, 21, 31, 30, 4, 3, 62, 61, 73, 74, 75, 76, 102, 125, 136, 123, 97]
+    corner_reward = [22, 29, 5, 2, 26, 27, 72, 101, 103, 113, 137, 135, 111, 108, 96]
+    decision_nonreward = [100, 71, 12, 24, 42, 106, 92, 119]
+    nondecision_nonreward = [
         35,
         23,
         18,
@@ -268,7 +251,7 @@ def init_project(
         104,
         131,
     ]
-    Corner_NonReward = [
+    corner_nonreward = [
         11,
         10,
         9,
@@ -316,10 +299,42 @@ def init_project(
         107,
         143,
     ]
-    Entry_Zone = [47, 46]
-    Target_Zone = [84, 85, 86]
+    entry_zone = [47, 46]
+    target_zone = [84, 85, 86]
+    decision_3way = [20, 17, 39, 51, 63, 60, 77, 89, 115, 114, 110, 109, 98]
+    decision_4way = [32, 14]
 
-    Decision_3way = [20, 17, 39, 51, 63, 60, 77, 89, 115, 114, 110, 109, 98]
-    Decision_4way = [32, 14]
+    node_type_mapping = {
+        "decision_reward": decision_reward,
+        "nondecision_reward": nondecision_reward,
+        "corner_reward": corner_reward,
+        "decision_nonreward": decision_nonreward,
+        "nondecision_nonreward": nondecision_nonreward,
+        "corner_nonreward": corner_nonreward,
+        "entry_zone": entry_zone,
+        "target_zone": target_zone,
+        "decision_3way": decision_3way,
+        "decision_4way": decision_4way,
+    }
+
+    # Create config dictionary and save config.yaml in project path
+    config = {
+        "project_name": project_name,
+        "project_path_full": str(project_path_full),
+        "trial_type": trial_type,
+        "file_ext": file_ext,
+        "video_type": video_type,
+        "dlc_scorer": dlc_scorer,
+        "bodyparts": bodyparts,
+        "experimental_groups": experimental_groups,
+        "palette": palette,
+        "sessions": sessions_dict,
+        "region_mapping": region_mapping,
+        "region_lengths": region_lengths,
+        "node_type_mapping": node_type_mapping,
+    }
+
+    with open(project_path_full / "config.yaml", "w") as config_file:
+        yaml.dump(config, config_file)
 
     return config
