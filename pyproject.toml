@@ -1,0 +1,93 @@
+[project]
+name = "compass_labyrinth"
+version = "0.1.0"
+description = "A unified computational and behavioral framework for analyzing goal-directed navigation in complex maze environments using hierarchical probabilistic models."
+authors = [
+    { name = "Shreya Bangera" },
+    { name = "Patrick Honma" },
+    { name = "Luiz Tauffer" },
+]
+requires-python = ">=3.11"
+keywords = ["compass", "navigation", "behavioral-modeling", "hmm", "neural-analysis", "eeg", "decision-making"]
+readme = { file = "README.md", content-type = "text/markdown" }
+license = { text = "MIT" }
+
+dependencies = [
+    # Core Scientific Stack
+    "numpy",
+    "pandas",
+    "scipy",
+    "scikit-learn",
+    
+    # Visualization
+    "matplotlib",
+    "seaborn",
+    
+    # Geospatial
+    "geopandas",
+    "shapely",
+
+    # Statistical & Machine Learning
+    "statsmodels",
+    "xgboost",
+    "shap",
+    "hmmlearn",
+    
+    # Dimensionality Reduction
+    "umap-learn",
+    
+    # Neural Data Processing
+    "mne",
+    "pyedflib",
+    
+    # Computer Vision
+    "opencv-python",
+    
+    # File I/O
+    "openpyxl",
+]
+
+[project.optional-dependencies]
+dev = [
+    "jupyterlab>=4.3.5",
+    "ipykernel",
+    "pytest>=7.0.0",
+    "pytest-cov",
+    "black>=23.0.0",
+]
+
+[project.urls]
+homepage = "https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth"
+repository = "https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth"
+documentation = "https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth/blob/main/README.md"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["behavior*", "compass*", "neural*", "post_hoc_analysis*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
+testpaths = ["tests"]
+
+[tool.black]
+line-length = 120
+target-version = ["py311", "py312"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | \.renv
+  | build
+  | dist
+  | notebooks
+)/
+'''

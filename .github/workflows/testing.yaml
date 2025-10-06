@@ -1,0 +1,79 @@
+name: Testing
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/testing.yaml'
+      - 'src/**'
+      - 'tests/**'
+  pull_request:
+    branches:
+      - main
+      - dev
+    paths:
+      - '.github/workflows/testing.yaml'
+      - 'src/**'
+      - 'tests/**'
+
+jobs:
+  run:
+    name: ${{ matrix.os }} Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.11", "3.12"]
+        R-version: [ "4.5.1" ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]" --no-cache-dir
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.R-version }}
+
+      - name: Install R system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libxml2-dev \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libharfbuzz-dev \
+            libfribidi-dev \
+            libpng-dev \
+            libjpeg-dev \
+            libtiff-dev \
+            libgit2-dev \
+            libudunits2-dev \
+            libgdal-dev \
+            gdal-bin \
+            libgeos-dev \
+            libproj-dev \
+            libx11-dev \
+            pandoc \
+            cmake
+
+      - name: Install R packages via renv
+        run: Rscript init_renv.R
+
+      - name: Run tests
+        run: |
+          pytest --cov=src/compass_labyrinth --cov-report=xml --cov-report=term-missing -vx
