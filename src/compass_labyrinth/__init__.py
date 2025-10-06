@@ -1,13 +1,20 @@
 from pathlib import Path
 import pandas as pd
+import datetime
 import yaml
+import shutil
 
 from .utils import load_config
+from compass_labyrinth.behavior.pose_estimation.dlc_utils import (
+    load_cohort_metadata,
+    validate_metadata,
+)
 
 
 def init_project(
     project_name: str,
     project_path: Path | str,
+    source_data_path: Path | str,
     user_metadata_file_path: Path | str,
     trial_type: str = "Labyrinth_DSI",
     file_ext: str = ".csv",
@@ -31,6 +38,8 @@ def init_project(
         The name of the project.
     project_path: Path | str
         The path to the project directory.
+    source_data_path: Path | str
+        The path to the source data directory containing videos and DLC outputs.
     user_metadata_file_path: Path | str
         The path to the user metadata Excel file.
 
@@ -42,7 +51,12 @@ def init_project(
     # Project name checks should be alphanumeric and underscores only
     if not project_name.replace("_", "").isalnum():
         raise ValueError("Project name must be alphanumeric and can only contain underscores.")
-
+    
+    # Validate source data path
+    source_data_path = Path(source_data_path).resolve()
+    if not source_data_path.exists():
+        raise ValueError(f"Source data path {source_data_path} does not exist.")
+    
     # Set up project's base path
     project_path = Path(project_path).resolve()
     project_path_full = project_path / project_name
@@ -53,30 +67,64 @@ def init_project(
         print(f"Project already exists at {project_path_full}")
         return load_config(project_path_full)
 
-    # Central video location (where all videos are copied for processing)
-    videofile_path = project_path_full / "videos" / "original_videos"
-    if not videofile_path.exists():
-        videofile_path.mkdir(parents=True, exist_ok=True)
+    # Create organized directory structure
+    all_dirs = {
+        # Videos folder - original videos and frames
+        'videos': project_path_full / 'videos',
+        'videos_original': project_path_full / 'videos' / 'original_videos',
+        'frames': project_path_full / 'videos' / 'frames',
+        
+        # Data folder - analysis inputs and outputs
+        'data': project_path_full / 'data',
+        'dlc_results': project_path_full / 'data' / 'dlc_results',
+        'dlc_cropping': project_path_full / 'data' / 'dlc_cropping_bounds',
+        'grid_files': project_path_full / 'data' / 'grid_files',
+        'grid_boundaries': project_path_full / 'data' / 'grid_boundaries',
+        'metadata': project_path_full / 'data' / 'metadata',
+        'eeg_edfs': project_path_full / 'data' / 'processed_eeg_edfs',
+        
+        # Figures folder - all plots and visualizations
+        'figures': project_path_full / 'figures',
+        
+        # CSV's folder
+        'csvs': project_path_full / 'csvs',
+        'csvs_individual': project_path_full / 'csvs'/ 'individual',
+        'csvs_combined': project_path_full / 'csvs' / 'combined',
 
-    # Pose estimation CSV outputs filepath
+        # Results folders
+        'results': project_path_full / 'results' ,
+        'results_task_performance': project_path_full / 'results' / 'task_performance',
+        'results_simulation_agent': project_path_full / 'results' / 'simulation_agent',
+        'results_compass_level_1': project_path_full / 'results' / 'compass_level_1',
+        'results_compass_level_2': project_path_full / 'results' / 'compass_level_2',
+        'results_ephys_compass': project_path_full / 'results' / 'ephys_compass'
+    }
+    for dir_name, dir_path in all_dirs.items():
+        dir_path.mkdir(parents=True, exist_ok=True)
+
+    # Copy or link videos to central video location
+    # TODO
+
+    # Copy pose estimation CSV outputs to project path
     pose_est_csv_path = project_path_full / "data" / "dlc_results"
-    if not pose_est_csv_path.exists():
-        pose_est_csv_path.mkdir(parents=True, exist_ok=True)
+    csv_files = [f for f in source_data_path.glob(f"*{file_ext}") if f.is_file()]
+    for file in csv_files:
+        dest_file = pose_est_csv_path / file.name
+        if not dest_file.exists():
+            shutil.copy2(file, dest_file)
 
     # Path for all grid based files for a particular Session
     # as part of Level-1 Post-Analysis --> Plot 1: Heatmap Representations of HMM States
-    grid_path = project_path_full / "data" / "grid_files"
-    if not grid_path.exists():
-        grid_path.mkdir(parents=True, exist_ok=True)
+    # TODO - copy grid files if available
 
     # Copy the user passed metadata to the project's path
     # TODO - later on, we will like to construct this metadata file automatically, instead of requesting from user
     user_metadata_file_path = Path(user_metadata_file_path).resolve()
-    metadata_df = pd.read_excel(user_metadata_file_path)
-    # Consider only non-NA Sessions
-    metadata_df = metadata_df[~metadata_df['Session #'].isna()]
-    # Find the subset of trials need to be excluded
-    metadata_df = metadata_df.loc[metadata_df['Exclude Trial']!= 'yes'].reset_index(drop=True)
+    metadata_df = load_cohort_metadata(
+        metadata_path=user_metadata_file_path,
+        trial_sheet_name=trial_type,
+    )
+    validate_metadata(metadata_df)
     sessions_dict = metadata_df.to_dict(orient="records")
 
     # # =============================================================================

@@ -12,7 +12,7 @@ import numpy as np
 from pathlib import Path
 import os
 import shutil
-from datetime import datetime
+from datetime import datetime, date, time
 import cv2
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Cursor
@@ -20,7 +20,11 @@ from shapely.geometry import Polygon, Point
 import geopandas as gpd
 from matplotlib.collections import LineCollection
 
-def load_cohort_metadata(metadata_path, trial_sheet_name):
+
+def load_cohort_metadata(
+    metadata_path: str | Path,
+    trial_sheet_name: str,
+):
     """
     Load and process trial metadata from Excel file.
     
@@ -55,6 +59,13 @@ def load_cohort_metadata(metadata_path, trial_sheet_name):
                 )
                 print("Processed cropping bounds for Probe Trial")
         
+        # Stringify timestamps
+        mouseinfo = mouseinfo.applymap(
+            lambda x: x.isoformat() if isinstance(x, (pd.Timestamp, datetime, date)) 
+            else x.strftime("%H:%M:%S") if isinstance(x, time)
+            else x
+        )
+        
         # Exclude trials marked for exclusion
         if 'Exclude Trial' in mouseinfo.columns:
             excluded_trials = mouseinfo['Exclude Trial'] == 'yes'
@@ -76,7 +87,8 @@ def load_cohort_metadata(metadata_path, trial_sheet_name):
         print(f"Error loading metadata: {e}")
         return None
 
-def validate_metadata(df):
+
+def validate_metadata(df: pd.DataFrame) -> bool:
     """
     Validate the loaded metadata for required columns and data quality.
     
@@ -112,7 +124,8 @@ def validate_metadata(df):
     print("Metadata validation completed")
     return True
 
-def display_metadata_summary(df):
+
+def display_metadata_summary(df: pd.DataFrame) -> None:
     """Display summary information about the loaded metadata."""
     if df is None or df.empty:
         return
@@ -145,6 +158,7 @@ def display_metadata_summary(df):
             print(f"  {col}: {count} missing values")
     
     print("="*50)
+
 
 def create_organized_directory_structure(base_path):
     """
