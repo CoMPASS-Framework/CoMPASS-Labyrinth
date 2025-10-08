@@ -139,7 +139,7 @@ def init_project(
         trial_sheet_name=trial_type,
     )
     validate_metadata(metadata_df)
-    sessions_dict = metadata_df.to_dict(orient="records")
+    cohort_metadata = metadata_df.to_dict(orient="records")
 
     # Create config dictionary and save config.yaml in project path
     config = {
@@ -154,7 +154,7 @@ def init_project(
         "bodyparts": bodyparts,
         "experimental_groups": experimental_groups,
         "palette": palette,
-        "sessions_metadata": sessions_dict,
+        "cohort_metadata": cohort_metadata,
         "region_mapping": REGION_MAPPING,
         "region_lengths": REGION_LENGTHS,
         "node_type_mapping": NODE_TYPE_MAPPING,
