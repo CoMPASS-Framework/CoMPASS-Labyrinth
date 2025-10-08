@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 import yaml
 import shutil
+import os
 
 from .utils import load_config
 from .constants import REGION_MAPPING, REGION_LENGTHS, NODE_TYPE_MAPPING
@@ -21,9 +22,6 @@ def init_project(
     file_ext: str = ".csv",
     video_type: str = ".mp4",
     dlc_scorer: str = "DLC_resnet50_LabyrinthMar13shuffle1_1000000",
-    bodyparts: list = [
-        "nose", "belly", "sternum", "leftflank", "rightflank", "tailbase"
-    ],
     experimental_groups: list = ["A", "B", "C", "D"],
     palette: str = "grey",
 ):
@@ -100,19 +98,38 @@ def init_project(
         'results_compass_level_2': project_path_full / 'results' / 'compass_level_2',
         'results_ephys_compass': project_path_full / 'results' / 'ephys_compass'
     }
-    for dir_name, dir_path in all_dirs.items():
+    for _, dir_path in all_dirs.items():
         dir_path.mkdir(parents=True, exist_ok=True)
 
-    # Copy or link videos to central video location
-    # TODO
-
-    # Copy pose estimation CSV outputs to project path
+    # Copy pose estimation outputs to project path
     pose_est_csv_path = project_path_full / "data" / "dlc_results"
-    csv_files = [f for f in source_data_path.glob(f"*{file_ext}") if f.is_file()]
-    for file in csv_files:
+    pe_files = [f.resolve() for f in source_data_path.glob(f"*{dlc_scorer}*{file_ext}")]
+    pe_files = sorted(pe_files, key=lambda f: f.name)
+    for file in pe_files:
         dest_file = pose_est_csv_path / file.name
         if not dest_file.exists():
             shutil.copy2(file, dest_file)
+
+    # Extract session names from pose estimation files
+    session_names = [f.stem.replace(f"{dlc_scorer}", "") for f in pe_files]
+
+    # Extract bodyparts names
+    df = pd.read_csv(pe_files[0], header=[0, 1, 2], skipinitialspace=True)
+    bodyparts = df.columns.get_level_values(1).unique().tolist()
+    bodyparts = [bp for bp in bodyparts if bp.lower() != "bodyparts"]
+
+    # Link videos to central video location
+    video_dest_path = project_path_full / "videos" / "original_videos"
+    video_files = [f.resolve() for f in source_data_path.glob(f"*{video_type}")]
+    video_files = sorted(video_files, key=lambda f: f.name)
+    video_session_names = [f.stem for f in video_files]
+    for sess in session_names:
+        if sess not in video_session_names:
+            raise ValueError(f"Video file for session {sess} not found in source data path.")
+    for file in video_files:
+        dest_file = video_dest_path / file.name
+        if not dest_file.exists():
+            os.symlink(file, dest_file)
 
     # Copy the user passed metadata to the project's path
     # TODO - later on, we will like to construct this metadata file automatically, instead of requesting from user
@@ -128,14 +145,16 @@ def init_project(
     config = {
         "project_name": project_name,
         "project_path_full": str(project_path_full),
+        "creation_date_time": datetime.datetime.now().isoformat(),
         "trial_type": trial_type,
         "file_ext": file_ext,
         "video_type": video_type,
         "dlc_scorer": dlc_scorer,
+        "session_names": session_names,
         "bodyparts": bodyparts,
         "experimental_groups": experimental_groups,
         "palette": palette,
-        "sessions": sessions_dict,
+        "sessions_metadata": sessions_dict,
         "region_mapping": REGION_MAPPING,
         "region_lengths": REGION_LENGTHS,
         "node_type_mapping": NODE_TYPE_MAPPING,
