@@ -889,6 +889,7 @@ def analyze_videos_with_DLC(mouseinfo_df, config_path, video_directory,
             continue
         
         # Run DeepLabCut analysis with destfolder parameter
+        # Ref: https://deeplabcut.github.io/DeepLabCut/docs/standardDeepLabCut_UserGuide.html#i-analyze-new-videos
         try:
             print(f"Running DeepLabCut analysis...")
             
