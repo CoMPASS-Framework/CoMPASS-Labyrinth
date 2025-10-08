@@ -10,6 +10,7 @@ from .constants import REGION_MAPPING, REGION_LENGTHS, NODE_TYPE_MAPPING
 from .behavior.pose_estimation.dlc_utils import (
     load_cohort_metadata,
     validate_metadata,
+    save_first_frame,
 )
 
 
@@ -130,6 +131,11 @@ def init_project(
         dest_file = video_dest_path / file.name
         if not dest_file.exists():
             os.symlink(file, dest_file)
+        # Save first frame of each video for reference
+        save_first_frame(
+            video_path=file,
+            frames_dir=project_path_full / "videos" / "frames",
+        )
 
     # Copy the user passed metadata to the project's path
     # TODO - later on, we will like to construct this metadata file automatically, instead of requesting from user

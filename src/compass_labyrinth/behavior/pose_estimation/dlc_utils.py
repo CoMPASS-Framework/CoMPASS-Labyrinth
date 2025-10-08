@@ -10,9 +10,9 @@ Lab: Palop Lab
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from datetime import datetime, date, time
 import os
 import shutil
-from datetime import datetime, date, time
 import cv2
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Cursor
@@ -158,6 +158,46 @@ def display_metadata_summary(df: pd.DataFrame) -> None:
             print(f"  {col}: {count} missing values")
     
     print("="*50)
+
+
+def save_first_frame(
+    video_path: str | Path,
+    frames_dir: str | Path,
+) -> None:
+    """
+    Saves the first frame of a video to the specified destination path.
+
+    Parameters:
+    -----------
+    video_path : str or Path
+        Path to the input video file.
+    frames_dir : str or Path
+        Directory where the first frame image will be saved.
+
+    Returns:
+    --------
+    None
+    """
+    # Open the video file
+    cap = cv2.VideoCapture(video_path)
+
+    if not cap.isOpened():
+        print(f"Error: Could not open video file '{video_path}'")
+        return False
+
+    # Read the first frame
+    success, frame = cap.read()
+
+    if success:
+        # Save the frame as an image
+        cv2.imwrite(frames_dir / f"{video_path.stem}.png", frame)
+    else:
+        print("Error: Could not read the first frame.")
+        cap.release()
+        return False
+
+    # Release the video capture object
+    cap.release()
 
 
 def create_organized_directory_structure(base_path):
@@ -360,12 +400,7 @@ def batch_save_first_frames(mouseinfo_df, video_directory, frames_directory):
     --------
     dict
         Summary of frame saving operations
-    """
-    import cv2
-    import matplotlib.pyplot as plt
-    import os
-    from pathlib import Path
-    
+    """    
     video_directory = Path(video_directory)
     frames_directory = Path(frames_directory)
     
