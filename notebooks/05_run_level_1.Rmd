@@ -10,43 +10,57 @@ output:
 
 # 1. Setup
 ```{r setup, include=FALSE}
-# Set global chunk options
+# ---- setup ---------------------------------------------------------------
+options(warn = 1)
+RNGkind("Mersenne-Twister","Inversion","Rejection"); set.seed(123)
+
+# Anchor here() to this file (safe if package is installed via renv)
+if (requireNamespace("here", quietly = TRUE)) {
+  here::i_am("notebooks/05_run_level_1.Rmd")
+}
+
+# Clean chunk defaults for knitting
 knitr::opts_chunk$set(
-  echo = TRUE,
+  echo    = TRUE,
   message = FALSE,
-  warning = FALSE
+  warning = FALSE,
+  cache   = FALSE,
+  error   = TRUE
 )
+
+# Single-threaded + deterministic plans are safer when knitting
+Sys.setenv(OMP_NUM_THREADS="1", MKL_NUM_THREADS="1", OPENBLAS_NUM_THREADS="1",
+           R_FUTURE_FORK_ENABLE="FALSE")
+
 ```
 
 # 2. Load Packages
 ```{r Import_Packages}
 
-# Load required packages
-library(dplyr)
-library(tidyverse)
-library(ggplot2)
-library(moveHMM)
-library(momentuHMM)
-library(parallel)
-library(here)  # For portable file paths
-library(zoo)
-library(circular)
+suppressPackageStartupMessages({
+  library(methods)
+  library(terra) # must load BEFORE momentuHMM
+  library(moveHMM)
+  library(momentuHMM)
+  library(tidyverse)    # dplyr, ggplot2, readr, etc.
+  library(here)
+  library(zoo)
+  library(circular)
+  library(DHARMa)
+  library(future)
+  library(furrr)
+  library(progressr)
+})
 
-library(momentuHMM)
-library(zoo)
-library(furrr)
-library(future)
-library(progressr)
-
-plan(multisession, workers = 2)  # use plan(sequential) if still crashing
-
+future::plan(future::sequential)     # safer for knitting
+progressr::handlers("txtprogressbar") # optional
 
 ```
 
 # 3. Import preprocessed file
 ```{r Import_preprocessed_csv}
 
-BASE_PATH = '' # Manual entry of BASE_PATH  # here() will send you to the root directory of your local drive
+BASE_PATH = here(normalizePath(file.path(getwd(), "..", "..")),"TEST_COMPASS") # Manual entry of BASE_PATH  # here() will send you to the root directory of your local drive
 preproc_df <- read.csv(here(BASE_PATH, "csvs",'combined', "Preprocessed_combined_file_exclusions.csv"), stringsAsFactors = TRUE)
 
 ```
@@ -120,7 +134,7 @@ summary(final_df$angle)
 # ------------------------------------------------------------
 
 # Load utility functions
-source("hmm_utils.R")
+source(here::here("src","compass_labyrinth","compass","level_1","hmm_utils.R"))
 
 # Prepare your data:
 # 'preproc_df' must contain x, y coordinates with sufficient temporal resolution
@@ -170,6 +184,7 @@ head(all_model_records)
 # 10. Export csv
 ```{r Export_csv}
 
-#write.csv(hmm_result$data, "C:\\Users\\...\\HMM_2state_file.csv", row.names=FALSE) 
+# Example output (uncomment and set a path you have write access to)
+# write.csv(hmm_result$data, here::here("outputs", "HMM_2state_file.csv"), row.names = FALSE)
 
 ```
