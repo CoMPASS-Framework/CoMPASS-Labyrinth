@@ -5,7 +5,7 @@ import yaml
 import shutil
 import os
 
-from .utils import load_config
+from .utils import load_project
 from .behavior.pose_estimation.dlc_utils import (
     load_cohort_metadata,
     validate_metadata,
@@ -64,7 +64,7 @@ def init_project(
         print(f"Project path does not exist. Creating directory at {project_path_full}")
     else:
         print(f"Project already exists at {project_path_full}")
-        return load_config(project_path_full)
+        return load_project(project_path_full)
 
     # Create organized directory structure
     all_dirs = {

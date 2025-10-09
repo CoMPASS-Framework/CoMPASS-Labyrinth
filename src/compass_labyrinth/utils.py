@@ -1,11 +1,10 @@
 from pathlib import Path
-import pandas as pd
 import yaml
 
 
-def load_config(project_path: Path | str) -> dict:
+def load_project(project_path: Path | str) -> dict:
     """
-    Loads configuration parameters from a YAML file.
+    Loads configuration parameters from an exisiting project's config.yaml file.
 
     Parameters:
     -----------
