@@ -78,7 +78,7 @@ def exp_decreasing(x, a, b, c):
     return a * np.exp(-b * x) + c
 
 # Compute deviation and velocity per bout
-def compute_deviation_velocity(df, key_regions=['Entry Zone', 'Reward Path', 'Target Zone']):
+def compute_deviation_velocity(df, key_regions=['entry_zone', 'reward_path', 'target_zone']):
     sessioncluster = [x for _, x in df.groupby('Session')]
     records = []
     for session_df in sessioncluster:

@@ -269,7 +269,7 @@ def plot_interactive_heatmap(grid_mapped, decision_fids, target_fids, genotype_n
     )
     
     # Add annotations above Grid.Number 47 and below 84
-    for fid, label, valign in [(47, "Entry Zone", "top"), (84, "Target Zone", "bottom")]:
+    for fid, label, valign in [(47, "entry_zone", "top"), (84, "target_zone", "bottom")]:
         if fid in grid_mapped['FID'].values:
             poly = grid_mapped.loc[grid_mapped['FID'] == fid, 'geometry'].values[0]
             centroid_x = poly.centroid.x
