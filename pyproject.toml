@@ -73,6 +73,9 @@ where = ["src"]
 include = ["behavior*", "compass*", "neural*", "post_hoc_analysis*"]
 exclude = ["tests*"]
 
+[tool.setuptools.package-data]
+compass_labyrinth = ["data/*.csv"]
+
 [tool.pytest.ini_options]
 pythonpath = [".", "src"]
 testpaths = ["tests"]

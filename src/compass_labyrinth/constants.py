@@ -2,6 +2,10 @@
 # PRE-FIXED VALUES (DO NOT EDIT)
 # =============================================================================
 
+import pandas as pd
+from importlib.resources import files
+
+
 # -------------------- REGION---------------------------#
 # Map Grid Nodes to Regions
 TARGET_ZONE = [84, 85, 86]
@@ -223,3 +227,14 @@ NODE_TYPE_MAPPING = {
     "decision_3way": DECISION_3WAY,
     "decision_4way": DECISION_4WAY,
 }
+
+# ----------------PACKAGE DATA-------------------------#
+# Load adjacency matrix from package data
+ADJACENCY_MATRIX = pd.read_csv(
+    files('compass_labyrinth.data').joinpath('4step_adjacency_matrix.csv'),
+)
+
+# Load value function from package data
+VALUE_FUNCTION = pd.read_csv(
+    files('compass_labyrinth.data').joinpath('value_function_per_grid_cell.csv')
+)

@@ -6,7 +6,13 @@ import shutil
 import os
 
 from .utils import load_config
-from .constants import REGION_MAPPING, REGION_LENGTHS, NODE_TYPE_MAPPING
+from .constants import (
+    REGION_MAPPING,
+    REGION_LENGTHS,
+    NODE_TYPE_MAPPING,
+    ADJACENCY_MATRIX,
+    VALUE_FUNCTION,
+)
 from .behavior.pose_estimation.dlc_utils import (
     load_cohort_metadata,
     validate_metadata,
@@ -111,6 +117,16 @@ def init_project(
         if not dest_file.exists():
             shutil.copy2(file, dest_file)
 
+    # ------ temporary - to be removed later ------
+    # COPY withGrids.csv files as well
+    with_grid_files = [f.resolve() for f in source_data_path.glob(f"*withGrids*{file_ext}")]
+    for file in with_grid_files:
+        dest_file = pose_est_csv_path / file.name
+        if not dest_file.exists():
+            shutil.copy2(file, dest_file)
+
+    # ---------------------------------------------
+
     # Extract session names from pose estimation files
     session_names = [f.stem.replace(f"{dlc_scorer}", "") for f in pe_files]
 
@@ -139,13 +155,21 @@ def init_project(
 
     # Copy the user passed metadata to the project's path
     # TODO - later on, we will like to construct this metadata file automatically, instead of requesting from user
-    user_metadata_file_path = Path(user_metadata_file_path).resolve()
-    metadata_df = load_cohort_metadata(
-        metadata_path=user_metadata_file_path,
-        trial_sheet_name=trial_type,
-    )
-    validate_metadata(metadata_df)
-    cohort_metadata = metadata_df.to_dict(orient="records")
+    construct_metadata = False
+    if construct_metadata:
+        cohort_metadata = []
+        for sess in session_names:
+            cohort_metadata.append({
+                "session_name": sess,
+            })
+    else:
+        user_metadata_file_path = Path(user_metadata_file_path).resolve()
+        metadata_df = load_cohort_metadata(
+            metadata_path=user_metadata_file_path,
+            trial_sheet_name=trial_type,
+        )
+        validate_metadata(metadata_df)
+        cohort_metadata = metadata_df.to_dict(orient="records")
 
     # Create config dictionary and save config.yaml in project path
     config = {
