@@ -35,7 +35,7 @@ CoMPASS-Labyrinth is a unified computational and behavioral framework for analyz
 ## Prerequisites
 
 - Python 3.11 or higher
-- R version 4.4.0 or higher
+- R version 4.4.0 or lower
 
 ## Installation
 
