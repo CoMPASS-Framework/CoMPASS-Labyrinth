@@ -6,13 +6,6 @@ import shutil
 import os
 
 from .utils import load_config
-from .constants import (
-    REGION_MAPPING,
-    REGION_LENGTHS,
-    NODE_TYPE_MAPPING,
-    ADJACENCY_MATRIX,
-    VALUE_FUNCTION,
-)
 from .behavior.pose_estimation.dlc_utils import (
     load_cohort_metadata,
     validate_metadata,
@@ -185,9 +178,6 @@ def init_project(
         "experimental_groups": experimental_groups,
         "palette": palette,
         "cohort_metadata": cohort_metadata,
-        "region_mapping": REGION_MAPPING,
-        "region_lengths": REGION_LENGTHS,
-        "node_type_mapping": NODE_TYPE_MAPPING,
     }
 
     with open(project_path_full / "config.yaml", "w") as config_file:
