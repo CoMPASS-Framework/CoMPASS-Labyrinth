@@ -27,36 +27,46 @@ if (!requireNamespace("renv", quietly = TRUE)) {
 
 library(renv)
 
-# Initialize renv if not already initialized
 if (!file.exists("renv.lock")) {
   cat("\nInitializing renv environment...\n")
   renv::init(bare = TRUE)  # bare = TRUE prevents automatic snapshot
 } else {
   cat("\nrenv already initialized. Using existing renv.lock\n")
+  renv::activate()
+  renv::restore(prompt = FALSE)
 }
+
+# Configure renv behavior
+renv::settings$use.cache(TRUE)
+renv::settings$snapshot.type("implicit")
 
 # List of required packages
 required_packages <- c(
   # Packages previously managed via conda
-  "dplyr",       # Data manipulation
-  "ggplot2",     # Visualization
-  "tidyverse",   # Data science ecosystem
-  "readxl",      # Excel file reading
-  "survival",    # Survival analysis
+  "rmarkdown",
+  "tinytex",
+  "knitr",
+  "htmltools",
+  "bslib",
+  "sass",
+  "tidyverse",
   "here",        # Portable file paths
   "zoo",         # Time series
   "circular",    # Circular statistics
+  "progressr",
+  "furrr",
+  "future",
+  "dplyr",       # Data manipulation
+  "ggplot2",     # Visualization
+  "readxl",      # Excel file reading
+  "survival",    # Survival analysis
   "remotes",     # Install from GitHub/other sources
   "devtools",    # Development tools
-  
-  # Packages previously from CRAN
-  "DHARMa",      # Model diagnostics
-  "moveHMM",     # Movement HMM models
   "momentuHMM",  # Advanced movement HMMs
-  "nhm",         # Nested HMM models
-  "furrr",       # Parallel purrr
-  "future",      # Futures for parallelization
-  "progressr"    # Progress bars
+  "DHARMa",      # Model diagnostics
+  "nhm" ,        # Nested HMM models
+  "terra",       # Spatial stack for prepData()
+  "sp"
 )
 
 cat("\nInstalling required R packages...\n")
@@ -74,6 +84,13 @@ for (pkg in required_packages) {
   } else {
     cat("✓ Already installed:", pkg, "\n")
   }
+}
+
+# Ensure TinyTeX toolchain (pdflatex) for PDF builds
+if (!nzchar(Sys.which("pdflatex"))) {
+  if (!requireNamespace("tinytex", quietly = TRUE)) renv::install("tinytex")
+  cat("\nInstalling TinyTeX LaTeX toolchain (one-time)...\n")
+  tinytex::install_tinytex()  # installs into user dir; persists across sessions
 }
 
 # Create snapshot to lock package versions
