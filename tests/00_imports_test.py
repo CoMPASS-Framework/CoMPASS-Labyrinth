@@ -158,7 +158,7 @@ class TestPackageDataImports:
     def test_import_adjacency_matrix(self):
         """Test importing ADJACENCY_MATRIX from package data."""
         try:
-            from compass_labyrinth import ADJACENCY_MATRIX
+            from compass_labyrinth.constants import ADJACENCY_MATRIX
             import pandas as pd
             
             assert ADJACENCY_MATRIX is not None
@@ -173,7 +173,7 @@ class TestPackageDataImports:
     def test_import_value_function(self):
         """Test importing VALUE_FUNCTION from package data."""
         try:
-            from compass_labyrinth import VALUE_FUNCTION
+            from compass_labyrinth.constants import VALUE_FUNCTION
             import pandas as pd
             
             assert VALUE_FUNCTION is not None
