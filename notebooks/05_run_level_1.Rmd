@@ -60,7 +60,12 @@ progressr::handlers("txtprogressbar") # optional
 # 3. Import preprocessed file
 ```{r Import_preprocessed_csv}
 
-BASE_PATH = here(normalizePath(file.path(getwd(), "..", "..")),"TEST_COMPASS") # Manual entry of BASE_PATH  # here() will send you to the root directory of your local drive
+BASE_PATH <- normalizePath(
+  here::here(normalizePath(file.path(getwd(), "..","..")),"TEST_COMPASS"),
+  winslash = "/",
+  mustWork = FALSE
+) 
+
 preproc_df <- read.csv(here(BASE_PATH, "csvs",'combined', "Preprocessed_combined_file_exclusions.csv"), stringsAsFactors = TRUE)
 
 ```
@@ -140,7 +145,7 @@ source(here::here("src","compass_labyrinth","compass","level_1","hmm_utils.R"))
 # 'preproc_df' must contain x, y coordinates with sufficient temporal resolution
 
 # Run HMM model selection with default settings
-hmm_result <- with_progress({
+hmm_result <- progressr::with_progress({
   fit_best_hmm(preproc_df,     # your dataframe with x, y
                          n_states = 2,  # number of behavioral states
                          n_iter = 15,   # how many random initializations per config
