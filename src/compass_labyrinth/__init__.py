@@ -24,7 +24,7 @@ def init_project(
     dlc_scorer: str = "DLC_resnet50_LabyrinthMar13shuffle1_1000000",
     experimental_groups: list = ["A", "B", "C", "D"],
     palette: str = "grey",
-):
+) -> tuple[dict, pd.DataFrame]:
     """
     Initializes project for the CoMPASS-Labyrinth analysis,  including:
     - Setting up directory structure
@@ -46,6 +46,8 @@ def init_project(
     --------
     config: dict
         A dictionary containing configuration parameters.
+    metadata_df: pd.DataFrame
+        A DataFrame containing cohort metadata.
     """
     # Project name checks should be alphanumeric and underscores only
     if not project_name.replace("_", "").isalnum():
@@ -162,6 +164,10 @@ def init_project(
         validate_metadata(metadata_df)
         cohort_metadata = metadata_df.to_dict(orient="records")
 
+    # Save cohort metadata as CSV
+    metadata_df = pd.DataFrame(cohort_metadata)
+    metadata_df.to_csv(project_path_full / "cohort_metadata.csv", index=False)
+
     # Create config dictionary and save config.yaml in project path
     config = {
         "project_name": project_name,
@@ -175,10 +181,9 @@ def init_project(
         "bodyparts": bodyparts,
         "experimental_groups": experimental_groups,
         "palette": palette,
-        "cohort_metadata": cohort_metadata,
     }
 
     with open(project_path_full / "config.yaml", "w") as config_file:
         yaml.dump(config, config_file)
 
-    return config
+    return (config, metadata_df)

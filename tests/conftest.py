@@ -27,6 +27,8 @@ def test_create_project(tmp_path_factory):
     -------
     dict
         Project's configuration dict from init_project
+    pd.DataFrame
+        Cohort metadata DataFrame from init_project
     """
     from compass_labyrinth import init_project
     
@@ -65,7 +67,7 @@ def test_create_project(tmp_path_factory):
     #     video_path.touch()  # Create empty file
     
     # Initialize the project
-    config = init_project(
+    config, metadata_df = init_project(
         project_name="test_project",
         project_path=tmp_path,
         source_data_path=source_data_path,
@@ -76,4 +78,4 @@ def test_create_project(tmp_path_factory):
         dlc_scorer="DLC_resnet50_LabyrinthMar13shuffle1_1000000",
     )
 
-    yield config
+    yield config, metadata_df

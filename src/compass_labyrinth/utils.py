@@ -1,22 +1,26 @@
 from pathlib import Path
 import yaml
 import os
+import pandas as pd
 
 
-def load_project(project_path: Path | str) -> dict:
+def load_project(project_path: Path | str) -> tuple[dict, pd.DataFrame]:
     """
-    Loads configuration parameters from an exisiting project's config.yaml file.
+    Loads configuration parameters and metadata from an existing project.
 
     Parameters:
     -----------
     project_path: Path | str
-        The path to the project directory containing the config.yaml file.
+        The path to the project directory containing the config.yaml and cohort_metadata.csv files.
 
     Returns:
     --------
     config: dict
         A dictionary containing configuration parameters.
+    metadata_df: pd.DataFrame
+        A DataFrame containing cohort metadata.
     """
+    # Load config.yaml
     project_path = Path(project_path).resolve()
     config_file_path = project_path / "config.yaml"
     if not config_file_path.exists():
@@ -25,7 +29,14 @@ def load_project(project_path: Path | str) -> dict:
     with open(config_file_path, 'r') as file:
         config = yaml.safe_load(file)
 
-    return config
+    # Load metadata CSV
+    metadata_file_path = project_path / "cohort_metadata.csv"
+    if not metadata_file_path.exists():
+        raise FileNotFoundError(f"Metadata file not found at {metadata_file_path}")
+    
+    metadata_df = pd.read_csv(metadata_file_path)
+
+    return (config, metadata_df)
 
 
 def save_figure(
