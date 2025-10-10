@@ -8,7 +8,15 @@
 
 import pandas as pd
 import numpy as np
+from pathlib import Path
 import os
+
+from compass_labyrinth.constants import (
+    NODE_TYPE_MAPPING,
+    REGION_MAPPING,
+    ADJACENCY_MATRIX,
+)
+
 
 ##################################################################
 # Concatenating all Pose Estimation results
@@ -50,7 +58,7 @@ def load_and_preprocess_session_data(filename, bp, DLCscorer, region_mapping):
     return dflin
 
 
-def compile_mouse_sessions(mouseinfo, pose_est_csv_filepath, DLCscorer, bp, region_mapping):
+def compile_mouse_sessions(mouseinfo, pose_est_csv_filepath, DLCscorer, bp, region_mapping=REGION_MAPPING):
     """
     Compiles all sessions into a single DataFrame.
 
@@ -67,8 +75,8 @@ def compile_mouse_sessions(mouseinfo, pose_est_csv_filepath, DLCscorer, bp, regi
     li_group = []
 
     for sess in mouseinfo['Session #'].unique():
-        session_name = f"Session{int(sess):04d}"
-        filename = os.path.join(pose_est_csv_filepath, f"{session_name}_withGrids.csv")
+        session_name = f"Session-{int(sess)}"
+        filename = os.path.join(pose_est_csv_filepath, f"{session_name}withGrids.csv")
         df = load_and_preprocess_session_data(filename, bp, DLCscorer, region_mapping)
         df['Session'] = sess
         li_group.append(df)
@@ -112,7 +120,7 @@ def remove_until_initial_node(df, initial_nodes=[47, 46, 34, 22]):
     return df.copy()
 
 
-def remove_invalid_grid_transitions(df, adjacency_matrix):
+def remove_invalid_grid_transitions(df, adjacency_matrix=ADJACENCY_MATRIX):
     """
     Removes rows from the dataframe where the transition between consecutive
     grid numbers is not valid (i.e., not adjacent in the adjacency matrix).
@@ -145,7 +153,7 @@ def remove_invalid_grid_transitions(df, adjacency_matrix):
     return df_cleaned
 
 
-def preprocess_sessions(df_comb, adjacency_matrix, initial_nodes=[47, 46, 34, 22]):
+def preprocess_sessions(df_comb, adjacency_matrix=ADJACENCY_MATRIX, initial_nodes=[47, 46, 34, 22]):
     """
     Full preprocessing pipeline for all sessions: trims to initial nodes and removes invalid transitions.
 
@@ -168,6 +176,27 @@ def preprocess_sessions(df_comb, adjacency_matrix, initial_nodes=[47, 46, 34, 22
     df_all_cleaned = pd.concat(preprocessed_sessions, ignore_index=True)
     df_all_cleaned['Session'] = df_all_cleaned['Session'].astype(int)
     df_all_cleaned['Grid Number'] = df_all_cleaned['Grid Number'].astype(int)
+
+    # Mapping of variable names to NodeType labels
+    # key : value pair, key = list name (as in Initializations) & value = column value name decided by user 
+    label_mapping = {
+        'decision_reward': 'Decision (Reward)',
+        'nondecision_reward': 'Non-Decision (Reward)',
+        'corner_reward': 'Corner (Reward)',
+        'decision_nonreward': 'Decision (Non-Reward)',
+        'nondecision_nonreward': 'Non-Decision (Non-Reward)',
+        'corner_nonreward': 'Corner (Non-Reward)',
+        'entry_zone': 'Entry Nodes',
+        'target_zone': 'Target Nodes'
+    }
+    df_all_cleaned['NodeType'] = 'Unlabeled'
+
+    # Apply mapping to access the list by name
+    # Creates the column NodeType based on Grid Numbers
+    for var_name, label in label_mapping.items():
+        node_list = NODE_TYPE_MAPPING[var_name]
+        df_all_cleaned.loc[df_all_cleaned['Grid Number'].isin(node_list), 'NodeType'] = label
+
     return df_all_cleaned
 
 
@@ -222,3 +251,42 @@ def ensure_velocity_column(df, x_col='x', y_col='y', velocity_col='Velocity', fp
     df[velocity_col] = velocity
     return df
 
+
+#########################################################
+# Save dataframes to CSV files
+#########################################################
+def save_preprocessed_to_csv(config: dict, df: pd.DataFrame) -> None:
+    """
+    Saves Preprocessed data to CSV files
+
+    Parameters
+    ----------
+    config : dict
+        Project configuration dictionary.
+    df : pd.DataFrame
+        Preprocessed DataFrame to save.
+
+    Returns
+    -------
+    None
+    """
+    project_path = Path(config["project_path_full"])
+    csv_dir = project_path / 'csvs'
+    combined_dir = csv_dir / 'combined'
+    individual_dir = csv_dir / 'individual'
+
+    # Create folders if they don’t exist
+    combined_dir.mkdir(parents=True, exist_ok=True)
+    individual_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save combined file
+    combined_path = combined_dir / 'Preprocessed_combined_file.csv'
+    df.to_csv(combined_path, index=False)
+    print(f"Saved combined file: {combined_path}")
+
+    # Save per-session individual files
+    for session_id, df_session in df.groupby('Session'):
+        file_name = f'Session-{session_id}_preprocessed.csv'
+        file_path = individual_dir / file_name
+        df_session.to_csv(file_path, index=False)
+    print(f"Saved {df['Session'].nunique()} individual session CSVs to: {individual_dir}")
