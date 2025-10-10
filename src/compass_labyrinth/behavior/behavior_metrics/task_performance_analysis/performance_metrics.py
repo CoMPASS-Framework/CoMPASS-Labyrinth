@@ -12,7 +12,6 @@ from scipy.ndimage import gaussian_filter1d
 from scipy.optimize import curve_fit
 from sklearn.preprocessing import RobustScaler, QuantileTransformer
 import seaborn as sns
-import seaborn as sn
 import matplotlib.pyplot as plt
 from statsmodels.formula.api import ols
 import statsmodels.api as sm
@@ -25,7 +24,6 @@ from itertools import combinations
 from statsmodels.stats.anova import AnovaRM
 from statsmodels.stats.multitest import multipletests
 from statsmodels.formula.api import mixedlm
-import seaborn as sns
 from scipy.stats import entropy, ttest_ind
 from itertools import combinations
 from matplotlib import gridspec
@@ -56,7 +54,7 @@ def generate_region_heatmap_pivots(
     lower_lim=0, 
     upper_lim=80000, 
     difference=10000, 
-    region_columns=['Entry Zone', 'Loops', 'Dead Ends', 'Neutral Zone', 'Reward Path', 'Target Zone'],
+    region_columns=['entry_zone', 'loops', 'dead_ends', 'neutral_zone', 'reward_path', 'target_zone'],
     region_lengths=None
 ):
     """
@@ -141,6 +139,7 @@ def generate_region_heatmap_pivots(
 def compute_frames_per_session(df):
     return df.groupby('Session').size().reset_index(name='No_of_Frames')
 
+
 def compute_target_zone_usage(df, pivot_dict, region='Target Zone', difference=10000):
     usage_records = []
     for genotype in df.Genotype.unique():
@@ -155,6 +154,7 @@ def compute_target_zone_usage(df, pivot_dict, region='Target Zone', difference=1
                 })
     return pd.DataFrame(usage_records)
 
+
 def summarize_target_usage(region_target, frames_df, mouseinfo):
     session_frames = dict(frames_df.values)
     session_sex = dict(mouseinfo[['Session #', 'Sex']].values)
@@ -164,12 +164,13 @@ def summarize_target_usage(region_target, frames_df, mouseinfo):
     summary['Sex'] = summary['Session'].map(session_sex)
     return summary
 
+
 def plot_target_usage_vs_frames(summary_df):
     summary_df = summary_df[
     np.isfinite(summary_df['No_of_Frames']) & 
     np.isfinite(summary_df['Target_Usage'])]
     fig, ax = plt.subplots(figsize=(10, 8))
-    sn.scatterplot(
+    sns.scatterplot(
         data=summary_df,
         x="No_of_Frames",
         y="Target_Usage",
@@ -195,6 +196,7 @@ def plot_target_usage_vs_frames(summary_df):
     plt.tight_layout()
     plt.show()
 
+
 def exclude_low_performing_sessions(df_main, summary_df):
     try:
         target_threshold = float(input("Enter minimum target usage threshold (e.g., 0.4): "))
@@ -214,6 +216,7 @@ def exclude_low_performing_sessions(df_main, summary_df):
     df_cleaned = df_main[~df_main['Session'].isin(sessions_to_exclude)].copy()
     return df_cleaned
 
+
 def plot_target_usage_with_exclusions(summary_df, sessions_to_exclude):
     summary_df = summary_df[
     np.isfinite(summary_df['No_of_Frames']) & 
@@ -225,7 +228,7 @@ def plot_target_usage_with_exclusions(summary_df, sessions_to_exclude):
     excluded_df = summary_df[summary_df['Session'].isin(sessions_to_exclude)]
 
     # Plot included points
-    sn.scatterplot(
+    sns.scatterplot(
         data=included_df,
         x="No_of_Frames",
         y="Target_Usage",
@@ -239,7 +242,7 @@ def plot_target_usage_with_exclusions(summary_df, sessions_to_exclude):
     )
 
     # Plot excluded points (overlay with 'X' marker)
-    sn.scatterplot(
+    sns.scatterplot(
         data=excluded_df,
         x="No_of_Frames",
         y="Target_Usage",
@@ -326,7 +329,7 @@ def plot_region_heatmaps(
     sns.set_context("notebook", font_scale=1.0)
     sns.set_style("ticks") 
 
-    region_order = region_desired_order or ['Entry Zone', 'Loops', 'Dead Ends', 'Neutral Zone', 'Reward Path', 'Target Zone']
+    region_order = region_desired_order or ['entry_zone', 'loops', 'dead_ends', 'neutral_zone', 'reward_path', 'target_zone']
     n_bins = int((upper_lim - lower_lim) / difference)
 
     fig = plt.figure(figsize=(16, 3.5 * n_bins))
@@ -439,7 +442,7 @@ def plot_region_heatmaps_all_genotypes(
     sns.set_style("white")
 
     region_order = region_desired_order or [
-        'Entry Zone', 'Loops', 'Dead Ends', 'Neutral Zone', 'Reward Path', 'Target Zone'
+        'entry_zone', 'loops', 'dead_ends', 'neutral_zone', 'reward_path', 'target_zone'
     ]
 
     all_genotypes = list(pivot_dict.keys())

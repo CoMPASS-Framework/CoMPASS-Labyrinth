@@ -61,8 +61,8 @@ def assign_bout_indices_from_entry_node(navigation_df: pd.DataFrame, delimiter_n
 
 
 def summarize_bout_success_by_session(navigation_df: pd.DataFrame,
-                                      optimal_regions: list = ['Entry Zone', 'Reward Path', 'Target Zone'],
-                                      target_region_label: list = ['Target Zone'],
+                                      optimal_regions: list = ['entry_zone', 'reward_path', 'target_zone'],
+                                      target_region_label: list = ['target_zone'],
                                       min_bout_length: int = 20) -> pd.DataFrame:
     """
     Computes number of total, valid, successful, and perfect bouts per session.
@@ -196,8 +196,8 @@ def compute_binned_success_summary(
     upper_succ_lim: int = 90000,
     diff_succ: int = 5000,
     valid_bout_threshold: int = 19,
-    optimal_path_regions: list[str] = ['Entry Zone', 'Reward Path', 'Target Zone'],
-    target_zone: str = 'Target Zone'
+    optimal_path_regions: list[str] = ['entry_zone', 'reward_path', 'target_zone'],
+    target_zone: str = 'target_zone'
 ) -> pd.DataFrame:
     """
     Computes successful bout metrics per session, binned by cumulative frame index.
@@ -239,7 +239,7 @@ def compute_binned_success_summary(
     return summary_df
 
 
-def plot_binned_success(summary_df: pd.DataFrame, palette: list[str]) -> None:
+def plot_binned_success(summary_df: pd.DataFrame, palette: list[str] = None) -> None:
     """
     Plots % of successful bouts over time across genotypes.
     """

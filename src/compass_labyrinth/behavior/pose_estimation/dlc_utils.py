@@ -10,9 +10,9 @@ Lab: Palop Lab
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from datetime import datetime, date, time
 import os
 import shutil
-from datetime import datetime
 import cv2
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Cursor
@@ -20,7 +20,11 @@ from shapely.geometry import Polygon, Point
 import geopandas as gpd
 from matplotlib.collections import LineCollection
 
-def load_cohort_metadata(metadata_path, trial_sheet_name):
+
+def load_cohort_metadata(
+    metadata_path: str | Path,
+    trial_sheet_name: str | None = None,
+) -> pd.DataFrame:
     """
     Load and process trial metadata from Excel file.
     
@@ -28,8 +32,8 @@ def load_cohort_metadata(metadata_path, trial_sheet_name):
     -----------
     metadata_path : str or Path
         Path to the Excel file containing trial information
-    trial_sheet_name : str
-        Name of the sheet/tab containing the trial data
+    trial_sheet_name : str or None
+        Name of the sheet/tab containing the trial data, needed for multi-sheet files
         
     Returns:
     --------
@@ -41,7 +45,11 @@ def load_cohort_metadata(metadata_path, trial_sheet_name):
         print(f"Sheet name: {trial_sheet_name}")
         
         # Load the Excel sheet
-        mouseinfo = pd.read_excel(metadata_path, sheet_name=trial_sheet_name)
+        metadata_path = Path(metadata_path)
+        if metadata_path.suffix in ['.xlsx', '.xls']:
+            mouseinfo = pd.read_excel(metadata_path, sheet_name=trial_sheet_name)
+        elif metadata_path.suffix == '.csv':
+            mouseinfo = pd.read_csv(metadata_path)
         print(f"Initial rows loaded: {len(mouseinfo)}")
         
         # Remove rows with missing Session numbers or where it's 0
@@ -55,6 +63,13 @@ def load_cohort_metadata(metadata_path, trial_sheet_name):
                 )
                 print("Processed cropping bounds for Probe Trial")
         
+        # Stringify timestamps
+        mouseinfo = mouseinfo.applymap(
+            lambda x: x.isoformat() if isinstance(x, (pd.Timestamp, datetime, date)) 
+            else x.strftime("%H:%M:%S") if isinstance(x, time)
+            else x
+        )
+        
         # Exclude trials marked for exclusion
         if 'Exclude Trial' in mouseinfo.columns:
             excluded_trials = mouseinfo['Exclude Trial'] == 'yes'
@@ -66,17 +81,17 @@ def load_cohort_metadata(metadata_path, trial_sheet_name):
         return mouseinfo
         
     except FileNotFoundError:
-        print(f"Error: Metadata file not found at {metadata_path}")
-        return None
-    except ValueError as e:
-        print(f"Error: Sheet '{trial_sheet_name}' not found in Excel file")
-        print(f"Available sheets: {pd.ExcelFile(metadata_path).sheet_names}")
-        return None
-    except Exception as e:
-        print(f"Error loading metadata: {e}")
-        return None
+        raise FileNotFoundError(f"Metadata file not found at {metadata_path}")
+    except ValueError:
+        raise ValueError(
+            f"Sheet '{trial_sheet_name}' not found in Excel file",
+            f"Available sheets: {pd.ExcelFile(metadata_path).sheet_names}"
+        )
+    except Exception:
+        raise Exception(f"Error loading metadata from {metadata_path}")
 
-def validate_metadata(df):
+
+def validate_metadata(df: pd.DataFrame) -> bool:
     """
     Validate the loaded metadata for required columns and data quality.
     
@@ -112,7 +127,8 @@ def validate_metadata(df):
     print("Metadata validation completed")
     return True
 
-def display_metadata_summary(df):
+
+def display_metadata_summary(df: pd.DataFrame) -> None:
     """Display summary information about the loaded metadata."""
     if df is None or df.empty:
         return
@@ -145,6 +161,47 @@ def display_metadata_summary(df):
             print(f"  {col}: {count} missing values")
     
     print("="*50)
+
+
+def save_first_frame(
+    video_path: str | Path,
+    frames_dir: str | Path,
+) -> None:
+    """
+    Saves the first frame of a video to the specified destination path.
+
+    Parameters:
+    -----------
+    video_path : str or Path
+        Path to the input video file.
+    frames_dir : str or Path
+        Directory where the first frame image will be saved.
+
+    Returns:
+    --------
+    None
+    """
+    # Open the video file
+    cap = cv2.VideoCapture(video_path)
+
+    if not cap.isOpened():
+        print(f"Error: Could not open video file '{video_path}'")
+        return False
+
+    # Read the first frame
+    success, frame = cap.read()
+
+    if success:
+        # Save the frame as an image
+        cv2.imwrite(frames_dir / f"{video_path.stem}.png", frame)
+    else:
+        print("Error: Could not read the first frame.")
+        cap.release()
+        return False
+
+    # Release the video capture object
+    cap.release()
+
 
 def create_organized_directory_structure(base_path):
     """
@@ -346,12 +403,7 @@ def batch_save_first_frames(mouseinfo_df, video_directory, frames_directory):
     --------
     dict
         Summary of frame saving operations
-    """
-    import cv2
-    import matplotlib.pyplot as plt
-    import os
-    from pathlib import Path
-    
+    """    
     video_directory = Path(video_directory)
     frames_directory = Path(frames_directory)
     
@@ -875,6 +927,7 @@ def analyze_videos_with_DLC(mouseinfo_df, config_path, video_directory,
             continue
         
         # Run DeepLabCut analysis with destfolder parameter
+        # Ref: https://deeplabcut.github.io/DeepLabCut/docs/standardDeepLabCut_UserGuide.html#i-analyze-new-videos
         try:
             print(f"Running DeepLabCut analysis...")
             

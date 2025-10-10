@@ -150,3 +150,42 @@ class TestUtilityModuleImports:
             assert compass_labyrinth.behavior.preprocessing.preprocessing_utils is not None
         except ImportError as e:
             pytest.fail(f"Failed to import compass_labyrinth.behavior.preprocessing.preprocessing_utils: {e}")
+
+
+class TestPackageDataImports:
+    """Test that package data can be imported and loaded correctly."""
+
+    def test_import_adjacency_matrix(self):
+        """Test importing ADJACENCY_MATRIX from package data."""
+        try:
+            from compass_labyrinth.constants import ADJACENCY_MATRIX
+            import pandas as pd
+            
+            assert ADJACENCY_MATRIX is not None
+            assert isinstance(ADJACENCY_MATRIX, pd.DataFrame)
+            assert ADJACENCY_MATRIX.shape == (144, 144), \
+                f"Expected shape (144, 144), got {ADJACENCY_MATRIX.shape}"
+        except ImportError as e:
+            pytest.fail(f"Failed to import ADJACENCY_MATRIX: {e}")
+        except AssertionError as e:
+            pytest.fail(f"ADJACENCY_MATRIX validation failed: {e}")
+
+    def test_import_value_function(self):
+        """Test importing VALUE_FUNCTION from package data."""
+        try:
+            from compass_labyrinth.constants import VALUE_FUNCTION
+            import pandas as pd
+            
+            assert VALUE_FUNCTION is not None
+            assert isinstance(VALUE_FUNCTION, pd.DataFrame)
+            assert VALUE_FUNCTION.shape == (144, 2), \
+                f"Expected shape (144, 2), got {VALUE_FUNCTION.shape}"
+            
+            # Check column names
+            expected_columns = ['Grid.Number', 'Value']
+            assert list(VALUE_FUNCTION.columns) == expected_columns, \
+                f"Expected columns {expected_columns}, got {list(VALUE_FUNCTION.columns)}"
+        except ImportError as e:
+            pytest.fail(f"Failed to import VALUE_FUNCTION: {e}")
+        except AssertionError as e:
+            pytest.fail(f"VALUE_FUNCTION validation failed: {e}")
