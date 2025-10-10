@@ -118,7 +118,9 @@ def init_project(
         if not dest_file.exists():
             shutil.copy2(file, dest_file)
 
-    # ---------------------------------------------
+    if len(pe_files) == 0:
+        pe_files = with_grid_files
+    # ------------------------------------------------------
 
     # Extract session names from pose estimation files
     session_names = [f.stem.replace(f"{dlc_scorer}", "") for f in pe_files]

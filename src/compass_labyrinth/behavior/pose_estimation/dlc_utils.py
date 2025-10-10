@@ -23,8 +23,8 @@ from matplotlib.collections import LineCollection
 
 def load_cohort_metadata(
     metadata_path: str | Path,
-    trial_sheet_name: str,
-):
+    trial_sheet_name: str | None = None,
+) -> pd.DataFrame:
     """
     Load and process trial metadata from Excel file.
     
@@ -32,8 +32,8 @@ def load_cohort_metadata(
     -----------
     metadata_path : str or Path
         Path to the Excel file containing trial information
-    trial_sheet_name : str
-        Name of the sheet/tab containing the trial data
+    trial_sheet_name : str or None
+        Name of the sheet/tab containing the trial data, needed for multi-sheet files
         
     Returns:
     --------
@@ -45,7 +45,11 @@ def load_cohort_metadata(
         print(f"Sheet name: {trial_sheet_name}")
         
         # Load the Excel sheet
-        mouseinfo = pd.read_excel(metadata_path, sheet_name=trial_sheet_name)
+        metadata_path = Path(metadata_path)
+        if metadata_path.suffix in ['.xlsx', '.xls']:
+            mouseinfo = pd.read_excel(metadata_path, sheet_name=trial_sheet_name)
+        elif metadata_path.suffix == '.csv':
+            mouseinfo = pd.read_csv(metadata_path)
         print(f"Initial rows loaded: {len(mouseinfo)}")
         
         # Remove rows with missing Session numbers or where it's 0
@@ -77,15 +81,14 @@ def load_cohort_metadata(
         return mouseinfo
         
     except FileNotFoundError:
-        print(f"Error: Metadata file not found at {metadata_path}")
-        return None
-    except ValueError as e:
-        print(f"Error: Sheet '{trial_sheet_name}' not found in Excel file")
-        print(f"Available sheets: {pd.ExcelFile(metadata_path).sheet_names}")
-        return None
-    except Exception as e:
-        print(f"Error loading metadata: {e}")
-        return None
+        raise FileNotFoundError(f"Metadata file not found at {metadata_path}")
+    except ValueError:
+        raise ValueError(
+            f"Sheet '{trial_sheet_name}' not found in Excel file",
+            f"Available sheets: {pd.ExcelFile(metadata_path).sheet_names}"
+        )
+    except Exception:
+        raise Exception(f"Error loading metadata from {metadata_path}")
 
 
 def validate_metadata(df: pd.DataFrame) -> bool:
