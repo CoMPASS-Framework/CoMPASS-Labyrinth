@@ -132,10 +132,6 @@ def init_project(
     video_dest_path = project_path_full / "videos" / "original_videos"
     video_files = [f.resolve() for f in source_data_path.glob(f"*{video_type}")]
     video_files = sorted(video_files, key=lambda f: f.name)
-    video_session_names = [f.stem for f in video_files]
-    for sess in session_names:
-        if sess not in video_session_names:
-            raise ValueError(f"Video file for session {sess} not found in source data path.")
     for file in video_files:
         dest_file = video_dest_path / file.name
         if not dest_file.exists():
