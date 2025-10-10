@@ -190,6 +190,6 @@ head(all_model_records)
 ```{r Export_csv}
 
 # Example output (uncomment and set a path you have write access to)
-# write.csv(hmm_result$data, here::here("outputs", "HMM_2state_file.csv"), row.names = FALSE)
+# write.csv(hmm_result$data,here(BASE_PATH, "csvs",'combined', "HMM_2State_file.csv"), row.names = FALSE)
 
 ```
