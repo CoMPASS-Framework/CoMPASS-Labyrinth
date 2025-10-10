@@ -15,8 +15,8 @@ if (Sys.info()["sysname"] == "Windows") {
 # Check R version
 r_version <- getRversion()
 cat("R version:", as.character(r_version), "\n")
-if (r_version > "4.4.0") {
-  warning("R version 4.4.0 or higher is recommended. Current version: ", r_version)
+if (r_version < "4.4.0") {
+  warning("R version 4.4.0 or lower is recommended. Current version: ", r_version)
 }
 
 # Install renv if not already installed
