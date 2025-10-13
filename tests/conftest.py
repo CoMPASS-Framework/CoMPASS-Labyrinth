@@ -94,16 +94,10 @@ def compiled_sessions_df(create_project_fixture):
     from compass_labyrinth.behavior.preprocessing import compile_mouse_sessions
     
     config, cohort_metadata = create_project_fixture
-    pose_est_csv_filepath = Path(config["project_path_full"]) / "data" / "dlc_results"
-    dlc_scorer = config["dlc_scorer"]
-    
     df_comb = compile_mouse_sessions(
-        mouseinfo=cohort_metadata,
-        pose_est_csv_filepath=pose_est_csv_filepath,
-        DLCscorer=dlc_scorer,
+        config=config,
         bp='sternum',
     )
-
     return df_comb
 
 
