@@ -39,6 +39,29 @@ def load_project(project_path: Path | str) -> tuple[dict, pd.DataFrame]:
     return (config, metadata_df)
 
 
+def load_cohort_metadata(config: dict) -> pd.DataFrame:
+    """
+    Loads cohort metadata from the CSV file specified in the project configuration.
+
+    Parameters:
+    -----------
+    config: dict
+        The project configuration dictionary containing the path to the cohort metadata CSV.
+
+    Returns:
+    --------
+    metadata_df: pd.DataFrame
+        A DataFrame containing cohort metadata.
+    """
+    project_path = Path(config["project_path_full"]).resolve()
+    metadata_file_path = project_path / "cohort_metadata.csv"
+    if not metadata_file_path.exists():
+        raise FileNotFoundError(f"Metadata file not found at {metadata_file_path}")
+    
+    metadata_df = pd.read_csv(metadata_file_path)
+    return metadata_df
+
+
 def save_figure(
     config: dict,
     fig_name: str,
