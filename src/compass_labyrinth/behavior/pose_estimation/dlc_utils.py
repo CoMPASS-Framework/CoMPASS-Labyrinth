@@ -21,12 +21,12 @@ import geopandas as gpd
 from matplotlib.collections import LineCollection
 
 
-def load_cohort_metadata(
+def import_cohort_metadata(
     metadata_path: str | Path,
     trial_sheet_name: str | None = None,
 ) -> pd.DataFrame:
     """
-    Load and process trial metadata from Excel file.
+    Import and process trial metadata from Excel file.
     
     Parameters:
     -----------
