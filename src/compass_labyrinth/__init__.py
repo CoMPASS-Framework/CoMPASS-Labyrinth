@@ -5,7 +5,7 @@ import yaml
 import shutil
 import os
 
-from .utils import load_project
+from .utils import load_project, load_cohort_metadata
 from .behavior.pose_estimation.dlc_utils import (
     import_cohort_metadata,
     validate_metadata,
