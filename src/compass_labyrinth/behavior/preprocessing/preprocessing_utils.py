@@ -11,6 +11,7 @@ import numpy as np
 from pathlib import Path
 import os
 
+from compass_labyrinth.utils import load_cohort_metadata
 from compass_labyrinth.constants import (
     NODE_TYPE_MAPPING,
     REGION_MAPPING,
@@ -22,18 +23,30 @@ from compass_labyrinth.constants import (
 # Concatenating all Pose Estimation results
 ###################################################################
 
-def load_and_preprocess_session_data(filename, bp, DLCscorer, region_mapping):
+def load_and_preprocess_session_data(
+    filename: str,
+    bp: str,
+    DLCscorer: str,
+    region_mapping: dict = REGION_MAPPING,
+) -> pd.DataFrame:
     """
     Loads DLC-tracked session data and assigns spatial regions based on grid numbers.
 
     Parameters:
-    - filename (str): CSV file path for a session.
-    - bp (str): Body part name (e.g., 'sternum').
-    - DLCscorer (str): DLC scorer name from the CSV header.
-    - region_mapping (dict): Dictionary mapping region names to grid number lists.
+    -----------
+    filename : str
+        CSV file path for a session.
+    bp : str
+        Body part name (e.g., 'sternum').
+    DLCscorer : str
+        DLC scorer name from the CSV header.
+    region_mapping : dict
+        Dictionary mapping region names to grid number lists.
 
     Returns:
-    - pd.DataFrame: Cleaned and region-labeled DataFrame for the session.
+    --------
+    pd.DataFrame
+        Cleaned and region-labeled DataFrame for the session.
     """
     dflin = pd.read_csv(filename, index_col=None, header=[0, 1, 2], skipinitialspace=True)
 
@@ -58,37 +71,48 @@ def load_and_preprocess_session_data(filename, bp, DLCscorer, region_mapping):
     return dflin
 
 
-def compile_mouse_sessions(mouseinfo, pose_est_csv_filepath, DLCscorer, bp, region_mapping=REGION_MAPPING):
+def compile_mouse_sessions(
+    config: dict,
+    bp: str,
+    region_mapping: dict = REGION_MAPPING,
+) -> pd.DataFrame:
     """
     Compiles all sessions into a single DataFrame.
 
     Parameters:
-    - mouseinfo (pd.DataFrame): Metadata for mouse sessions.
-    - videofile_path (str): Path to input session CSVs.
-    - DLCscorer (str): DLC scorer name.
-    - bp (str): Body part name (e.g., 'sternum').
-    - region_mapping (dict): Region name → grid number list.
+    -----------
+    config : dict
+        Project configuration dictionary.
+    bp : str
+        Body part name (e.g., 'sternum').
+    region_mapping : dict
+        Region name → grid number list.
 
     Returns:
-    - pd.DataFrame: Combined session dataframe with Region, Genotype, Sex.
+    --------
+    pd.DataFrame
+        Combined session dataframe with Region, Genotype, Sex.
     """
-    li_group = []
+    pose_est_csv_filepath = Path(config["project_path_full"]) / "data" / "dlc_results"
+    dlc_scorer = config["dlc_scorer"]
+    cohort_metadata = load_cohort_metadata(config)
 
-    for sess in mouseinfo['Session #'].unique():
+    li_group = []
+    for sess in cohort_metadata['Session #'].unique():
         session_name = f"Session-{int(sess)}"
         filename = os.path.join(pose_est_csv_filepath, f"{session_name}withGrids.csv")
-        df = load_and_preprocess_session_data(filename, bp, DLCscorer, region_mapping)
+        df = load_and_preprocess_session_data(filename, bp, dlc_scorer, region_mapping)
         df['Session'] = sess
         li_group.append(df)
 
     df_comb = pd.concat(li_group, axis=0, ignore_index=True)
     df_comb['Grid Number'] = df_comb['Grid Number'].astype(int)
     # Map Genotype and Sex
-    session_to_genotype = {k: g["Session #"].tolist() for k, g in mouseinfo.groupby("Genotype")}
+    session_to_genotype = {k: g["Session #"].tolist() for k, g in cohort_metadata.groupby("Genotype")}
     inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
     df_comb['Genotype'] = df_comb['Session'].map(inverse_mapping)
 
-    session_to_sex = dict(mouseinfo[['Session #', 'Sex']].values)
+    session_to_sex = dict(cohort_metadata[['Session #', 'Sex']].values)
     df_comb['Sex'] = df_comb['Session'].map(session_to_sex)
 
     return df_comb
@@ -98,17 +122,21 @@ def compile_mouse_sessions(mouseinfo, pose_est_csv_filepath, DLCscorer, bp, regi
 # Preprocessing
 ###################################################################
 
-def remove_until_initial_node(df, initial_nodes=[47, 46, 34, 22]):
+def remove_until_initial_node(df: pd.DataFrame, initial_nodes: list = [47, 46, 34, 22]) -> pd.DataFrame:
     """
     Removes all rows in the dataframe until the first occurrence of a grid node
     in the provided initial_nodes list.
 
     Parameters:
-    - df (pd.DataFrame): The input session dataframe.
-    - initial_nodes (list): List of grid node integers to detect.
+    -----------
+    df : pd.DataFrame
+        The input session dataframe.
+    initial_nodes : list
+        List of grid node integers to detect.
 
     Returns:
-    - pd.DataFrame: Truncated dataframe starting from the first initial node.
+    pd.DataFrame
+        Truncated dataframe starting from the first initial node.
     """
     if df.iloc[0]['Grid Number'] in initial_nodes:
         return df.copy()
@@ -120,17 +148,21 @@ def remove_until_initial_node(df, initial_nodes=[47, 46, 34, 22]):
     return df.copy()
 
 
-def remove_invalid_grid_transitions(df, adjacency_matrix=ADJACENCY_MATRIX):
+def remove_invalid_grid_transitions(df: pd.DataFrame, adjacency_matrix: pd.DataFrame = ADJACENCY_MATRIX) -> pd.DataFrame:
     """
     Removes rows from the dataframe where the transition between consecutive
     grid numbers is not valid (i.e., not adjacent in the adjacency matrix).
 
     Parameters:
-    - df (pd.DataFrame): The session dataframe after initial truncation.
-    - adjacency_matrix (pd.DataFrame): Square adjacency matrix with binary values.
+    -----------
+    df : pd.DataFrame
+        The session dataframe after initial truncation.
+    adjacency_matrix : pd.DataFrame
+        Square adjacency matrix with binary values.
 
     Returns:
-    - pd.DataFrame: Cleaned dataframe with only valid grid transitions.
+    pd.DataFrame
+        Cleaned dataframe with only valid grid transitions.
     """
     grid_numbers = list(df['Grid Number'])
     drop_indices = []
@@ -153,17 +185,27 @@ def remove_invalid_grid_transitions(df, adjacency_matrix=ADJACENCY_MATRIX):
     return df_cleaned
 
 
-def preprocess_sessions(df_comb, adjacency_matrix=ADJACENCY_MATRIX, initial_nodes=[47, 46, 34, 22]):
+def preprocess_sessions(
+    df_comb: pd.DataFrame,
+    adjacency_matrix: pd.DataFrame = ADJACENCY_MATRIX,
+    initial_nodes: list = [47, 46, 34, 22],
+) -> pd.DataFrame:
     """
     Full preprocessing pipeline for all sessions: trims to initial nodes and removes invalid transitions.
 
     Parameters:
-    - df_comb (pd.DataFrame): Combined dataframe containing all sessions.
-    - adjacency_matrix (pd.DataFrame): Grid adjacency matrix.
-    - initial_nodes (list): Nodes that mark the true session start.
+    -----------
+    df_comb: pd.DataFrame
+        Combined dataframe with all sessions.
+    adjacency_matrix: pd.DataFrame
+        Grid adjacency matrix.
+    initial_nodes: list
+        Nodes that mark the true session start.
 
     Returns:
-    - pd.DataFrame: Fully cleaned and combined dataframe across all sessions.
+    --------
+    pd.DataFrame
+        Fully cleaned and combined dataframe across all sessions.
     """
     preprocessed_sessions = []
 
@@ -204,7 +246,13 @@ def preprocess_sessions(df_comb, adjacency_matrix=ADJACENCY_MATRIX, initial_node
 # Velocity column creation
 #######################################################
 
-def ensure_velocity_column(df, x_col='x', y_col='y', velocity_col='Velocity', fps=5):
+def ensure_velocity_column(
+    df: pd.DataFrame,
+    x_col: str = 'x',
+    y_col: str = 'y',
+    velocity_col: str = 'Velocity',
+    fps: float = 5,
+) -> pd.DataFrame:
     """
     Adds a velocity column to the DataFrame if it doesn't already exist.
     Velocity is calculated as Euclidean displacement between frames, scaled by fps.
