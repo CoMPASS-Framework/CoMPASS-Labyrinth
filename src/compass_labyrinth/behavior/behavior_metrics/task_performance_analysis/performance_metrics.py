@@ -29,6 +29,9 @@ from itertools import combinations
 from matplotlib import gridspec
 warnings.filterwarnings("ignore")
 
+
+from compass_labyrinth.constants import REGION_LENGTHS
+
 ##################################################################
 # Create time-binned dictionary
 ###################################################################
@@ -50,26 +53,35 @@ def get_max_session_row_bracket(df_combined, session_col='Session'):
 
 
 def generate_region_heatmap_pivots(
-    df, 
-    lower_lim=0, 
-    upper_lim=80000, 
-    difference=10000, 
-    region_columns=['entry_zone', 'loops', 'dead_ends', 'neutral_zone', 'reward_path', 'target_zone'],
-    region_lengths=None
+    df: pd.DataFrame,
+    lower_lim: int = 0, 
+    upper_lim: int = 80000, 
+    difference: int = 10000, 
+    region_columns: list = ['entry_zone', 'loops', 'dead_ends', 'neutral_zone', 'reward_path', 'target_zone'],
+    region_lengths: dict = REGION_LENGTHS,
 ):
     """
     Create binned pivot tables for each genotype showing region occupancy over time windows.
     
     Parameters:
-        df (DataFrame): Input DataFrame containing 'Session', 'Genotype', and 'Region' columns.
-        lower_lim (int): Start index for binning.
-        upper_lim (int): End index for binning.
-        difference (int): Bin size.
-        region_columns (list): List of region names to consider.
-        region_lengths (dict): Dictionary with total lengths for each region.
-    
+    -----------
+    df : pd.DataFrame
+        Input DataFrame containing 'Session', 'Genotype', and 'Region' columns.
+    lower_lim : int
+        Start index for binning.
+    upper_lim : int
+        End index for binning.
+    difference : int
+        Bin size.
+    region_columns : list
+        List of region names to consider.
+    region_lengths : dict
+        Dictionary with total lengths for each region.
+
     Returns:
-        pivot_dict (dict): Dictionary with Genotype as keys and list of pivot DataFrames as values.
+    -----------
+    pivot_dict : dict
+        Dictionary with Genotype as keys and list of pivot DataFrames as values.
     """
     pivot_dict = {}
     thresh_val = int((upper_lim - lower_lim) / difference)
@@ -102,7 +114,7 @@ def generate_region_heatmap_pivots(
             datafr.set_index('Session', inplace=True)
             reg_datafr.append(datafr)
 
-        for j in range(thresh_val):
+        for j in range(len(reg_datafr)):
             datafr_sub = reg_datafr[j].reset_index()
             for region in region_columns:
                 region_len = region_lengths.get(region, 1) if region_lengths else 1
@@ -136,11 +148,16 @@ def generate_region_heatmap_pivots(
 # Exclusion Criteria
 ###################################################################
 
-def compute_frames_per_session(df):
+def compute_frames_per_session(df: pd.DataFrame) -> pd.DataFrame:
     return df.groupby('Session').size().reset_index(name='No_of_Frames')
 
 
-def compute_target_zone_usage(df, pivot_dict, region='Target Zone', difference=10000):
+def compute_target_zone_usage(
+    df: pd.DataFrame,
+    pivot_dict: dict,
+    region: str = 'Target Zone',
+    difference: int = 10000,
+) -> pd.DataFrame:
     usage_records = []
     for genotype in df.Genotype.unique():
         li_genotype = pivot_dict[genotype]
@@ -155,20 +172,24 @@ def compute_target_zone_usage(df, pivot_dict, region='Target Zone', difference=1
     return pd.DataFrame(usage_records)
 
 
-def summarize_target_usage(region_target, frames_df, mouseinfo):
+def summarize_target_usage(
+    region_target: str,
+    frames_df: pd.DataFrame,
+    cohort_metadata: pd.DataFrame,
+) -> pd.DataFrame:
     session_frames = dict(frames_df.values)
-    session_sex = dict(mouseinfo[['Session #', 'Sex']].values)
-
+    session_sex = dict(cohort_metadata[['Session #', 'Sex']].values)
     summary = region_target.groupby(['Genotype', 'Session'])['Target_Usage'].mean().reset_index()
     summary['No_of_Frames'] = summary['Session'].map(session_frames)
     summary['Sex'] = summary['Session'].map(session_sex)
     return summary
 
 
-def plot_target_usage_vs_frames(summary_df):
+def plot_target_usage_vs_frames(summary_df: pd.DataFrame):
     summary_df = summary_df[
-    np.isfinite(summary_df['No_of_Frames']) & 
-    np.isfinite(summary_df['Target_Usage'])]
+        np.isfinite(summary_df['No_of_Frames']) & 
+        np.isfinite(summary_df['Target_Usage'])
+    ]
     fig, ax = plt.subplots(figsize=(10, 8))
     sns.scatterplot(
         data=summary_df,
@@ -197,18 +218,25 @@ def plot_target_usage_vs_frames(summary_df):
     plt.show()
 
 
-def exclude_low_performing_sessions(df_main, summary_df):
+def exclude_low_performing_sessions(
+    df_main: pd.DataFrame,
+    summary_df: pd.DataFrame,
+    usage_threshold: float | None = 0.4,
+    min_frames: int | None = 30000,
+) -> pd.DataFrame:
     try:
-        target_threshold = float(input("Enter minimum target usage threshold (e.g., 0.4): "))
-        frame_threshold = int(input("Enter minimum number of frames threshold (e.g., 30000): "))
+        if usage_threshold is None:
+            target_threshold = float(input("Enter minimum target usage threshold (e.g., 0.4): "))
+        if min_frames is None:
+            frame_threshold = int(input("Enter minimum number of frames threshold (e.g., 30000): "))
     except ValueError:
         print("Invalid input. Using default thresholds: Target Usage = 0.4, Frames = 30000")
-        target_threshold = 0.4
-        frame_threshold = 30000
+        usage_threshold = 0.4
+        min_frames = 30000
 
     sessions_to_exclude = summary_df.loc[
-        (summary_df['Target_Usage'] < target_threshold) &
-        (summary_df['No_of_Frames'] < frame_threshold),
+        (summary_df['Target_Usage'] < usage_threshold) &
+        (summary_df['No_of_Frames'] < min_frames),
         'Session'
     ].unique().tolist()
 
@@ -217,10 +245,11 @@ def exclude_low_performing_sessions(df_main, summary_df):
     return df_cleaned
 
 
-def plot_target_usage_with_exclusions(summary_df, sessions_to_exclude):
+def plot_target_usage_with_exclusions(summary_df: pd.DataFrame, sessions_to_exclude: list):
     summary_df = summary_df[
-    np.isfinite(summary_df['No_of_Frames']) & 
-    np.isfinite(summary_df['Target_Usage'])]
+        np.isfinite(summary_df['No_of_Frames']) & 
+        np.isfinite(summary_df['Target_Usage'])
+    ]
     fig, ax = plt.subplots(figsize=(10, 8))
 
     # Split included and excluded sessions
@@ -278,7 +307,7 @@ def plot_target_usage_with_exclusions(summary_df, sessions_to_exclude):
 # Subset the Time-Binned Dictionary based on Valid Sessions
 ###################################################################
 
-def subset_pivot_dict_sessions(pivot_dict, df_all_csv):
+def subset_pivot_dict_sessions(pivot_dict: dict, df_all_csv: pd.DataFrame) -> dict:
     """
     Subset an existing pivot_dict to only include valid sessions from df_all_csv.
 
@@ -313,15 +342,15 @@ def subset_pivot_dict_sessions(pivot_dict, df_all_csv):
 ###################################################################
 
 def plot_region_heatmaps(
-    pivot_dict,
-    group_name,
-    lower_lim,
-    upper_lim,
-    difference,
-    included_sessions=None,
-    vmax=0.6,
-    region_desired_order=None,
-    cmap="viridis"
+    pivot_dict: dict,
+    group_name: str,
+    lower_lim: int,
+    upper_lim: int,
+    difference: int,
+    included_sessions: list | None = None,
+    vmax: float = 0.6,
+    region_desired_order: list | None = None,
+    cmap: str = "viridis"
 ):
     """
     Clean and aesthetically pleasing vertically stacked heatmaps with one colorbar per bin.

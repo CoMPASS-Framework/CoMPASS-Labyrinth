@@ -1,8 +1,9 @@
 """Shared fixtures for tests."""
 
 import pytest
-from pathlib import Path
 import shutil
+from pathlib import Path
+import pandas as pd
 
 
 @pytest.fixture(scope="session")
@@ -153,3 +154,31 @@ def save_preprocessed_data(create_project_fixture, velocity_column_df):
     save_preprocessed_to_csv(config=config, df=velocity_column_df)
 
     return True
+
+
+@pytest.fixture(scope="session")
+def create_time_binned_dict(create_project_fixture, save_preprocessed_data):
+    """
+    Creates time-binned data dictionary.
+    
+    Returns
+    -------
+    dict
+        Dictionary with time-binned DataFrames for each session
+    """
+    from compass_labyrinth.behavior.behavior_metrics.task_performance_analysis import generate_region_heatmap_pivots
+
+    config, cohort_metadata = create_project_fixture
+        
+    # Import combined CSV
+    filepath = Path(config["project_path_full"]) / "csvs" / "combined" / "Preprocessed_combined_file.csv"
+    df_all_csv = pd.read_csv(filepath)
+
+    pivot_dict = generate_region_heatmap_pivots(
+        df=df_all_csv,
+        lower_lim=0,        # Start of time window
+        upper_lim=80000,    # End of time window
+        difference=10000,   # Bin width in timepoints
+    )
+
+    return pivot_dict
