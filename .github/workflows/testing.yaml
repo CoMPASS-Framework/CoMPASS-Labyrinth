@@ -72,7 +72,9 @@ jobs:
             cmake
 
       - name: Install R packages via renv
-        run: Rscript init_renv.R
+        run: |
+          Rscript init_renv.R
+          Rscript -e "renv::restore()"
 
       - name: Run tests
         run: |
