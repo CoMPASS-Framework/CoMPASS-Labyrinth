@@ -33,7 +33,7 @@ def test_r_packages():
 
     for pkg in packages:
         result = subprocess.run(
-            ["Rscript", "-e", f"library({pkg})"],
+            ["Rscript", "-e", f"renv::activate(); library({pkg})"],
             capture_output=True,
             text=True,
             cwd=project_root,  # Run from project root to activate renv
