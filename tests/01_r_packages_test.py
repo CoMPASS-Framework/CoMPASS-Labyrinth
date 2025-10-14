@@ -10,7 +10,7 @@ def test_r_packages():
     # Get project root (one level up from tests/ directory)
     # This ensures renv is activated from the correct directory
     project_root = Path(__file__).parent.parent
-    
+
     packages = [
         "dplyr",
         "ggplot2",
@@ -28,14 +28,14 @@ def test_r_packages():
         "nhm",
         "furrr",
         "future",
-        "progressr"
+        "progressr",
     ]
-    
+
     for pkg in packages:
         result = subprocess.run(
             ["Rscript", "-e", f"library({pkg})"],
             capture_output=True,
             text=True,
-            cwd=project_root  # Run from project root to activate renv
+            cwd=project_root,  # Run from project root to activate renv
         )
         assert result.returncode == 0, f"R package '{pkg}' not installed"
