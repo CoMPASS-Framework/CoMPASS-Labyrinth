@@ -219,7 +219,8 @@ def plot_target_usage_vs_frames(
     if save_fig:
         save_path = Path(config["project_path_full"]) / "figures" / "target_usage_vs_frames.png"
         plt.savefig(save_path, bbox_inches='tight', dpi=300)
-    
+        print(f"Figure saved at: {save_path}")
+
     # Show figure
     if show_fig:
         plt.show()
@@ -323,6 +324,7 @@ def plot_target_usage_with_exclusions(
     if save_fig:
         save_path = Path(config["project_path_full"]) / "figures" / "target_usage_vs_frames_exclusions.png"
         plt.savefig(save_path, bbox_inches='tight', dpi=300)
+        print(f"Figure saved at: {save_path}")
     
     # Show figure
     if show_fig:
@@ -372,6 +374,7 @@ def subset_pivot_dict_sessions(pivot_dict: dict, df_all_csv: pd.DataFrame) -> di
 ###################################################################
 
 def plot_region_heatmaps(
+    config: dict,
     pivot_dict: dict,
     group_name: str,
     lower_lim: int,
@@ -380,8 +383,11 @@ def plot_region_heatmaps(
     included_sessions: list | None = None,
     vmax: float = 0.6,
     region_desired_order: list | None = None,
-    cmap: str = "viridis"
-):
+    cmap: str = "viridis",
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
     """
     Clean and aesthetically pleasing vertically stacked heatmaps with one colorbar per bin.
     """
@@ -455,7 +461,18 @@ def plot_region_heatmaps(
         y=0.99
     )
     plt.subplots_adjust(top=0.95, bottom=0.03, left=0.05, right=0.95)
-    #plt.show()
+    
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / f"region_heatmaps_{group_name}.pdf"
+        fig.savefig(save_path, dpi=300, bbox_inches="tight")
+        print(f"Figure saved at: {save_path}")
+
+    if show_fig:
+        plt.show()
+
+    if return_fig:
+        return fig
 
 
 #####################################################################
@@ -463,20 +480,24 @@ def plot_region_heatmaps(
 #####################################################################
 
 def plot_region_heatmaps_all_genotypes(
-    pivot_dict,
-    df_all_csv,
-    lower_lim,
-    upper_lim,
-    difference,
-    vmax=0.6,
-    region_desired_order=None,
-    cmap="viridis",
-    included_genotypes=None,
-    figsize_per_genotype=(4.5, 2.8),
-    spacing_w=0.6,   # Wider horizontal space between genotypes
-    spacing_h=0.2,   # Tighter vertical space between bins
-    show_colorbar=True
-):
+    config: dict,
+    pivot_dict: dict,
+    df_all_csv: pd.DataFrame,
+    lower_lim: int,
+    upper_lim: int,
+    difference: int,
+    vmax: float = 0.6,
+    region_desired_order: list | None = None,
+    cmap: str = "viridis",
+    included_genotypes: list | None = None,
+    figsize_per_genotype: tuple = (4.5, 2.8),
+    spacing_w: float = 0.6,   # Wider horizontal space between genotypes
+    spacing_h: float = 0.2,   # Tighter vertical space between bins
+    show_colorbar: bool = True,
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
     """
     Plot region occupancy heatmaps for each genotype and bin:
     - Rows: bins
@@ -573,7 +594,18 @@ def plot_region_heatmaps_all_genotypes(
         wspace=spacing_w, hspace=spacing_h,
         top=0.95, bottom=0.05, left=0.05, right=0.95
     )
-    #plt.show()
+    
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / "region_heatmaps_all_genotypes.pdf"
+        fig.savefig(save_path, dpi=300, bbox_inches="tight")
+        print(f"Figure saved at: {save_path}")
+
+    if show_fig:
+        plt.show()
+
+    if return_fig:
+        return fig
 
 
 ##################################################################

@@ -185,7 +185,7 @@ def create_time_binned_dict(create_project_fixture, save_preprocessed_data):
 
 
 @pytest.fixture(scope="session")
-def exclusion_criteria(create_project_fixture, create_time_binned_dict):
+def task_performance(create_project_fixture, create_time_binned_dict):
 
     from compass_labyrinth.behavior.behavior_metrics.task_performance_analysis import (
         compute_frames_per_session,
@@ -193,7 +193,8 @@ def exclusion_criteria(create_project_fixture, create_time_binned_dict):
         summarize_target_usage,
         plot_target_usage_vs_frames,
         exclude_low_performing_sessions,
-        plot_target_usage_with_exclusions
+        plot_target_usage_with_exclusions,
+        subset_pivot_dict_sessions,
     )
 
     config, cohort_metadata = create_project_fixture
@@ -256,4 +257,11 @@ def exclusion_criteria(create_project_fixture, create_time_binned_dict):
     output_path = Path(config["project_path_full"]) / "csvs" / "combined" / "Preprocessed_combined_file_exclusions.csv"
     df_all_csv.to_csv(output_path, index=False)
 
-    return df_all_csv
+    # Subset the Time-Binned Dictionary based on Valid Sessions
+    pivot_dict = subset_pivot_dict_sessions(
+        pivot_dict=create_time_binned_dict,
+        df_all_csv=df_all_csv,
+    )
+
+    return df_all_csv, pivot_dict
+
