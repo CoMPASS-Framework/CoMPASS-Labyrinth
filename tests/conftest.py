@@ -6,7 +6,7 @@ import shutil
 
 
 @pytest.fixture(scope="session")
-def test_create_project(tmp_path_factory):
+def create_project_fixture(tmp_path_factory):
     """
     Session-scoped fixture that creates a test project using init_project.
     
@@ -42,8 +42,8 @@ def test_create_project(tmp_path_factory):
     
     # Copy CSV files from assets to source directory
     csv_files = [
-        "Session0003_withGrids.csv",
-        "Session0004_withGrids.csv",
+        "Session-3withGrids.csv",
+        "Session-4withGrids.csv",
     ]
     
     for csv_file in csv_files:
@@ -79,3 +79,77 @@ def test_create_project(tmp_path_factory):
     )
 
     yield config, metadata_df
+
+
+@pytest.fixture(scope="session")
+def compiled_sessions_df(create_project_fixture):
+    """
+    Provides compiled session data.
+    
+    Returns
+    -------
+    pd.DataFrame
+        Combined DataFrame with all sessions
+    """
+    from compass_labyrinth.behavior.preprocessing import compile_mouse_sessions
+    
+    config, cohort_metadata = create_project_fixture
+    df_comb = compile_mouse_sessions(
+        config=config,
+        bp='sternum',
+    )
+    return df_comb
+
+
+@pytest.fixture(scope="session")
+def preprocessed_sessions_df(compiled_sessions_df):
+    """
+    Provides preprocessed session data.
+    
+    Returns
+    -------
+    pd.DataFrame
+        Preprocessed DataFrame with all sessions
+    """
+    from compass_labyrinth.behavior.preprocessing import preprocess_sessions
+
+    df_all_csv = preprocess_sessions(df_comb=compiled_sessions_df)
+
+    return df_all_csv
+
+
+@pytest.fixture(scope="session")
+def velocity_column_df(preprocessed_sessions_df):
+    """
+    Provides preprocessed session data with velocity column.
+    
+    Returns
+    -------
+    pd.DataFrame
+        Preprocessed DataFrame with velocity column added
+    """
+    from compass_labyrinth.behavior.preprocessing import ensure_velocity_column
+
+    df_with_velocity = ensure_velocity_column(
+        df=preprocessed_sessions_df,
+        fps=5,
+    )
+
+    return df_with_velocity
+
+
+@pytest.fixture(scope="session")
+def save_preprocessed_data(create_project_fixture, velocity_column_df):
+    """
+    Saves preprocessed data to CSV files.
+    
+    Returns
+    -------
+    None
+    """
+    from compass_labyrinth.behavior.preprocessing import save_preprocessed_to_csv
+
+    config, _ = create_project_fixture
+    save_preprocessed_to_csv(config=config, df=velocity_column_df)
+
+    return True

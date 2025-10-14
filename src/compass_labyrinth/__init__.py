@@ -5,9 +5,9 @@ import yaml
 import shutil
 import os
 
-from .utils import load_project
+from .utils import load_project, load_cohort_metadata
 from .behavior.pose_estimation.dlc_utils import (
-    load_cohort_metadata,
+    import_cohort_metadata,
     validate_metadata,
     save_first_frame,
 )
@@ -157,7 +157,7 @@ def init_project(
             })
     else:
         user_metadata_file_path = Path(user_metadata_file_path).resolve()
-        metadata_df = load_cohort_metadata(
+        metadata_df = import_cohort_metadata(
             metadata_path=user_metadata_file_path,
             trial_sheet_name=trial_type,
         )

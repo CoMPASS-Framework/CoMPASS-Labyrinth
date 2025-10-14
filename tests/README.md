@@ -50,8 +50,8 @@ def test_my_feature(test_project):
 ## Test Assets
 
 The `tests/assets/` directory contains:
-- `Session0003_withGrids.csv` - Test DLC output CSV
-- `Session0004_withGrids.csv` - Test DLC output CSV
+- `Session-3withGrids.csv` - Test DLC output CSV
+- `Session-4withGrids.csv` - Test DLC output CSV
 - `WT_DSI_Labyrinth_Metadata.csv` - Test metadata file
 
 ## Running Tests
