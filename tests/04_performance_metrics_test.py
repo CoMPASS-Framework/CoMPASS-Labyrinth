@@ -100,3 +100,16 @@ class TestPerformanceMetrics:
 
         fig_path = Path(config["project_path_full"]) / "figures" / "region_heatmaps_all_genotypes.pdf"
         assert fig_path.exists()
+
+    def test_shannon_entropy(self, create_project_fixture, shannon_entropy):
+        config, _ = create_project_fixture
+        entropy_df = shannon_entropy
+        assert isinstance(entropy_df, pd.DataFrame)
+        assert not entropy_df.empty
+        required_columns = ['Session', 'Genotype', 'Bin', 'Entropy']
+        for col in required_columns:
+            assert col in entropy_df.columns
+
+        # Check if the plot file was created
+        fig_path = Path(config["project_path_full"]) / "figures" / "shannon_entropy.pdf"
+        assert fig_path.exists()

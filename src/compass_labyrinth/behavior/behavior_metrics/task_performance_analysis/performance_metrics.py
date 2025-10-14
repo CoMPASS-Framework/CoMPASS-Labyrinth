@@ -614,10 +614,28 @@ def plot_region_heatmaps_all_genotypes(
 
 # Compute Shannon Entropy per Bin per Session
 
-def compute_shannon_entropy_per_bin(pivot_dict, bin_size, df_all_csv):
+def compute_shannon_entropy_per_bin(
+    pivot_dict: dict,
+    df_all_csv: pd.DataFrame,
+    bin_size: int = 10000,
+) -> pd.DataFrame:
     """
     Computes Shannon entropy per bin per session.
     Uses df_all_csv for genotype mapping and ensures robust merging.
+
+    Parameters:
+    -----------
+    pivot_dict : dict
+        Dictionary with Genotype as keys and list of pivot DataFrames as values.
+    df_all_csv : pd.DataFrame
+        DataFrame containing 'Session' and 'Genotype' columns.
+    bin_size : int
+        Size of each time bin.
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame with columns: 'Session', 'Bin', 'Entropy', 'Genotype'.
     """
     entropy_records = []
 
@@ -673,7 +691,15 @@ def compute_shannon_entropy_per_bin(pivot_dict, bin_size, df_all_csv):
 ## Plot 2: Plotting Shannon's Entropy across Sessions (/Mice)
 ###############################################################################
 
-def plot_entropy_over_bins(entropy_df, palette=None, ylim=(0, 5)):
+def plot_entropy_over_bins(
+    config: dict,
+    entropy_df: pd.DataFrame,
+    palette: list | None = None,
+    ylim: tuple = (0, 5),
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None:
     sns.set_style("ticks") 
     g = sns.catplot(
         data=entropy_df,
@@ -703,8 +729,18 @@ def plot_entropy_over_bins(entropy_df, palette=None, ylim=(0, 5)):
     #ax.tick_params(labelsize=12)
 
     plt.tight_layout()
-    #plt.show()
+    
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / "shannon_entropy.pdf"
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
+        print(f"Figure saved at: {save_path}")
 
+    if show_fig:
+        plt.show()
+    
+    if return_fig:
+        return g
 
 
 # ------------------- Repeated Measures ANOVA (within-subject: Bin) -----------------#

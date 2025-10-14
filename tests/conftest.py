@@ -265,3 +265,33 @@ def task_performance(create_project_fixture, create_time_binned_dict):
 
     return df_all_csv, pivot_dict
 
+
+@pytest.fixture(scope="session")
+def shannon_entropy(create_project_fixture, task_performance):
+    from compass_labyrinth.behavior.behavior_metrics.task_performance_analysis import (
+        compute_shannon_entropy_per_bin,
+        plot_entropy_over_bins,
+    )
+
+    config, cohort_metadata = create_project_fixture
+    df_all_csv, pivot_dict = task_performance
+
+    BIN_SIZE = 10000
+
+    # Compute Shannon Entropy
+    entropy_df = compute_shannon_entropy_per_bin(
+        pivot_dict=pivot_dict,
+        df_all_csv=df_all_csv,
+        bin_size=BIN_SIZE,
+    )
+
+    # Plot Shannon's Entropy across Sessions
+    plot_entropy_over_bins(
+        config=config,
+        entropy_df=entropy_df,
+        save_fig=True,
+        show_fig=False,
+        return_fig=False,
+    )
+
+    return entropy_df
