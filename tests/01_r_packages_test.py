@@ -36,6 +36,6 @@ def test_r_packages():
             ["Rscript", "-e", f"renv::activate(); library({pkg})"],
             capture_output=True,
             text=True,
-            cwd=project_root,  # Run from project root to activate renv
+            # cwd=project_root,  # Run from project root to activate renv
         )
         assert result.returncode == 0, f"R package '{pkg}' not installed"
