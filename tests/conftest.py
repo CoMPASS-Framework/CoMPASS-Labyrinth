@@ -182,3 +182,78 @@ def create_time_binned_dict(create_project_fixture, save_preprocessed_data):
     )
 
     return pivot_dict
+
+
+@pytest.fixture(scope="session")
+def exclusion_criteria(create_project_fixture, create_time_binned_dict):
+
+    from compass_labyrinth.behavior.behavior_metrics.task_performance_analysis import (
+        compute_frames_per_session,
+        compute_target_zone_usage,
+        summarize_target_usage,
+        plot_target_usage_vs_frames,
+        exclude_low_performing_sessions,
+        plot_target_usage_with_exclusions
+    )
+
+    config, cohort_metadata = create_project_fixture
+
+    # Import combined CSV
+    filepath = Path(config["project_path_full"]) / "csvs" / "combined" / "Preprocessed_combined_file.csv"
+    df_all_csv = pd.read_csv(filepath)
+
+    BIN_SIZE = 10000               # BASED ON THE TIME-BINNED DICTIONARY
+    REGION = "target_zone"         # Region to evaluate usage
+
+    # Step 1: Total frames per session
+    frames_df = compute_frames_per_session(df=df_all_csv)
+
+    # Step 2: Target zone usage per bout
+    region_target = compute_target_zone_usage(
+        df=df_all_csv,
+        pivot_dict=create_time_binned_dict,
+        region=REGION,
+        difference=BIN_SIZE,
+    )
+
+    # Step 3: Session-level summary
+    region_summary = summarize_target_usage(
+        region_target=region_target,
+        frames_df=frames_df,
+        cohort_metadata=cohort_metadata,
+    )
+
+    # Step 4: Visualize usage vs. session duration
+    plot_target_usage_vs_frames(
+        config=config,
+        summary_df=region_summary,
+        save_fig=True,
+        show_fig=False,
+    )
+
+    # Step 5: Interactive exclusion based on usage and frame thresholds
+    df_all_csv = exclude_low_performing_sessions(
+        df=df_all_csv,
+        summary_df=region_summary,
+        usage_threshold=0.4,
+        min_frames=30000,
+    )
+
+    # Step 6: Replot the target usage v/s frames plot with the excluded sessions 'X' out
+    sessions_to_exclude = region_summary.loc[
+        ~region_summary['Session'].isin(df_all_csv['Session'])
+    ]['Session'].tolist()
+
+    plot_target_usage_with_exclusions(
+        config=config,
+        summary_df=region_summary,
+        sessions_to_exclude=sessions_to_exclude,
+        save_fig=True,
+        show_fig=False,
+    )
+
+    # Save the DataFrame
+    output_path = Path(config["project_path_full"]) / "csvs" / "combined" / "Preprocessed_combined_file_exclusions.csv"
+    df_all_csv.to_csv(output_path, index=False)
+
+    return df_all_csv

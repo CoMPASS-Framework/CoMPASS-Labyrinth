@@ -8,29 +8,22 @@
 '''
 import pandas as pd
 import numpy as np
-from scipy.ndimage import gaussian_filter1d
-from scipy.optimize import curve_fit
-from sklearn.preprocessing import RobustScaler, QuantileTransformer
 import seaborn as sns
+from pathlib import Path
 import matplotlib.pyplot as plt
-from statsmodels.formula.api import ols
-import statsmodels.api as sm
-import matplotlib.pyplot as plt
-from scipy.stats import entropy
-import logging
-import warnings
 import matplotlib.gridspec as gridspec
+import warnings
 from itertools import combinations
 from statsmodels.stats.anova import AnovaRM
 from statsmodels.stats.multitest import multipletests
 from statsmodels.formula.api import mixedlm
 from scipy.stats import entropy, ttest_ind
-from itertools import combinations
-from matplotlib import gridspec
-warnings.filterwarnings("ignore")
-
 
 from compass_labyrinth.constants import REGION_LENGTHS
+
+
+warnings.filterwarnings("ignore")
+
 
 ##################################################################
 # Create time-binned dictionary
@@ -155,7 +148,7 @@ def compute_frames_per_session(df: pd.DataFrame) -> pd.DataFrame:
 def compute_target_zone_usage(
     df: pd.DataFrame,
     pivot_dict: dict,
-    region: str = 'Target Zone',
+    region: str = 'target_zone',
     difference: int = 10000,
 ) -> pd.DataFrame:
     usage_records = []
@@ -185,7 +178,13 @@ def summarize_target_usage(
     return summary
 
 
-def plot_target_usage_vs_frames(summary_df: pd.DataFrame):
+def plot_target_usage_vs_frames(
+    config: dict,
+    summary_df: pd.DataFrame,
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
     summary_df = summary_df[
         np.isfinite(summary_df['No_of_Frames']) & 
         np.isfinite(summary_df['Target_Usage'])
@@ -215,11 +214,23 @@ def plot_target_usage_vs_frames(summary_df: pd.DataFrame):
         )
     plt.title("Target Zone Usage vs No. of Frames")
     plt.tight_layout()
-    plt.show()
+    
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / "target_usage_vs_frames.png"
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
+    
+    # Show figure
+    if show_fig:
+        plt.show()
+    
+    # Return figure
+    if return_fig:
+        return fig
 
 
 def exclude_low_performing_sessions(
-    df_main: pd.DataFrame,
+    df: pd.DataFrame,
     summary_df: pd.DataFrame,
     usage_threshold: float | None = 0.4,
     min_frames: int | None = 30000,
@@ -241,11 +252,18 @@ def exclude_low_performing_sessions(
     ].unique().tolist()
 
     print(f"\nExcluding {len(sessions_to_exclude)} session(s): {sessions_to_exclude}")
-    df_cleaned = df_main[~df_main['Session'].isin(sessions_to_exclude)].copy()
+    df_cleaned = df[~df['Session'].isin(sessions_to_exclude)].copy()
     return df_cleaned
 
 
-def plot_target_usage_with_exclusions(summary_df: pd.DataFrame, sessions_to_exclude: list):
+def plot_target_usage_with_exclusions(
+    config: dict,
+    summary_df: pd.DataFrame,
+    sessions_to_exclude: list,
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
     summary_df = summary_df[
         np.isfinite(summary_df['No_of_Frames']) & 
         np.isfinite(summary_df['Target_Usage'])
@@ -300,7 +318,19 @@ def plot_target_usage_with_exclusions(summary_df: pd.DataFrame, sessions_to_excl
     plt.title("Target Zone Usage vs No. of Frames (Excluded Sessions Marked)")
     plt.tight_layout()
     plt.legend()
-    plt.show()
+    
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / "target_usage_vs_frames_exclusions.png"
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
+    
+    # Show figure
+    if show_fig:
+        plt.show()
+    
+    # Return figure
+    if return_fig:
+        return fig
 
 
 ###################################################################
