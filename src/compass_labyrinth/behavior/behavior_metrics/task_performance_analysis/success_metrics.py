@@ -5,19 +5,12 @@
         ├── Cumulative successful bout analysis
         ├── Time-based successful bout analysis
 '''
+from pathlib import Path
 import pandas as pd
 import numpy as np
-from scipy.ndimage import gaussian_filter1d
-from scipy.optimize import curve_fit
-from sklearn.preprocessing import RobustScaler, QuantileTransformer
 import seaborn as sns
-import seaborn as sn
+from itertools import combinations
 import matplotlib.pyplot as plt
-from statsmodels.formula.api import ols
-import statsmodels.api as sm
-import matplotlib.pyplot as plt
-from scipy.stats import entropy
-import logging
 from scipy.stats import ttest_ind
 import statsmodels.api as sm
 from statsmodels.formula.api import mixedlm
@@ -25,21 +18,29 @@ from statsmodels.stats.anova import AnovaRM
 from statsmodels.stats.multitest import multipletests
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 
+
 ##################################################################
 ## Plot 5: Cumulative Successful Bout Percentage
 ###################################################################
-
-def assign_bout_indices_from_entry_node(navigation_df: pd.DataFrame, delimiter_node: int = 47) -> pd.DataFrame:
+def assign_bout_indices_from_entry_node(
+    navigation_df: pd.DataFrame,
+    delimiter_node: int = 47,
+) -> pd.DataFrame:
     """
     Assigns bout indices to each row of a session based on entries to a delimiter node (e.g., Entry node = 47).
     A new bout starts every time the delimiter node is encountered.
 
     Parameters:
-    - navigation_df: DataFrame with 'Session' and 'Grid Number' columns.
-    - delimiter_node: Grid number that marks the entry point for bouts.
+    -----------
+    navigation_df : pd.DataFrame
+        DataFrame with 'Session' and 'Grid Number' columns.
+    delimiter_node : int
+        Grid number that marks the entry point for bouts.
 
     Returns:
-    - DataFrame with an added 'Bout_ID' column.
+    --------
+    pd.DataFrame
+        DataFrame with an added 'Bout_ID' column.
     """
     all_sessions = []
 
@@ -60,21 +61,30 @@ def assign_bout_indices_from_entry_node(navigation_df: pd.DataFrame, delimiter_n
     return pd.concat(all_sessions, ignore_index=True)
 
 
-def summarize_bout_success_by_session(navigation_df: pd.DataFrame,
-                                      optimal_regions: list = ['entry_zone', 'reward_path', 'target_zone'],
-                                      target_region_label: list = ['target_zone'],
-                                      min_bout_length: int = 20) -> pd.DataFrame:
+def summarize_bout_success_by_session(
+    navigation_df: pd.DataFrame,
+    optimal_regions: list = ['entry_zone', 'reward_path', 'target_zone'],
+    target_region_label: list = ['target_zone'],
+    min_bout_length: int = 20,
+) -> pd.DataFrame:
     """
     Computes number of total, valid, successful, and perfect bouts per session.
 
     Parameters:
-    - navigation_df: DataFrame with 'Session', 'Genotype', 'Region', and 'Bout_Index'.
-    - optimal_regions: Ordered list of region labels that define a perfect bout.
-    - target_region_label: Region considered as successful bout completion.
-    - min_bout_length: Minimum length of frames required to count a bout as valid.
+    -----------
+    navigation_df : pd.DataFrame
+        DataFrame with 'Session', 'Genotype', 'Region', and 'Bout_Index'.
+    optimal_regions : list
+        Ordered list of region labels that define a perfect bout.
+    target_region_label : list
+        Region considered as successful bout completion.
+    min_bout_length : int
+        Minimum length of frames required to count a bout as valid.
 
     Returns:
-    - summary_table: DataFrame summarizing bout stats by session.
+    --------
+    summary_table : pd.DataFrame
+        DataFrame summarizing bout stats by session.
     """
     summary_records = []
 
@@ -87,39 +97,62 @@ def summarize_bout_success_by_session(navigation_df: pd.DataFrame,
         perfect_bouts = [b for b in successful_bouts if set(optimal_regions) == set(b['Region'].unique())]
 
         summary_records.append({
-            'Session': session_id,
-            'Genotype': genotype,
-            'Total_Bouts': len(session_bouts),
-            'Valid_Bouts': len(valid_bouts),
-            'Successful_Bouts': len(successful_bouts),
-            'Perfect_Bouts': len(perfect_bouts)
+            'session': session_id,
+            'genotype': genotype,
+            'total_bouts': len(session_bouts),
+            'valid_bouts': len(valid_bouts),
+            'successful_bouts': len(successful_bouts),
+            'perfect_bouts': len(perfect_bouts)
         })
 
     summary_table = pd.DataFrame(summary_records)
-    summary_table = summary_table[summary_table['Total_Bouts'] != 0]
+    summary_table = summary_table[summary_table['total_bouts'] != 0]
 
     # Derived percentages
-    summary_table['Success_Rate'] = (100 * summary_table['Successful_Bouts']) / summary_table['Valid_Bouts']
-    summary_table['Perfect_Rate'] = (
-        100 * summary_table['Perfect_Bouts'] / summary_table['Successful_Bouts'].replace(0, np.nan)
+    summary_table['success_rate'] = (100 * summary_table['successful_bouts']) / summary_table['valid_bouts']
+    summary_table['perfect_rate'] = (
+        100 * summary_table['perfect_bouts'] / summary_table['successful_bouts'].replace(0, np.nan)
     )
 
     return summary_table
 
 
-def plot_success_rate(summary_table: pd.DataFrame, palette: list = None) -> None:
+def plot_success_rate(
+    config: dict,
+    summary_table: pd.DataFrame,
+    palette: list = None,
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
     """
     Plots a barplot showing success rates across genotypes from the bout summary.
 
     Parameters:
-    - summary_table: Output from summarize_bout_success_by_session.
-    - palette: Optional color palette for different genotypes.
+    -----------
+    config : dict
+        Project configuration dictionary.
+    summary_table : pd.DataFrame
+        Output from summarize_bout_success_by_session.
+    palette : list, optional
+        Optional color palette for different genotypes.
+    save_fig : bool, default True
+        Whether to save the figure as a PDF.
+    show_fig : bool, default True
+        Whether to display the figure.
+    return_fig : bool, default False
+        Whether to return the figure object.
+    
+    Returns:
+    --------
+    plt.Figure or None
+        The matplotlib figure object if return_fig is True, else None.
     """
     plt.figure(figsize=(4.5, 5))
 
     ax = sns.barplot(
-        x='Genotype',
-        y='Success_Rate',
+        x='genotype',
+        y='success_rate',
         data=summary_table,
         errorbar='se',
         width=0.7,
@@ -130,8 +163,8 @@ def plot_success_rate(summary_table: pd.DataFrame, palette: list = None) -> None
     )
 
     sns.stripplot(
-        x='Genotype',
-        y='Success_Rate',
+        x='genotype',
+        y='success_rate',
         data=summary_table,
         dodge=True,
         color='black',
@@ -150,29 +183,49 @@ def plot_success_rate(summary_table: pd.DataFrame, palette: list = None) -> None
     plt.yticks(size=12, color='black')
 
     plt.tight_layout()
-    #plt.show()
+    
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / "cumulative_successful_bouts.pdf"
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
+    
+    # Return figure
+    if return_fig:
+        return ax.figure
+
 
 #-------------------- T-TEST ON SUCCESS RATE PER GENOTYPE PAIR ---------------------#
-
-def perform_genotype_ttests(summary_table: pd.DataFrame, rate_col: str = 'Success_Rate'):
+def perform_genotype_ttests(
+    summary_table: pd.DataFrame,
+    rate_col: str = 'success_rate',
+):
     """
-    Performs t-tests between genotypes on a given rate column (e.g., Success_Rate or Perfect_Rate).
+    Performs t-tests between genotypes on a given rate column (e.g., success_rate or perfect_rate).
 
     Parameters:
-    - summary_table: DataFrame from `summarize_bout_success_by_session`
-    - rate_col: Column to compare (default 'Success_Rate')
+    -----------
+    summary_table : pd.DataFrame
+        DataFrame from `summarize_bout_success_by_session`
+    rate_col : str, default 'success_rate'
+        Column to compare across genotypes. Default is 'success_rate'.
 
     Returns:
-    - Dictionary with t-test results between each genotype pair.
+    --------
+    dict
+        Dictionary with t-test results between each genotype pair.
     """
-    from itertools import combinations
     results = {}
 
     # Unique genotype pairs
-    genotypes = summary_table['Genotype'].unique()
+    genotypes = summary_table['genotype'].unique()
     for g1, g2 in combinations(genotypes, 2):
-        data1 = summary_table[summary_table['Genotype'] == g1][rate_col].dropna()
-        data2 = summary_table[summary_table['Genotype'] == g2][rate_col].dropna()
+        data1 = summary_table[summary_table['genotype'] == g1][rate_col].dropna()
+        data2 = summary_table[summary_table['genotype'] == g2][rate_col].dropna()
         t_stat, p_val = ttest_ind(data1, data2, equal_var=False)
 
         results[f"{g1} vs {g2}"] = {
@@ -186,10 +239,10 @@ def perform_genotype_ttests(summary_table: pd.DataFrame, rate_col: str = 'Succes
 
     return results
 
+
 ##################################################################
 # Plot 6: Time-based Successful Bout Percentage
 ###################################################################
-
 def compute_binned_success_summary(
     df_all_csv: pd.DataFrame,
     lower_succ_lim: int = 0,
@@ -201,6 +254,28 @@ def compute_binned_success_summary(
 ) -> pd.DataFrame:
     """
     Computes successful bout metrics per session, binned by cumulative frame index.
+
+    Parameters:
+    -----------
+    df_all_csv : pd.DataFrame
+        DataFrame with 'Session', 'Genotype', 'Region', 'Bout_ID', and 'Frame' columns.
+    lower_succ_lim : int
+        Lower limit of frames to start binning.
+    upper_succ_lim : int
+        Upper limit of frames to end binning.
+    diff_succ : int
+        Size of each frame bin.
+    valid_bout_threshold : int
+        Minimum number of frames for a bout to be considered valid.
+    optimal_path_regions : list
+        Regions defining a perfect bout.
+    target_zone : str
+        Region considered as successful bout completion.
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame summarizing binned successful bout metrics per session.
     """
     summary_records = []
     session_clusters = [x for _, x in df_all_csv.groupby('Session')]
@@ -239,9 +314,36 @@ def compute_binned_success_summary(
     return summary_df
 
 
-def plot_binned_success(summary_df: pd.DataFrame, palette: list[str] = None) -> None:
+def plot_binned_success(
+    config: dict,    
+    summary_df: pd.DataFrame,
+    palette: list[str] = None,
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
     """
     Plots % of successful bouts over time across genotypes.
+
+    Parameters:
+    -----------
+    config : dict
+        Project configuration dictionary.
+    summary_df : pd.DataFrame
+        DataFrame containing summary statistics for each session.
+    palette : list, optional
+        Optional color palette for different genotypes.
+    save_fig : bool, default True
+        Whether to save the figure as a PDF.
+    show_fig : bool, default True
+        Whether to display the figure.
+    return_fig : bool, default False
+        Whether to return the figure object.
+    
+    Returns:
+    --------
+    plt.Figure or None
+        The matplotlib figure object if return_fig is True, else None.
     """
     sns.set_style('white')
     sns.set_style('ticks')
@@ -266,29 +368,39 @@ def plot_binned_success(summary_df: pd.DataFrame, palette: list[str] = None) -> 
     plt.xlabel('Time in maze')
     plt.title('Successful Bout % over time across genotypes')
     plt.ylabel('% of Successful Bouts')
-    #plt.show()
+    
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / "time_based_successful_bouts.pdf"
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
+    
+    # Return figure
+    if return_fig:
+        return ax.figure
 
 
 # ----------------- Mixed Effects Model (with NaNs kept) ----------------- #
-def run_mixedlm_with_nans(summary_df: pd.DataFrame):
+def run_mixedlm_with_nans(summary_df: pd.DataFrame) -> None:
     print("\nRunning MixedLM with NaNs preserved...")
-
     model_df = summary_df.copy()
     model_df = model_df.dropna(subset=['Succ_bout_perc'])
-
     model = mixedlm("Succ_bout_perc ~ C(Bout_num) * C(Genotype)", 
                     model_df, 
                     groups=model_df["Session"])
     result = model.fit()
     print(result.summary())
 
-# ----------------- Repeated Measures ANOVA (after fillna) ----------------- #
-def run_repeated_measures_anova(summary_df: pd.DataFrame):
-    print("\nRunning Repeated Measures ANOVA (NaNs filled with 0)...")
 
+# ----------------- Repeated Measures ANOVA (after fillna) ----------------- #
+def run_repeated_measures_anova(summary_df: pd.DataFrame) -> None:
+    print("\nRunning Repeated Measures ANOVA (NaNs filled with 0)...")
     anova_df = summary_df.copy()
     anova_df['Succ_bout_perc'] = anova_df['Succ_bout_perc'].fillna(0)
-
     try:
         aovrm = AnovaRM(
             anova_df, 
@@ -302,20 +414,21 @@ def run_repeated_measures_anova(summary_df: pd.DataFrame):
     except Exception as e:
         print(f"ANOVA failed: {e}")
 
-# ----------------- Pairwise Multiple Comparisons (Tukey + FDR) ----------------- #
-def run_pairwise_comparisons(summary_df: pd.DataFrame):
-    print("\nRunning Pairwise Comparisons with Tukey HSD + FDR...")
 
+# ----------------- Pairwise Multiple Comparisons (Tukey + FDR) ----------------- #
+def run_pairwise_comparisons(summary_df: pd.DataFrame) -> None:
+    print("\nRunning Pairwise Comparisons with Tukey HSD + FDR...")
     tukey_df = summary_df.copy()
     tukey_df['Succ_bout_perc'] = tukey_df['Succ_bout_perc'].fillna(0)
-
     results = []
     for bout in tukey_df['Bout_num'].unique():
         sub = tukey_df[tukey_df['Bout_num'] == bout]
         if sub['Genotype'].nunique() > 1:
-            tukey = pairwise_tukeyhsd(endog=sub['Succ_bout_perc'],
-                                      groups=sub['Genotype'],
-                                      alpha=0.05)
+            tukey = pairwise_tukeyhsd(
+                endog=sub['Succ_bout_perc'],
+                groups=sub['Genotype'],
+                alpha=0.05,
+            )
             df_tukey = pd.DataFrame(data=tukey._results_table.data[1:], columns=tukey._results_table.data[0])
             df_tukey['Bout_num'] = bout
             results.append(df_tukey)
@@ -329,7 +442,3 @@ def run_pairwise_comparisons(summary_df: pd.DataFrame):
         print(all_results)
     else:
         print("No pairwise comparisons could be performed.")
-
-
-
-

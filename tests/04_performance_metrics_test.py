@@ -204,3 +204,87 @@ class TestPerformanceMetrics:
         fig_path = Path(config["project_path_full"]) / "figures" / "all_regions_prop_usage.pdf"
         assert fig_path.exists()
 
+    def test_bout_success(self, create_project_fixture, bout_level_metrics):
+        from compass_labyrinth.behavior.behavior_metrics.task_performance_analysis import (
+            summarize_bout_success_by_session,
+            plot_success_rate,
+            perform_genotype_ttests,
+        )
+
+        config, _ = create_project_fixture
+        df_all_csv_wbouts = bout_level_metrics
+
+        assert isinstance(df_all_csv_wbouts, pd.DataFrame)
+        assert not df_all_csv_wbouts.empty
+
+        # Compute success summary statistics
+        bout_summary = summarize_bout_success_by_session(df_all_csv_wbouts)
+        assert isinstance(bout_summary, pd.DataFrame)
+        assert not bout_summary.empty
+
+        # Plot % of successful bouts per genotype
+        fig = plot_success_rate(
+            config=config,
+            summary_table=bout_summary,
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+        assert isinstance(fig, plt.Figure)
+        fig_path = Path(config["project_path_full"]) / "figures" / "cumulative_successful_bouts.pdf"
+        assert fig_path.exists()
+
+        # Perform t-tests between genotypes
+        ttest_results_success = perform_genotype_ttests(bout_summary, rate_col='success_rate')
+        assert isinstance(ttest_results_success, dict)
+        assert len(ttest_results_success) > 0
+
+    def test_time_based_successful_bouts(self, create_project_fixture, bout_level_metrics):
+        from compass_labyrinth.behavior.behavior_metrics.task_performance_analysis import (
+            compute_binned_success_summary,
+            plot_binned_success,
+            run_mixedlm_with_nans,
+            run_repeated_measures_anova,
+            run_pairwise_comparisons,
+        )
+
+        config, _ = create_project_fixture
+        df_all_csv_wbouts = bout_level_metrics
+
+        BIN_SIZE = 5000
+        LOWER_BOUND = 0
+        UPPER_BOUND = 90000
+
+        summary_df = compute_binned_success_summary(
+            df_all_csv=df_all_csv_wbouts,
+            lower_succ_lim=LOWER_BOUND,
+            upper_succ_lim=UPPER_BOUND,
+            diff_succ=BIN_SIZE,
+            valid_bout_threshold=19,
+            optimal_path_regions=['entry_zone', 'reward_path', 'target_zone'],
+            target_zone='target_zone'
+        )
+        assert isinstance(summary_df, pd.DataFrame)
+        assert not summary_df.empty
+
+        fig = plot_binned_success(
+            config=config,
+            summary_df=summary_df,
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+        assert isinstance(fig, plt.Figure)
+        fig_path = Path(config["project_path_full"]) / "figures" / "time_based_successful_bouts.pdf"
+        assert fig_path.exists()
+
+        # Statistical Tests
+        # Run Mixed Linear Model (preserves NaNs)
+        #run_mixedlm_with_nans(summary_df)
+
+        # Run Repeated Measures ANOVA (NaNs filled with 0)
+        run_repeated_measures_anova(summary_df)
+
+        # Run Pairwise Comparisons (with FDR correction)
+        run_pairwise_comparisons(summary_df)
+

@@ -296,3 +296,15 @@ def shannon_entropy(create_project_fixture, task_performance):
     )
 
     return entropy_df
+
+
+@pytest.fixture(scope="session")
+def bout_level_metrics(task_performance):
+    from compass_labyrinth.behavior.behavior_metrics.task_performance_analysis import assign_bout_indices_from_entry_node
+
+    df_all_csv, _ = task_performance
+
+    # Assign bout indices to the navigation dataframe
+    df_all_csv_wbouts = assign_bout_indices_from_entry_node(df_all_csv)
+
+    return df_all_csv_wbouts
