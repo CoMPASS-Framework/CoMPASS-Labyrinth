@@ -744,8 +744,7 @@ def plot_entropy_over_bins(
 
 
 # ------------------- Repeated Measures ANOVA (within-subject: Bin) -----------------#
-
-def run_entropy_anova(entropy_df):
+def run_entropy_anova(entropy_df: pd.DataFrame) -> AnovaRM | None:
     """
     Run repeated measures ANOVA using Bin as within-subject factor.
     Fills missing Entropy values with 0 (only here).
@@ -769,10 +768,8 @@ def run_entropy_anova(entropy_df):
         return None
 
 
-
 #----------------- FDR-Corrected Pairwise T-Tests (all genotype combos per bin) ----------------#
-
-def run_fdr_pairwise_tests(entropy_df):
+def run_fdr_pairwise_tests(entropy_df: pd.DataFrame) -> pd.DataFrame | None:
     """
     For each bin, performs pairwise t-tests between all genotype pairs.
     Applies FDR correction across all tests.
@@ -814,7 +811,6 @@ def run_fdr_pairwise_tests(entropy_df):
 
 
 #--------------- Mixed Effects Model (Bin × Genotype interaction per pair) --------------#
-
 def run_mixed_model_per_genotype_pair(entropy_df):
     """
     For each genotype pair, test if Bin × Genotype interaction is significant.

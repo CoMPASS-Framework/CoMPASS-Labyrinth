@@ -47,6 +47,7 @@ def create_project_fixture(tmp_path_factory):
         "Session-4withGrids.csv",
         "Session-5withGrids.csv",
         "Session-6withGrids.csv",
+        "Session-7withGrids.csv",
     ]
 
     for csv_file in csv_files:

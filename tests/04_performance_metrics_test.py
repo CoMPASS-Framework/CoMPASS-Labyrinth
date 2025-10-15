@@ -113,3 +113,27 @@ class TestPerformanceMetrics:
         # Check if the plot file was created
         fig_path = Path(config["project_path_full"]) / "figures" / "shannon_entropy.pdf"
         assert fig_path.exists()
+
+    def test_statistical_tests(self, create_project_fixture, shannon_entropy):
+        from compass_labyrinth.behavior.behavior_metrics.task_performance_analysis import (
+            run_entropy_anova,
+            run_fdr_pairwise_tests,
+            run_mixed_model_per_genotype_pair,
+        )
+
+        # Repeated Measures ANOVA
+        anova_result = run_entropy_anova(shannon_entropy)
+        assert isinstance(anova_result.anova_table, pd.DataFrame)
+        assert not anova_result.anova_table.empty
+
+        # Pairwise t-tests + FDR correction (per bin, per genotype pair)
+        fdr_results = run_fdr_pairwise_tests(shannon_entropy)
+        assert isinstance(fdr_results, pd.DataFrame)
+        assert not fdr_results.empty
+
+        # Run per-pair mixed models
+        mixed_results, interaction_table = run_mixed_model_per_genotype_pair(shannon_entropy)
+        assert isinstance(mixed_results, dict)
+        assert isinstance(interaction_table, pd.DataFrame)
+        assert not interaction_table.empty
+
