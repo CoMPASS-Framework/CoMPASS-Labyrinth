@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 class TestPerformanceMetrics:
@@ -136,4 +137,70 @@ class TestPerformanceMetrics:
         assert isinstance(mixed_results, dict)
         assert isinstance(interaction_table, pd.DataFrame)
         assert not interaction_table.empty
+
+    def test_region_usage_over_bins(self, create_project_fixture, task_performance):
+        from compass_labyrinth.behavior.behavior_metrics.task_performance_analysis import (
+            compute_region_usage_over_bins,
+            plot_region_usage_over_bins,
+            run_region_usage_stats_mixedlm,
+            run_region_usage_stats_fdr,
+            plot_all_regions_usage_over_bins,
+        )
+
+        config, _ = create_project_fixture
+        df_all_csv, pivot_dict = task_performance
+
+        REGION = "target_zone"
+        BIN_SIZE = 10000
+
+        region_usage_df = compute_region_usage_over_bins(
+            pivot_dict=pivot_dict,
+            df_all_csv=df_all_csv,
+            region=REGION,
+            bin_size=BIN_SIZE,
+        )
+
+        assert isinstance(region_usage_df, pd.DataFrame)
+        assert not region_usage_df.empty
+        required_columns = ["Session", "Genotype", "Bin", REGION]
+        for col in required_columns:
+            assert col in region_usage_df.columns
+        
+        fig = plot_region_usage_over_bins(
+            config=config,
+            region_data=region_usage_df,
+            region_name=REGION,
+            ylim=(0, 1),
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+
+        assert isinstance(fig, plt.Figure)
+        fig_path = Path(config["project_path_full"]) / "figures" / f"{REGION}_prop_usage.pdf"
+        assert fig_path.exists()
+
+        # Mixed Effects Model
+        run_region_usage_stats_mixedlm(region_usage_df, region_col=REGION)
+
+        # Pairwise t-tests + FDR correction
+        fdr_results = run_region_usage_stats_fdr(region_usage_df, region_col=REGION)
+        assert isinstance(fdr_results, pd.DataFrame)
+        assert not fdr_results.empty
+
+        # Proportion of usage across all Regions
+        region_list = ['entry_zone', 'loops','dead_ends', 'neutral_zone', 'reward_path', 'target_zone']
+        fig_all = plot_all_regions_usage_over_bins(
+            config=config,
+            pivot_dict=pivot_dict,
+            df_all_csv=df_all_csv,
+            region_list=region_list,
+            bin_size=BIN_SIZE,
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+        assert isinstance(fig_all, plt.Figure)
+        fig_path = Path(config["project_path_full"]) / "figures" / "all_regions_prop_usage.pdf"
+        assert fig_path.exists()
 

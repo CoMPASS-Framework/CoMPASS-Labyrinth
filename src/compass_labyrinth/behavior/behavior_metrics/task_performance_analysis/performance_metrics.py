@@ -811,9 +811,9 @@ def run_fdr_pairwise_tests(entropy_df: pd.DataFrame) -> pd.DataFrame | None:
 
 
 #--------------- Mixed Effects Model (Bin × Genotype interaction per pair) --------------#
-def run_mixed_model_per_genotype_pair(entropy_df):
+def run_mixed_model_per_genotype_pair(entropy_df: pd.DataFrame) -> tuple[dict, pd.DataFrame]:
     """
-    For each genotype pair, test if Bin × Genotype interaction is significant.
+    For each genotype pair, test if Bin x Genotype interaction is significant.
     Does NOT fill NaNs. Uses only complete-case rows per model.
 
     Returns:
@@ -870,8 +870,12 @@ def run_mixed_model_per_genotype_pair(entropy_df):
 ##################################################################
 # Proportion of Region-based usage across Time bins
 ###################################################################
-
-def compute_region_usage_over_bins(pivot_dict, df_all_csv, region, bin_size):
+def compute_region_usage_over_bins(
+    pivot_dict: dict,
+    df_all_csv: pd.DataFrame,
+    region: str,
+    bin_size: int,
+) -> pd.DataFrame:
     """
     Computes binned region usage across sessions for the given region.
 
@@ -907,7 +911,16 @@ def compute_region_usage_over_bins(pivot_dict, df_all_csv, region, bin_size):
 ## Plot 3: Proportion of usage per Region across time
 ###################################################################
 
-def plot_region_usage_over_bins(region_data, region_name, palette=None, ylim=(0, 1)):
+def plot_region_usage_over_bins(
+    config: dict,
+    region_data: pd.DataFrame,
+    region_name: str,
+    palette: list | None = None,
+    ylim: tuple = (0, 1),
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+):
     """
     Plots the proportion of usage over time bins for a specific region.
 
@@ -930,7 +943,18 @@ def plot_region_usage_over_bins(region_data, region_name, palette=None, ylim=(0,
     plt.title(region_name, fontsize=15, weight='bold')
     ax.set(yticks=np.arange(ylim[0], ylim[1] + 0.1, 0.1))
 
-    #plt.show()
+    # Save figure
+    fig = ax.figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / f"{region_name}_prop_usage.pdf"
+        fig.savefig(save_path, dpi=300, bbox_inches="tight")
+        print(f"Figure saved at: {save_path}")
+
+    if show_fig:
+        plt.show()
+
+    if return_fig:
+        return fig
 
 
 ##################################################################
@@ -938,12 +962,16 @@ def plot_region_usage_over_bins(region_data, region_name, palette=None, ylim=(0,
 ###################################################################
 
 def plot_all_regions_usage_over_bins(
-    pivot_dict,
-    df_all_csv,
-    region_list,
-    bin_size,
-    palette=None,
-    ylim=(0, 1)
+    config: dict,
+    pivot_dict: dict,
+    df_all_csv: pd.DataFrame,
+    region_list: list,
+    bin_size: int = 10000,
+    palette: list | None = None,
+    ylim: tuple = (0, 1),
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
 ):
     """
     Plots usage over bins for multiple regions in a 2x3 subplot layout with a shared legend outside.
@@ -1001,13 +1029,24 @@ def plot_all_regions_usage_over_bins(
 
     plt.suptitle('Proportion of Region Usage Across Time Bins', fontsize=18, weight='bold')
     plt.tight_layout(rect=[0, 0, 0.88, 0.95])  # Leave space for external legend
-    #plt.show()
+    
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / "all_regions_prop_usage.pdf"
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Figure saved at: {save_path}")
+
+    if show_fig:
+        plt.show()
+
+    if return_fig:
+        return fig
+
 
 #------------------- Mixed Effects Model ----------------------#
-
-def run_region_usage_stats_mixedlm(reg_binned, region_col='Target Zone'):
+def run_region_usage_stats_mixedlm(reg_binned: pd.DataFrame, region_col: str = 'target_zone') -> None:
     """
-    Mixed Effects Model (Bin × Genotype) with missing bins dropped.
+    Mixed Effects Model (Bin x Genotype) with missing bins dropped.
     """
     # ------------ Rename column safely (avoid space) -------------
     safe_col = region_col.replace(" ", "_")
@@ -1029,7 +1068,10 @@ def run_region_usage_stats_mixedlm(reg_binned, region_col='Target Zone'):
 
 #--------------- Pairwise Comparison with FDR Correction --------------#
 
-def run_region_usage_stats_fdr(reg_binned, region_col='Target Zone'):
+def run_region_usage_stats_fdr(
+    reg_binned: pd.DataFrame,
+    region_col: str = 'target_zone',
+) -> pd.DataFrame | None:
     """
     Pairwise genotype comparisons at each bin (FDR corrected).
     """
@@ -1050,7 +1092,7 @@ def run_region_usage_stats_fdr(reg_binned, region_col='Target Zone'):
             for g1, g2 in combinations(genotypes, 2):
                 vals1 = df_bin[df_bin['Genotype'] == g1][safe_col]
                 vals2 = df_bin[df_bin['Genotype'] == g2][safe_col]
-                stat, pval = stats.ttest_ind(vals1, vals2, equal_var=False)
+                stat, pval = ttest_ind(vals1, vals2, equal_var=False)
                 bin_results.append({'Bin': b, 'Group1': g1, 'Group2': g2, 'pval': pval})
 
         df_stats = pd.DataFrame(bin_results)
@@ -1058,5 +1100,6 @@ def run_region_usage_stats_fdr(reg_binned, region_col='Target Zone'):
         df_stats['pval_fdr'] = pvals_corrected
         df_stats['significant'] = reject
         print(df_stats.to_string(index=False))
+        return df_stats
     except Exception as e:
         print("Pairwise t-test error:", e)
