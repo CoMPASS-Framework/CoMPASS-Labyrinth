@@ -86,10 +86,6 @@ jobs:
             pandoc \
             cmake
 
-      # IMPORTANT: do NOT run init_renv.R in CI; setup-renv restored from renv.lock.
-      # - name: Initialize R environment via renv
-      #   run: Rscript init_renv.R
-
       - name: Run tests
         run: |
           pytest --cov=src/compass_labyrinth --cov-report=xml --cov-report=term-missing -vx

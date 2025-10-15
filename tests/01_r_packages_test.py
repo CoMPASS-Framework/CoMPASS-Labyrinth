@@ -10,6 +10,7 @@ def test_r_packages():
         "dplyr", "ggplot2", "tidyverse", "readxl", "survival",
         "here", "zoo", "circular", "remotes", "devtools",
         "DHARMa", "momentuHMM", "furrr", "future", "progressr", "terra"
+        # Add "moveHMM" / "nhm" here ONLY if they’re in renv.lock and truly needed.
     ]
 
     expr = r"""
