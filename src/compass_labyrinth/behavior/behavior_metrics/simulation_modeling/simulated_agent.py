@@ -5,7 +5,6 @@ Goal:
    ├── Simulated Agent Modeling & Visualisation
    ├── Chi Square Analysis, Visualisation
 """
-
 import pandas as pd
 import numpy as np
 import random
@@ -15,17 +14,29 @@ from statsmodels.formula.api import mixedlm
 import math
 import warnings
 
+
 warnings.filterwarnings("ignore")
 
 ##################################################################
 # Simulated Agent Modelling
 ###################################################################
-
-# ------------------ Simulation Agent Modeling ------------------ #
-
-
-def get_valid_and_optimal_transitions(df, decision_label="Decision (Reward)", reward_label="Reward Path"):
-    """Extract valid and optimal transitions per session."""
+def get_valid_and_optimal_transitions(
+    df: pd.DataFrame,
+    decision_label: str = "Decision (Reward)",
+    reward_label: str = "Reward Path",
+) -> tuple[dict, dict]:
+    """
+    Extract valid and optimal transitions per session.
+    
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame containing navigation data.
+    decision_label : str
+        Label for decision points.
+    reward_label : str
+        Label for reward path.
+    """
     valid_transitions, optimal_transitions = {}, {}
 
     for session, group in df.groupby("Session"):
@@ -47,8 +58,34 @@ def get_valid_and_optimal_transitions(df, decision_label="Decision (Reward)", re
     return valid_transitions, optimal_transitions
 
 
-def simulate_agent_vs_actual(df_slice, valid_dict, optimal_dict, n_simulations, decision_label="Decision (Reward)"):
-    """Simulate random agent transitions and compare with actual."""
+def simulate_agent_vs_actual(
+    df_slice : pd.DataFrame,
+    valid_dict : dict,
+    optimal_dict : dict,
+    n_simulations : int,
+    decision_label : str = "Decision (Reward)",
+) -> tuple[list, list]:
+    """
+    Simulate random agent transitions and compare with actual.
+    
+    Parameters:
+    -----------
+    df_slice : pd.DataFrame
+        DataFrame segment for the epoch.
+    valid_dict : dict
+        Valid transitions for the session.
+    optimal_dict : dict
+        Optimal transitions for the session.
+    n_simulations : int
+        Number of random simulations per decision point.
+    decision_label : str
+        Label for decision points.
+
+    Returns:
+    --------
+    tuple of lists
+        Lists of actual and simulated optimal transitions (1 for optimal, 0 otherwise).
+    """
     actual, simulated = [], []
 
     for i in range(len(df_slice) - 1):
@@ -70,16 +107,60 @@ def simulate_agent_vs_actual(df_slice, valid_dict, optimal_dict, n_simulations, 
     return actual, simulated
 
 
-def bootstrap_distribution(data, n_samples=10000):
-    """Generate bootstrap sample means."""
+def bootstrap_distribution(
+    data: list,
+    n_samples: int = 10000,
+) -> np.ndarray:
+    """
+    Generate bootstrap sample means.
+    
+    Parameters:
+    -----------
+    data : list
+        Data points.
+    n_samples : int
+        Number of bootstrap samples.
+
+    Returns:
+    --------
+    np.ndarray
+        Array of bootstrap sample means.
+    """
     samples = np.random.choice(data, (n_samples, len(data)), replace=True)
     return np.mean(samples, axis=1)
 
 
 def compute_epoch_metrics(
-    df_slice, valid_dict, optimal_dict, n_bootstrap, n_simulations, decision_label="Decision (Reward)"
-):
-    """Compute performance metrics for a single epoch of navigation."""
+    df_slice : pd.DataFrame,
+    valid_dict : dict,
+    optimal_dict : dict,
+    n_bootstrap : int,
+    n_simulations : int,
+    decision_label : str = "Decision (Reward)",
+) -> pd.Series:
+    """
+    Compute performance metrics for a single epoch of navigation.
+    
+    Parameters:
+    -----------
+    df_slice : pd.DataFrame
+        DataFrame segment for the epoch.
+    valid_dict : dict
+        Valid transitions for the session.
+    optimal_dict : dict
+        Optimal transitions for the session.
+    n_bootstrap : int
+        Number of bootstrap samples.
+    n_simulations : int
+        Number of random simulations per decision point.
+    decision_label : str
+        Label for decision points.
+
+    Returns:
+    --------
+    pd.Series
+        Series with computed metrics.
+    """
     if df_slice.empty or decision_label not in df_slice["NodeType"].values:
         return pd.Series(
             {
@@ -132,8 +213,25 @@ def compute_epoch_metrics(
     )
 
 
-def segment_data_by_epoch(df, epoch_size):
-    """Split DataFrame by genotype and session into sequential time-based epochs."""
+def segment_data_by_epoch(
+    df: pd.DataFrame,
+    epoch_size: int,
+) -> list:
+    """
+    Split DataFrame by genotype and session into sequential time-based epochs.
+    
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame containing navigation data.
+    epoch_size : int
+        Number of rows per epoch.
+
+    Returns:
+    --------
+    list of tuples
+        Each tuple contains (session, epoch_number, epoch_dataframe).
+    """
     epochs = []
     for (genotype, session), group in df.groupby(["Genotype", "Session"]):
         for i in range(0, len(group), epoch_size):
@@ -144,9 +242,36 @@ def segment_data_by_epoch(df, epoch_size):
 
 
 def evaluate_agent_performance(
-    df, epoch_size, n_bootstrap, n_simulations, decision_label="Decision (Reward)", reward_label="Reward Path"
-):
-    """Run full evaluation pipeline for simulated agent vs. actual mouse."""
+    df: pd.DataFrame,
+    epoch_size: int,
+    n_bootstrap: int,
+    n_simulations: int,
+    decision_label: str = "Decision (Reward)",
+    reward_label: str = "Reward Path",
+) -> pd.DataFrame:
+    """
+    Run full evaluation pipeline for simulated agent vs. actual mouse.
+
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame containing navigation data.
+    epoch_size : int
+        Number of rows per epoch.
+    n_bootstrap : int
+        Number of bootstrap samples.
+    n_simulations : int
+        Number of random simulations per decision point.
+    decision_label : str
+        Label for decision points.
+    reward_label : str
+        Label for reward path.
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame with performance metrics per epoch.
+    """
     valid_dict, optimal_dict = get_valid_and_optimal_transitions(df, decision_label, reward_label)
     epochs = segment_data_by_epoch(df, epoch_size)
 
@@ -163,19 +288,21 @@ def evaluate_agent_performance(
 
 
 # ------------------ Trim max. common epochs ------------------ #
-
-
-def trim_to_common_epochs(df_results):
+def trim_to_common_epochs(df_results: pd.DataFrame) -> pd.DataFrame:
     """
     Trims the results dataframe to retain only the maximum number of epochs common across all sessions.
 
     Parameters:
-    - df_results (pd.DataFrame): The output of evaluate_agent_performance.
-    - 'Session' (str): Column name indicating sessions.
-    - 'Epoch_Number' (str): Column name indicating epoch/bin number.
+    -----------
+    df_results : pd.DataFrame
+        The output of evaluate_agent_performance.
+            - 'Session' (str): Column name indicating sessions.
+            - 'Epoch_Number' (str): Column name indicating epoch/bin number.
 
     Returns:
-    - pd.DataFrame: Trimmed dataframe with only common epochs.
+    --------
+    pd.DataFrame
+        Trimmed dataframe with only common epochs.
     """
     df_trimmed = df_results.copy()
 
@@ -202,10 +329,6 @@ def trim_to_common_epochs(df_results):
 ##################################################################
 ## Plot 1: Simulated Agent v/s Mouse Performance across Time
 ###################################################################
-
-# ------------------ Plotting ------------------ #
-
-
 def plot_agent_transition_performance(df_result):
     plt.figure(figsize=(12, 6))
     sns.lineplot(data=df_result, x="Epoch Number", y="Actual Reward Path %", marker="o", label="Mouse", color="black")
