@@ -1,6 +1,8 @@
 """Shared fixtures for tests."""
+
 import matplotlib
-matplotlib.use('Agg')  # Set non-interactive backend for headless environments
+
+matplotlib.use("Agg")  # Set non-interactive backend for headless environments
 
 import pytest
 import shutil
@@ -302,7 +304,9 @@ def shannon_entropy(create_project_fixture, task_performance):
 
 @pytest.fixture(scope="session")
 def bout_level_metrics(task_performance):
-    from compass_labyrinth.behavior.behavior_metrics.task_performance_analysis import assign_bout_indices_from_entry_node
+    from compass_labyrinth.behavior.behavior_metrics.task_performance_analysis import (
+        assign_bout_indices_from_entry_node,
+    )
 
     df_all_csv, _ = task_performance
 

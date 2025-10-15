@@ -166,7 +166,7 @@ class TestPerformanceMetrics:
         required_columns = ["Session", "Genotype", "Bin", REGION]
         for col in required_columns:
             assert col in region_usage_df.columns
-        
+
         fig = plot_region_usage_over_bins(
             config=config,
             region_data=region_usage_df,
@@ -190,7 +190,7 @@ class TestPerformanceMetrics:
         assert not fdr_results.empty
 
         # Proportion of usage across all Regions
-        region_list = ['entry_zone', 'loops','dead_ends', 'neutral_zone', 'reward_path', 'target_zone']
+        region_list = ["entry_zone", "loops", "dead_ends", "neutral_zone", "reward_path", "target_zone"]
         fig_all = plot_all_regions_usage_over_bins(
             config=config,
             pivot_dict=pivot_dict,
@@ -236,7 +236,7 @@ class TestPerformanceMetrics:
         assert fig_path.exists()
 
         # Perform t-tests between genotypes
-        ttest_results_success = perform_genotype_ttests(bout_summary, rate_col='success_rate')
+        ttest_results_success = perform_genotype_ttests(bout_summary, rate_col="success_rate")
         assert isinstance(ttest_results_success, dict)
         assert len(ttest_results_success) > 0
 
@@ -262,8 +262,8 @@ class TestPerformanceMetrics:
             upper_succ_lim=UPPER_BOUND,
             diff_succ=BIN_SIZE,
             valid_bout_threshold=19,
-            optimal_path_regions=['entry_zone', 'reward_path', 'target_zone'],
-            target_zone='target_zone'
+            optimal_path_regions=["entry_zone", "reward_path", "target_zone"],
+            target_zone="target_zone",
         )
         assert isinstance(summary_df, pd.DataFrame)
         assert not summary_df.empty
@@ -281,7 +281,7 @@ class TestPerformanceMetrics:
 
         # Statistical Tests
         # Run Mixed Linear Model (preserves NaNs)
-        #run_mixedlm_with_nans(summary_df)
+        # run_mixedlm_with_nans(summary_df)
 
         # Run Repeated Measures ANOVA (NaNs filled with 0)
         run_repeated_measures_anova(summary_df)
@@ -324,18 +324,18 @@ class TestPerformanceMetrics:
         df_deviation = compute_deviation_velocity(df=df_all_csv_wbouts)
         assert isinstance(df_deviation, pd.DataFrame)
         assert not df_deviation.empty
-        for col in ['ind_no', 'session', 'genotype', 'deviation', 'velocity']:
+        for col in ["ind_no", "session", "genotype", "deviation", "velocity"]:
             assert col in df_deviation.columns
 
         # Process deviation and velocity (normalize, smooth, fit curves)
-        GENOTYPE = 'WT'
+        GENOTYPE = "WT"
         df_processed, params_dev, params_vel = process_deviation_velocity(
             index_df=df_deviation,
             genotype=GENOTYPE,
         )
         assert isinstance(df_processed, pd.DataFrame)
         assert not df_processed.empty
-        for col in ['velocity_robust_scaled', 'velocity_normalized', 'velocity_smooth_normalized', 'deviation_smooth']:
+        for col in ["velocity_robust_scaled", "velocity_normalized", "velocity_smooth_normalized", "deviation_smooth"]:
             assert col in df_processed.columns
         assert isinstance(params_dev, (list, np.ndarray))
         assert isinstance(params_vel, (list, np.ndarray))
@@ -368,4 +368,3 @@ class TestPerformanceMetrics:
         assert isinstance(fig_all, plt.Figure)
         fig_path = Path(config["project_path_full"]) / "figures" / "all_genotypes_deviation_velocity_metric.pdf"
         assert fig_path.exists()
-

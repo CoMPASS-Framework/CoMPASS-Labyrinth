@@ -1,10 +1,10 @@
-'''
-    DATA PREPROCESSING
-    Author: Shreya Bangera
-    Goal: 
-       ├── Concatenating all Pose estimation CSV files
-       ├── Preprocessing all the tracking data
-'''
+"""
+DATA PREPROCESSING
+Author: Shreya Bangera
+Goal:
+   ├── Concatenating all Pose estimation CSV files
+   ├── Preprocessing all the tracking data
+"""
 
 import pandas as pd
 import numpy as np
@@ -22,6 +22,7 @@ from compass_labyrinth.constants import (
 ##################################################################
 # Concatenating all Pose Estimation results
 ###################################################################
+
 
 def load_and_preprocess_session_data(
     filename: str,
@@ -51,22 +52,21 @@ def load_and_preprocess_session_data(
     dflin = pd.read_csv(filename, index_col=None, header=[0, 1, 2], skipinitialspace=True)
 
     # Extract relevant columns
-    dflin = dflin.loc[:, [(DLCscorer, bp, "x"),
-                          (DLCscorer, bp, "y"),
-                          (DLCscorer, bp, "Grid Number"),
-                          (DLCscorer, bp, "likelihood")]]
-    dflin.columns = ['x', 'y', 'Grid Number', 'likelihood']
-    dflin['S_no'] = np.arange(1, len(dflin) + 1)
+    dflin = dflin.loc[
+        :, [(DLCscorer, bp, "x"), (DLCscorer, bp, "y"), (DLCscorer, bp, "Grid Number"), (DLCscorer, bp, "likelihood")]
+    ]
+    dflin.columns = ["x", "y", "Grid Number", "likelihood"]
+    dflin["S_no"] = np.arange(1, len(dflin) + 1)
 
     # Filter: tracking likelihood and grid presence
     dflin = dflin.fillna(-1)
-    dflin = dflin[(dflin['likelihood'] > 0.6) & (dflin['Grid Number'] != -1)].copy()
+    dflin = dflin[(dflin["likelihood"] > 0.6) & (dflin["Grid Number"] != -1)].copy()
     dflin.reset_index(drop=True, inplace=True)
 
     # Assign regions from dictionary
-    dflin['Region'] = 'Unknown'
+    dflin["Region"] = "Unknown"
     for region_name, grid_list in region_mapping.items():
-        dflin.loc[dflin['Grid Number'].isin(grid_list), 'Region'] = region_name
+        dflin.loc[dflin["Grid Number"].isin(grid_list), "Region"] = region_name
 
     return dflin
 
@@ -98,22 +98,22 @@ def compile_mouse_sessions(
     cohort_metadata = load_cohort_metadata(config)
 
     li_group = []
-    for sess in cohort_metadata['Session #'].unique():
+    for sess in cohort_metadata["Session #"].unique():
         session_name = f"Session-{int(sess)}"
         filename = os.path.join(pose_est_csv_filepath, f"{session_name}withGrids.csv")
         df = load_and_preprocess_session_data(filename, bp, dlc_scorer, region_mapping)
-        df['Session'] = sess
+        df["Session"] = sess
         li_group.append(df)
 
     df_comb = pd.concat(li_group, axis=0, ignore_index=True)
-    df_comb['Grid Number'] = df_comb['Grid Number'].astype(int)
+    df_comb["Grid Number"] = df_comb["Grid Number"].astype(int)
     # Map Genotype and Sex
     session_to_genotype = {k: g["Session #"].tolist() for k, g in cohort_metadata.groupby("Genotype")}
     inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
-    df_comb['Genotype'] = df_comb['Session'].map(inverse_mapping)
+    df_comb["Genotype"] = df_comb["Session"].map(inverse_mapping)
 
-    session_to_sex = dict(cohort_metadata[['Session #', 'Sex']].values)
-    df_comb['Sex'] = df_comb['Session'].map(session_to_sex)
+    session_to_sex = dict(cohort_metadata[["Session #", "Sex"]].values)
+    df_comb["Sex"] = df_comb["Session"].map(session_to_sex)
 
     return df_comb
 
@@ -121,6 +121,7 @@ def compile_mouse_sessions(
 ##################################################################
 # Preprocessing
 ###################################################################
+
 
 def remove_until_initial_node(df: pd.DataFrame, initial_nodes: list = [47, 46, 34, 22]) -> pd.DataFrame:
     """
@@ -138,17 +139,19 @@ def remove_until_initial_node(df: pd.DataFrame, initial_nodes: list = [47, 46, 3
     pd.DataFrame
         Truncated dataframe starting from the first initial node.
     """
-    if df.iloc[0]['Grid Number'] in initial_nodes:
+    if df.iloc[0]["Grid Number"] in initial_nodes:
         return df.copy()
 
-    first_valid_index = df[df['Grid Number'].isin(initial_nodes)].index.min()
+    first_valid_index = df[df["Grid Number"].isin(initial_nodes)].index.min()
     if pd.notna(first_valid_index):
         return df.iloc[first_valid_index:].reset_index(drop=True)
-    
+
     return df.copy()
 
 
-def remove_invalid_grid_transitions(df: pd.DataFrame, adjacency_matrix: pd.DataFrame = ADJACENCY_MATRIX) -> pd.DataFrame:
+def remove_invalid_grid_transitions(
+    df: pd.DataFrame, adjacency_matrix: pd.DataFrame = ADJACENCY_MATRIX
+) -> pd.DataFrame:
     """
     Removes rows from the dataframe where the transition between consecutive
     grid numbers is not valid (i.e., not adjacent in the adjacency matrix).
@@ -164,7 +167,7 @@ def remove_invalid_grid_transitions(df: pd.DataFrame, adjacency_matrix: pd.DataF
     pd.DataFrame
         Cleaned dataframe with only valid grid transitions.
     """
-    grid_numbers = list(df['Grid Number'])
+    grid_numbers = list(df["Grid Number"])
     drop_indices = []
     x = 0
     num = 0
@@ -209,35 +212,35 @@ def preprocess_sessions(
     """
     preprocessed_sessions = []
 
-    for _, session_df in df_comb.groupby('Session'):
+    for _, session_df in df_comb.groupby("Session"):
         session_df = session_df.reset_index(drop=True)
         session_df = remove_until_initial_node(session_df, initial_nodes)
         session_df = remove_invalid_grid_transitions(session_df, adjacency_matrix)
         preprocessed_sessions.append(session_df)
 
     df_all_cleaned = pd.concat(preprocessed_sessions, ignore_index=True)
-    df_all_cleaned['Session'] = df_all_cleaned['Session'].astype(int)
-    df_all_cleaned['Grid Number'] = df_all_cleaned['Grid Number'].astype(int)
+    df_all_cleaned["Session"] = df_all_cleaned["Session"].astype(int)
+    df_all_cleaned["Grid Number"] = df_all_cleaned["Grid Number"].astype(int)
 
     # Mapping of variable names to NodeType labels
-    # key : value pair, key = list name (as in Initializations) & value = column value name decided by user 
+    # key : value pair, key = list name (as in Initializations) & value = column value name decided by user
     label_mapping = {
-        'decision_reward': 'Decision (Reward)',
-        'nondecision_reward': 'Non-Decision (Reward)',
-        'corner_reward': 'Corner (Reward)',
-        'decision_nonreward': 'Decision (Non-Reward)',
-        'nondecision_nonreward': 'Non-Decision (Non-Reward)',
-        'corner_nonreward': 'Corner (Non-Reward)',
-        'entry_zone': 'Entry Nodes',
-        'target_zone': 'Target Nodes'
+        "decision_reward": "Decision (Reward)",
+        "nondecision_reward": "Non-Decision (Reward)",
+        "corner_reward": "Corner (Reward)",
+        "decision_nonreward": "Decision (Non-Reward)",
+        "nondecision_nonreward": "Non-Decision (Non-Reward)",
+        "corner_nonreward": "Corner (Non-Reward)",
+        "entry_zone": "Entry Nodes",
+        "target_zone": "Target Nodes",
     }
-    df_all_cleaned['NodeType'] = 'Unlabeled'
+    df_all_cleaned["NodeType"] = "Unlabeled"
 
     # Apply mapping to access the list by name
     # Creates the column NodeType based on Grid Numbers
     for var_name, label in label_mapping.items():
         node_list = NODE_TYPE_MAPPING[var_name]
-        df_all_cleaned.loc[df_all_cleaned['Grid Number'].isin(node_list), 'NodeType'] = label
+        df_all_cleaned.loc[df_all_cleaned["Grid Number"].isin(node_list), "NodeType"] = label
 
     return df_all_cleaned
 
@@ -246,11 +249,12 @@ def preprocess_sessions(
 # Velocity column creation
 #######################################################
 
+
 def ensure_velocity_column(
     df: pd.DataFrame,
-    x_col: str = 'x',
-    y_col: str = 'y',
-    velocity_col: str = 'Velocity',
+    x_col: str = "x",
+    y_col: str = "y",
+    velocity_col: str = "Velocity",
     fps: float = 5,
 ) -> pd.DataFrame:
     """
@@ -284,17 +288,15 @@ def ensure_velocity_column(
 
     df = df.copy()
 
-    if 'Session' in df.columns:
-        coords = df[[x_col, y_col, 'Session']]
+    if "Session" in df.columns:
+        coords = df[[x_col, y_col, "Session"]]
         velocity = (
-            coords.groupby('Session', group_keys=False)[[x_col, y_col]]
-            .apply(lambda g: np.sqrt(g[x_col].diff()**2 + g[y_col].diff()**2) * fps)
+            coords.groupby("Session", group_keys=False)[[x_col, y_col]]
+            .apply(lambda g: np.sqrt(g[x_col].diff() ** 2 + g[y_col].diff() ** 2) * fps)
             .fillna(0)
         )
     else:
-        velocity = (
-            np.sqrt(df[x_col].diff()**2 + df[y_col].diff()**2) * fps
-        ).fillna(0)
+        velocity = (np.sqrt(df[x_col].diff() ** 2 + df[y_col].diff() ** 2) * fps).fillna(0)
 
     df[velocity_col] = velocity
     return df
@@ -319,22 +321,22 @@ def save_preprocessed_to_csv(config: dict, df: pd.DataFrame) -> None:
     None
     """
     project_path = Path(config["project_path_full"])
-    csv_dir = project_path / 'csvs'
-    combined_dir = csv_dir / 'combined'
-    individual_dir = csv_dir / 'individual'
+    csv_dir = project_path / "csvs"
+    combined_dir = csv_dir / "combined"
+    individual_dir = csv_dir / "individual"
 
     # Create folders if they don’t exist
     combined_dir.mkdir(parents=True, exist_ok=True)
     individual_dir.mkdir(parents=True, exist_ok=True)
 
     # Save combined file
-    combined_path = combined_dir / 'Preprocessed_combined_file.csv'
+    combined_path = combined_dir / "Preprocessed_combined_file.csv"
     df.to_csv(combined_path, index=False)
     print(f"Saved combined file: {combined_path}")
 
     # Save per-session individual files
-    for session_id, df_session in df.groupby('Session'):
-        file_name = f'Session-{session_id}_preprocessed.csv'
+    for session_id, df_session in df.groupby("Session"):
+        file_name = f"Session-{session_id}_preprocessed.csv"
         file_path = individual_dir / file_name
         df_session.to_csv(file_path, index=False)
     print(f"Saved {df['Session'].nunique()} individual session CSVs to: {individual_dir}")

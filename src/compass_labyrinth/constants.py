@@ -231,10 +231,8 @@ NODE_TYPE_MAPPING = {
 # ----------------PACKAGE DATA-------------------------#
 # Load adjacency matrix from package data
 ADJACENCY_MATRIX = pd.read_csv(
-    files('compass_labyrinth.data').joinpath('4step_adjacency_matrix.csv'),
+    files("compass_labyrinth.data").joinpath("4step_adjacency_matrix.csv"),
 )
 
 # Load value function from package data
-VALUE_FUNCTION = pd.read_csv(
-    files('compass_labyrinth.data').joinpath('value_function_per_grid_cell.csv')
-)
+VALUE_FUNCTION = pd.read_csv(files("compass_labyrinth.data").joinpath("value_function_per_grid_cell.csv"))
