@@ -2,28 +2,32 @@ name: Testing
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
     paths:
-      - '.github/workflows/testing.yaml'
+      - '.github/workflows/testing.yml'
       - 'src/**'
       - 'tests/**'
+      - 'renv.lock'
+      - 'init_renv.R'
   pull_request:
-    branches: [main, dev]
+    branches: [ main, dev ]
     paths:
-      - '.github/workflows/testing.yaml'
+      - '.github/workflows/testing.yml'
       - 'src/**'
       - 'tests/**'
+      - 'renv.lock'
+      - 'init_renv.R'
 
 jobs:
   run:
-    name: ${{ matrix.os }} Python ${{ matrix.python-version }}
+    name: ${{ matrix.os }} | Py ${{ matrix.python-version }} | R ${{ matrix.r-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.11"]
-        R-version: ["4.3.1"]   # pin R to the stable version you want
+        r-version: ["4.3.1"]  # pin to the version that works for you
 
     steps:
       - name: Checkout repository
@@ -39,70 +43,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]" --no-cache-dir
 
-      - name: Setup R
+      - name: Setup R ${{ matrix.r-version }}
         uses: r-lib/actions/setup-r@v2
         with:
-          r-version: ${{ matrix.R-version }}
+          r-version: ${{ matrix.r-version }}
           use-public-rspm: true
 
-      - name: Install renv (set CRAN repo first)
-        shell: Rscript {0}
-        run: |
-          repo <- if (.Platform$OS.type == "windows") {
-            "https://cloud.r-project.org/"
-          } else {
-            "https://packagemanager.posit.co/cran/__linux__/noble/latest"
-          }
-          options(repos = c(CRAN = repo))
-          if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
-
-      - name: Activate and restore renv
-        shell: Rscript {0}
-        run: |
-          source("renv/activate.R")
-          renv::restore(prompt = FALSE)
-
-      - name: Restore renv (bootstrap if needed)
-        shell: Rscript {0}
-        run: |
-          # set CRAN repo (Linux/macos via Posit Package Manager; Windows via CRAN)
-          repo <- if (.Platform$OS.type == "windows") {
-            "https://cloud.r-project.org/"
-          } else {
-            "https://packagemanager.posit.co/cran/__linux__/noble/latest"
-          }
-          options(repos = c(CRAN = repo))
-      
-          if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
-          renv::consent(provided = TRUE)
-      
-          if (file.exists("renv/activate.R")) {
-            source("renv/activate.R")
-          }
-      
-          # If there's a lockfile, restore (this will create renv/activate.R if missing)
-          if (file.exists("renv.lock")) {
-            renv::restore(prompt = FALSE)
-          } else {
-            # fallback (rare): initialize a bare project lib so tests can still run
-            renv::init(bare = TRUE)
-          }
-      
-          renv::status()
-
-
-      - name: Setup renv (restore & cache)
-        uses: r-lib/actions/setup-renv@v2
-        with:
-          profile: default
-          cache-version: 2
-
-      # Optional: show renv status (handy debugging)
-      - name: Verify renv status
-        run: Rscript -e "source('renv/activate.R'); renv::status()"
-
-      # System deps (Linux only) for spatial/graphics etc.
-      - name: Install R system dependencies
+      # Spatial build deps only for Linux
+      - name: Install system dependencies (Linux only)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
@@ -126,6 +74,40 @@ jobs:
             libx11-dev \
             pandoc \
             cmake
+
+      # ---- Robust renv bootstrap: no need for renv/activate.R to exist ----
+      - name: Bootstrap & restore renv (cross-OS, no activate.R required)
+        shell: Rscript {0}
+        run: |
+          # Choose a CRAN mirror per OS
+          repo <- if (.Platform$OS.type == "windows") {
+            "https://cloud.r-project.org/"
+          } else if (grepl("darwin", R.version$platform)) {
+            "https://packagemanager.posit.co/cran/macos/latest"
+          } else {
+            "https://packagemanager.posit.co/cran/__linux__/noble/latest"
+          }
+          options(repos = c(CRAN = repo))
+
+          # Install renv if missing
+          if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
+          renv::consent(provided = TRUE)
+
+          # If a project activate file exists, use it (nice to have)
+          if (file.exists("renv/activate.R")) {
+            source("renv/activate.R")
+          }
+
+          # Restore if we have a lockfile; otherwise init a bare env so tests can run
+          if (file.exists("renv.lock")) {
+            message("renv.lock found → restoring...")
+            renv::restore(prompt = FALSE)
+          } else {
+            message("No renv.lock found → initializing bare renv (no packages).")
+            renv::init(bare = TRUE)
+          }
+
+          renv::status()
 
       - name: Run tests
         run: |
