@@ -45,16 +45,22 @@ jobs:
           r-version: ${{ matrix.R-version }}
           use-public-rspm: true
 
-      # Ensure {renv} can be installed before setup-renv tries to use it
-      - name: Install renv (set repo)
+      - name: Install renv (set CRAN repo first)
         shell: Rscript {0}
         run: |
-          repo <- if (.Platform$OS.type == "windows")
+          repo <- if (.Platform$OS.type == "windows") {
             "https://cloud.r-project.org/"
-          else
+          } else {
             "https://packagemanager.posit.co/cran/__linux__/noble/latest"
+          }
           options(repos = c(CRAN = repo))
           if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
+
+      - name: Activate and restore renv
+        shell: Rscript {0}
+        run: |
+          source("renv/activate.R")
+          renv::restore(prompt = FALSE)
 
       - name: Setup renv (restore & cache)
         uses: r-lib/actions/setup-renv@v2
