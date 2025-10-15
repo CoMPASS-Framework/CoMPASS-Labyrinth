@@ -1,4 +1,6 @@
 """Shared fixtures for tests."""
+import matplotlib
+matplotlib.use('Agg')  # Set non-interactive backend for headless environments
 
 import pytest
 import shutil
