@@ -46,9 +46,15 @@ jobs:
           use-public-rspm: true
 
       # Ensure {renv} can be installed before setup-renv tries to use it
-      - name: Install renv (set repo explicitly)
+      - name: Install renv (set repo)
+        shell: Rscript {0}
         run: |
-          Rscript -e "options(repos=c(CRAN = if (.Platform$OS.type == 'windows') 'https://cloud.r-project.org/' else 'https://packagemanager.posit.co/cran/__linux__/noble/latest')); if (!requireNamespace('renv', quietly=TRUE)) install.packages('renv')"
+          repo <- if (.Platform$OS.type == "windows")
+            "https://cloud.r-project.org/"
+          else
+            "https://packagemanager.posit.co/cran/__linux__/noble/latest"
+          options(repos = c(CRAN = repo))
+          if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
 
       - name: Setup renv (restore & cache)
         uses: r-lib/actions/setup-renv@v2
