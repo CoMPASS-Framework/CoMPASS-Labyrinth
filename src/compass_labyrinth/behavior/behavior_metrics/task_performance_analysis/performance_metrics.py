@@ -29,18 +29,25 @@ warnings.filterwarnings("ignore")
 ##################################################################
 # Create time-binned dictionary
 ###################################################################
-
-
-def get_max_session_row_bracket(df_combined, session_col="Session"):
+def get_max_session_row_bracket(
+    df_combined: pd.DataFrame,
+    session_col: str = "Session",
+) -> int:
     """
-    Finds the session with the maximum number of rows and returns the largest lower multiple of 10,000.
+    Finds the session with the maximum number of rows and returns the largest
+    lower multiple of 10,000.
 
     Parameters:
-        df_combined (pd.DataFrame): Combined dataframe containing multiple sessions.
-        session_col (str): Name of the column representing session ID.
+    -----------
+    df_combined : pd.DataFrame
+        Combined dataframe containing multiple sessions.
+    session_col : str
+        Name of the column representing session ID.
 
     Returns:
-        int: Lower bracketed row count (e.g., 20000 if max session has 23567 rows).
+    --------
+    int
+        Lower bracketed row count (e.g., 20000 if max session has 23567 rows).
     """
     session_counts = df_combined[session_col].value_counts()
     max_rows = session_counts.max()
@@ -54,7 +61,7 @@ def generate_region_heatmap_pivots(
     difference: int = 10000,
     region_columns: list = ["entry_zone", "loops", "dead_ends", "neutral_zone", "reward_path", "target_zone"],
     region_lengths: dict = REGION_LENGTHS,
-):
+) -> dict:
     """
     Create binned pivot tables for each genotype showing region occupancy over time windows.
 
@@ -132,8 +139,6 @@ def generate_region_heatmap_pivots(
 ##################################################################
 # Exclusion Criteria
 ###################################################################
-
-
 def compute_frames_per_session(df: pd.DataFrame) -> pd.DataFrame:
     return df.groupby("Session").size().reset_index(name="No_of_Frames")
 
@@ -144,6 +149,25 @@ def compute_target_zone_usage(
     region: str = "target_zone",
     difference: int = 10000,
 ) -> pd.DataFrame:
+    """
+    Compute target zone usage from a time-binned pivot dictionary.
+
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame containing 'Session' and 'Genotype' columns.
+    pivot_dict : dict
+        Dictionary with Genotype as keys and list of pivot DataFrames as values.
+    region : str
+        The region to compute usage for.
+    difference : int
+        Bin size.
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame containing target zone usage information.
+    """
     usage_records = []
     for genotype in df.Genotype.unique():
         li_genotype = pivot_dict[genotype]
@@ -165,6 +189,23 @@ def summarize_target_usage(
     frames_df: pd.DataFrame,
     cohort_metadata: pd.DataFrame,
 ) -> pd.DataFrame:
+    """
+    Summarize target zone usage per session.
+
+    Parameters:
+    -----------
+    region_target : str
+        The target region to summarize.
+    frames_df : pd.DataFrame
+        DataFrame containing frame information.
+    cohort_metadata : pd.DataFrame
+        DataFrame containing cohort metadata.
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame containing the summary of target zone usage.
+    """
     session_frames = dict(frames_df.values)
     session_sex = dict(cohort_metadata[["Session #", "Sex"]].values)
     summary = region_target.groupby(["Genotype", "Session"])["Target_Usage"].mean().reset_index()
@@ -180,6 +221,27 @@ def plot_target_usage_vs_frames(
     show_fig: bool = True,
     return_fig: bool = False,
 ) -> None | plt.Figure:
+    """
+    Plot target zone usage vs number of frames.
+
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary containing project details.
+    summary_df : pd.DataFrame
+        DataFrame containing the summary of target zone usage.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    plt.Figure or None
+        The figure object if return_fig is True, otherwise None.
+    """
     summary_df = summary_df[np.isfinite(summary_df["No_of_Frames"]) & np.isfinite(summary_df["Target_Usage"])]
     fig, ax = plt.subplots(figsize=(10, 8))
     sns.scatterplot(
@@ -230,6 +292,25 @@ def exclude_low_performing_sessions(
     usage_threshold: float | None = 0.4,
     min_frames: int | None = 30000,
 ) -> pd.DataFrame:
+    """
+    Exclude sessions based on target usage and frame count thresholds.
+
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        The original DataFrame containing session data.
+    summary_df : pd.DataFrame
+        The summary DataFrame containing session performance metrics.
+    usage_threshold : float | None
+        The minimum target usage threshold for excluding sessions.
+    min_frames : int | None
+        The minimum number of frames threshold for excluding sessions.
+
+    Returns:
+    --------
+    pd.DataFrame
+        The cleaned DataFrame with low-performing sessions excluded.
+    """
     try:
         if usage_threshold is None:
             target_threshold = float(input("Enter minimum target usage threshold (e.g., 0.4): "))
@@ -261,6 +342,29 @@ def plot_target_usage_with_exclusions(
     show_fig: bool = True,
     return_fig: bool = False,
 ) -> None | plt.Figure:
+    """
+    Plot target zone usage vs number of frames, marking excluded sessions.
+
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary containing project details.
+    summary_df : pd.DataFrame
+        DataFrame containing the summary of target zone usage.
+    sessions_to_exclude : list
+        List of session IDs to exclude from the plot.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to show the figure.
+    return_fig : bool
+        Whether to return the figure.
+
+    Returns:
+    --------
+    None | plt.Figure
+        The created figure, if return_fig is True.
+    """
     summary_df = summary_df[np.isfinite(summary_df["No_of_Frames"]) & np.isfinite(summary_df["Target_Usage"])]
     fig, ax = plt.subplots(figsize=(10, 8))
 
@@ -317,18 +421,21 @@ def plot_target_usage_with_exclusions(
 ###################################################################
 # Subset the Time-Binned Dictionary based on Valid Sessions
 ###################################################################
-
-
 def subset_pivot_dict_sessions(pivot_dict: dict, df_all_csv: pd.DataFrame) -> dict:
     """
     Subset an existing pivot_dict to only include valid sessions from df_all_csv.
 
     Parameters:
-        pivot_dict (dict): Original pivot_dict with all sessions.
-        df_all_csv (pd.DataFrame): Must contain 'Session' and 'Genotype' columns.
+    -----------
+    pivot_dict : dict
+        Original pivot_dict with all sessions.
+    df_all_csv : pd.DataFrame
+        Must contain 'Session' and 'Genotype' columns.
 
     Returns:
-        dict: Filtered pivot_dict with only valid sessions per genotype.
+    --------
+    dict
+        Filtered pivot_dict with only valid sessions per genotype.
     """
     # Map genotype to list of valid sessions
     valid_sessions_dict = {
@@ -352,8 +459,6 @@ def subset_pivot_dict_sessions(pivot_dict: dict, df_all_csv: pd.DataFrame) -> di
 ##################################################################
 # Plot 1: Heatmap Representations
 ###################################################################
-
-
 def plot_region_heatmaps(
     config: dict,
     pivot_dict: dict,
@@ -371,6 +476,40 @@ def plot_region_heatmaps(
 ) -> None | plt.Figure:
     """
     Clean and aesthetically pleasing vertically stacked heatmaps with one colorbar per bin.
+
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary containing project details.
+    pivot_dict : dict
+        Dictionary with Genotype as keys and list of pivot DataFrames as values.
+    group_name : str
+        The genotype or group to plot.
+    lower_lim : int
+        Start frame.
+    upper_lim : int
+        End frame.
+    difference : int
+        Bin size.
+    included_sessions : list | None
+        List of session IDs to include. If None, include all sessions.
+    vmax : float
+        Colorbar upper limit.
+    region_desired_order : list | None
+        Desired order of regions for the heatmap. If None, use default order.
+    cmap : str
+        Colormap name.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    None | plt.Figure
+        The figure object if return_fig is True, otherwise None.
     """
     sns.set_context("notebook", font_scale=1.0)
     sns.set_style("ticks")
@@ -456,8 +595,6 @@ def plot_region_heatmaps(
 #####################################################################
 ## Heatmap Representations across all Genotypes
 #####################################################################
-
-
 def plot_region_heatmaps_all_genotypes(
     config: dict,
     pivot_dict: dict,
@@ -483,19 +620,46 @@ def plot_region_heatmaps_all_genotypes(
     - Columns: genotypes
 
     Parameters:
-        pivot_dict (dict): {genotype: list of pivot tables per bin}
-        df_all_csv (pd.DataFrame): DataFrame with valid 'Genotype' and 'Session' combinations
-        lower_lim (int): Start frame
-        upper_lim (int): End frame
-        difference (int): Bin size
-        vmax (float): Colorbar upper limit
-        region_desired_order (list): Optional order of regions
-        cmap (str): Colormap name
-        included_genotypes (list): Genotype order to include
-        figsize_per_genotype (tuple): width × height scaling per genotype
-        spacing_w (float): Space between genotype columns
-        spacing_h (float): Space between time-bin rows
-        show_colorbar (bool): If True, show colorbar in last column per row
+    -----------
+    config : dict
+        Configuration dictionary containing project details.
+    pivot_dict : dict
+        Dictionary with Genotype as keys and list of pivot DataFrames as values.
+    df_all_csv : pd.DataFrame
+        DataFrame with valid 'Genotype' and 'Session' combinations.
+    lower_lim : int
+        Start frame
+    upper_lim : int
+        End frame
+    difference : int
+        Bin size
+    vmax : float
+        Colorbar upper limit
+    region_desired_order : list
+        Optional order of regions
+    cmap : str
+        Colormap name
+    included_genotypes : list
+        Genotype order to include
+    figsize_per_genotype : tuple
+        width x height scaling per genotype
+    spacing_w : float
+        Space between genotype columns
+    spacing_h : float
+        Space between time-bin rows
+    show_colorbar : bool
+        If True, show colorbar in last column per row
+    save_fig : bool
+        If True, save the figure
+    show_fig : bool
+        If True, display the figure
+    return_fig : bool
+        If True, return the figure object
+
+    Returns:
+    --------
+    None | plt.Figure
+        The figure object if return_fig is True, otherwise None.
     """
     sns.set_context("notebook", font_scale=1.0)
     sns.set_style("white")
@@ -588,10 +752,6 @@ def plot_region_heatmaps_all_genotypes(
 ##################################################################
 # Shannon's Entropy
 ###################################################################
-
-# Compute Shannon Entropy per Bin per Session
-
-
 def compute_shannon_entropy_per_bin(
     pivot_dict: dict,
     df_all_csv: pd.DataFrame,
@@ -664,8 +824,6 @@ def compute_shannon_entropy_per_bin(
 ###############################################################################
 ## Plot 2: Plotting Shannon's Entropy across Sessions (/Mice)
 ###############################################################################
-
-
 def plot_entropy_over_bins(
     config: dict,
     entropy_df: pd.DataFrame,
@@ -674,7 +832,32 @@ def plot_entropy_over_bins(
     save_fig: bool = True,
     show_fig: bool = True,
     return_fig: bool = False,
-) -> None:
+) -> None | plt.Figure:
+    """
+    Plot Shannon's entropy across bins for each genotype.
+
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary containing project details.
+    entropy_df : pd.DataFrame
+        DataFrame containing 'Session', 'Bin', 'Entropy', and 'Genotype' columns
+    palette : list | None
+        List of colors for genotypes.
+    ylim : tuple
+        Y-axis limits.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    None | plt.Figure
+        The figure object if return_fig is True, otherwise None.
+    """
     sns.set_style("ticks")
     g = sns.catplot(
         data=entropy_df,
@@ -723,6 +906,16 @@ def run_entropy_anova(entropy_df: pd.DataFrame) -> AnovaRM | None:
     """
     Run repeated measures ANOVA using Bin as within-subject factor.
     Fills missing Entropy values with 0 (only here).
+
+    Parameters:
+    -----------
+    entropy_df : pd.DataFrame
+        DataFrame containing 'Session', 'Bin', 'Entropy', and 'Genotype' columns
+
+    Returns:
+    --------
+    AnovaRM | None
+        The fitted ANOVA model or None if it fails.
     """
     df_stats = entropy_df.copy()
     df_stats["Entropy"] = df_stats["Entropy"].fillna(0)
@@ -743,6 +936,16 @@ def run_fdr_pairwise_tests(entropy_df: pd.DataFrame) -> pd.DataFrame | None:
     """
     For each bin, performs pairwise t-tests between all genotype pairs.
     Applies FDR correction across all tests.
+
+    Parameters:
+    -----------
+    entropy_df : pd.DataFrame
+        DataFrame containing 'Session', 'Bin', 'Entropy', and 'Genotype' columns
+
+    Returns:
+    --------
+    pd.DataFrame | None
+        DataFrame with pairwise test results.
     """
     df = entropy_df.copy()
     df["Entropy"] = df["Entropy"].fillna(0)
@@ -780,9 +983,17 @@ def run_mixed_model_per_genotype_pair(entropy_df: pd.DataFrame) -> tuple[dict, p
     For each genotype pair, test if Bin x Genotype interaction is significant.
     Does NOT fill NaNs. Uses only complete-case rows per model.
 
+    Parameters:
+    -----------
+    entropy_df : pd.DataFrame
+        DataFrame containing 'Session', 'Bin', 'Entropy', and 'Genotype' columns
+
     Returns:
-        result_dict (dict): model summaries
-        interaction_table (pd.DataFrame): p-values of interaction terms
+    --------
+    result_dict : dict
+        Model summaries
+    interaction_table : pd.DataFrame
+        p-values of interaction terms
     """
     df = entropy_df.copy()
     df = df.dropna(subset=["Entropy"])
@@ -839,13 +1050,20 @@ def compute_region_usage_over_bins(
     Computes binned region usage across sessions for the given region.
 
     Parameters:
-        pivot_dict (dict): Dictionary with genotype keys and binned pivot tables.
-        mouseinfo (pd.DataFrame): DataFrame with session and genotype mapping.
-        region (str): Region to compute usage for (e.g., "Target Zone").
-        bin_size (int): Size of each bin (in frames).
+    -----------
+    pivot_dict : dict
+        Dictionary with genotype keys and binned pivot tables.
+    df_all_csv : pd.DataFrame
+        DataFrame with session and genotype mapping.
+    region : str
+        Region to compute usage for (e.g., "Target Zone").
+    bin_size : int
+        Size of each bin (in frames).
 
     Returns:
-        pd.DataFrame: Binned region usage across sessions with Genotype labels.
+    --------
+    pd.DataFrame
+        Binned region usage across sessions with Genotype labels.
     """
     region_usage = []
 
@@ -869,8 +1087,6 @@ def compute_region_usage_over_bins(
 ##################################################################
 ## Plot 3: Proportion of usage per Region across time
 ###################################################################
-
-
 def plot_region_usage_over_bins(
     config: dict,
     region_data: pd.DataFrame,
@@ -885,10 +1101,28 @@ def plot_region_usage_over_bins(
     Plots the proportion of usage over time bins for a specific region.
 
     Parameters:
-        region_data (pd.DataFrame): Output from compute_region_usage_over_bins().
-        region_name (str): Display name for the region.
-        palette (list or dict): Optional Seaborn color palette for genotypes.
-        ylim (tuple): Y-axis limits.
+    -----------
+    config : dict
+        Configuration dictionary containing project details.
+    region_data : pd.DataFrame
+        Output from compute_region_usage_over_bins().
+    region_name : str
+        Display name for the region.
+    palette : list or dict
+        Optional Seaborn color palette for genotypes.
+    ylim : tuple
+        Y-axis limits.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    None | plt.Figure
+        The figure object if return_fig is True, otherwise None.
     """
     ax = sns.catplot(
         x="Bin",
@@ -926,8 +1160,6 @@ def plot_region_usage_over_bins(
 ##################################################################
 ## Plot 4: Proportion of usage for all Regions across time
 ###################################################################
-
-
 def plot_all_regions_usage_over_bins(
     config: dict,
     pivot_dict: dict,
@@ -942,6 +1174,34 @@ def plot_all_regions_usage_over_bins(
 ):
     """
     Plots usage over bins for multiple regions in a 2x3 subplot layout with a shared legend outside.
+
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary containing project details.
+    pivot_dict : dict
+        Dictionary with genotype keys and binned pivot tables.
+    df_all_csv : pd.DataFrame
+        DataFrame with session and genotype mapping.
+    region_list : list
+        List of regions to plot (max 6).
+    bin_size : int
+        Size of each bin (in frames).
+    palette : list or dict
+        Optional Seaborn color palette for genotypes.
+    ylim : tuple
+        Y-axis limits.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    None | plt.Figure
+        The figure object if return_fig is True, otherwise None.
     """
     fig, axes = plt.subplots(2, 3, figsize=(18, 10), sharex=True, sharey=True)
     axes = axes.flatten()
@@ -1007,12 +1267,23 @@ def plot_all_regions_usage_over_bins(
 def run_region_usage_stats_mixedlm(reg_binned: pd.DataFrame, region_col: str = "target_zone") -> None:
     """
     Mixed Effects Model (Bin x Genotype) with missing bins dropped.
+
+    Parameters:
+    -----------
+    reg_binned : pd.DataFrame
+        DataFrame from compute_region_usage_over_bins().
+    region_col : str
+        Column name for the region of interest. Default is "target_zone".
+    
+    Returns:
+    --------
+    None
     """
-    # ------------ Rename column safely (avoid space) -------------
+    # Rename column safely (avoid space)
     safe_col = region_col.replace(" ", "_")
     reg_binned = reg_binned.rename(columns={region_col: safe_col})
 
-    # ------------ MixedLM (drop NaNs) -------------
+    # MixedLM (drop NaNs)
     df_nan = reg_binned[["Session", "Bin", "Genotype", safe_col]].dropna()
     df_nan["Bin"] = df_nan["Bin"].astype(float)
     df_nan["Genotype"] = df_nan["Genotype"].astype("category")
@@ -1027,14 +1298,24 @@ def run_region_usage_stats_mixedlm(reg_binned: pd.DataFrame, region_col: str = "
 
 
 # --------------- Pairwise Comparison with FDR Correction --------------#
-
-
 def run_region_usage_stats_fdr(
     reg_binned: pd.DataFrame,
     region_col: str = "target_zone",
 ) -> pd.DataFrame | None:
     """
     Pairwise genotype comparisons at each bin (FDR corrected).
+
+    Parameters:
+    -----------
+    reg_binned : pd.DataFrame
+        DataFrame from compute_region_usage_over_bins().
+    region_col : str
+        Column name for the region of interest. Default is "target_zone".
+
+    Returns:
+    --------
+    pd.DataFrame | None
+        DataFrame with pairwise test results or None if an error occurs.
     """
     # ------------ Rename column safely (avoid space) -------------
     safe_col = region_col.replace(" ", "_")
