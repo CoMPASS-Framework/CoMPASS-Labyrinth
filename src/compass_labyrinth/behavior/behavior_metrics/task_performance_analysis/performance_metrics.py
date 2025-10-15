@@ -1274,7 +1274,7 @@ def run_region_usage_stats_mixedlm(reg_binned: pd.DataFrame, region_col: str = "
         DataFrame from compute_region_usage_over_bins().
     region_col : str
         Column name for the region of interest. Default is "target_zone".
-    
+
     Returns:
     --------
     None
