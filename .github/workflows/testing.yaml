@@ -2,17 +2,16 @@ name: Testing
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
     paths:
-      - '.github/workflows/testing.yaml'
+      - '.github/workflows/testing.yml'     # <- fix extension
+      - '.github/workflows/testing.yaml'    # (optional: watch both)
       - 'src/**'
       - 'tests/**'
   pull_request:
-    branches:
-      - main
-      - dev
+    branches: [ main, dev ]
     paths:
+      - '.github/workflows/testing.yml'
       - '.github/workflows/testing.yaml'
       - 'src/**'
       - 'tests/**'
@@ -26,7 +25,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         python-version: ["3.11"]
-        R-version: [ "4.5.1" ]
+        R-version: [ "4.3.1" ]   # pin to the stable version for your project
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install project dependencies
+      - name: Install project dependencies (Python)
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]" --no-cache-dir
@@ -45,8 +45,10 @@ jobs:
         uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.R-version }}
+          use-public-rspm: true
 
-      - name: Install R system dependencies
+      # Install system libs needed by GDAL/PROJ/etc *before* renv restore
+      - name: Install R system dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
@@ -71,9 +73,18 @@ jobs:
             pandoc \
             cmake
 
-      - name: Install R packages via renv
-        run: Rscript init_renv.R
+      # Restore packages from renv.lock and cache them
+      - name: Setup renv (restore & cache)
+        uses: r-lib/actions/setup-renv@v2
+        with:
+          profile: default
+          cache-version: 2
+
+      # Quick sanity check (optional)
+      - name: Verify renv status
+        run: Rscript -e "source('renv/activate.R'); renv::status()"
 
       - name: Run tests
+        working-directory: .
         run: |
           pytest --cov=src/compass_labyrinth --cov-report=xml --cov-report=term-missing -vx
