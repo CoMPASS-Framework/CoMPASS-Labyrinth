@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -287,4 +288,84 @@ class TestPerformanceMetrics:
 
         # Run Pairwise Comparisons (with FDR correction)
         run_pairwise_comparisons(summary_df)
+
+    def test_deviation_from_reward_path_and_velocity(self, create_project_fixture, task_performance):
+        from compass_labyrinth.behavior.behavior_metrics.task_performance_analysis import (
+            ensure_velocity_column,
+            ensure_bout_indices,
+            compute_deviation_velocity,
+            process_deviation_velocity,
+            plot_deviation_velocity_fit,
+            plot_deviation_velocity_all,
+        )
+
+        config, _ = create_project_fixture
+        df_all_csv, _ = task_performance
+
+        # Ensures velocity column exists
+        df_all_csv_wvelocity = ensure_velocity_column(
+            df=df_all_csv,
+            frame_rate=5.0,
+        )
+        assert isinstance(df_all_csv_wvelocity, pd.DataFrame)
+        assert not df_all_csv_wvelocity.empty
+        assert "Velocity" in df_all_csv_wvelocity.columns
+
+        # Ensure Bout Index column Bout_ID exists
+        df_all_csv_wbouts = ensure_bout_indices(
+            df=df_all_csv_wvelocity,
+            delimiter_node=47,
+        )
+        assert isinstance(df_all_csv_wbouts, pd.DataFrame)
+        assert not df_all_csv_wbouts.empty
+        assert "Bout_ID" in df_all_csv_wbouts.columns
+
+        # Compute deviation and velocity per bout
+        df_deviation = compute_deviation_velocity(df=df_all_csv_wbouts)
+        assert isinstance(df_deviation, pd.DataFrame)
+        assert not df_deviation.empty
+        for col in ['ind_no', 'session', 'genotype', 'deviation', 'velocity']:
+            assert col in df_deviation.columns
+
+        # Process deviation and velocity (normalize, smooth, fit curves)
+        GENOTYPE = 'WT'
+        df_processed, params_dev, params_vel = process_deviation_velocity(
+            index_df=df_deviation,
+            genotype=GENOTYPE,
+        )
+        assert isinstance(df_processed, pd.DataFrame)
+        assert not df_processed.empty
+        for col in ['velocity_robust_scaled', 'velocity_normalized', 'velocity_smooth_normalized', 'deviation_smooth']:
+            assert col in df_processed.columns
+        assert isinstance(params_dev, (list, np.ndarray))
+        assert isinstance(params_vel, (list, np.ndarray))
+
+        # Plot deviation and velocity with fitted curves for a specific genotype
+        fig = plot_deviation_velocity_fit(
+            config=config,
+            df=df_processed,
+            params_dev=params_dev,
+            params_vel=params_vel,
+            genotype=GENOTYPE,
+            max_bouts=200,
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+        assert isinstance(fig, plt.Figure)
+        fig_path = Path(config["project_path_full"]) / "figures" / f"{GENOTYPE}_deviation_velocity_metric.pdf"
+        assert fig_path.exists()
+
+        # Plot deviation and velocity with fitted curves for all genotypes
+        fig_all = plot_deviation_velocity_all(
+            config=config,
+            index_df=df_deviation,
+            max_bouts=200,
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+        assert isinstance(fig_all, plt.Figure)
+        fig_path = Path(config["project_path_full"]) / "figures" / "all_genotypes_deviation_velocity_metric.pdf"
+        assert fig_path.exists()
 

@@ -147,11 +147,11 @@ def compute_deviation_velocity(
         for bout in bouts_in_session:
             if len(bout) > 0:
                 records.append({
-                    'Ind_no': ind,
-                    'Session': session_df['Session'].iloc[0],
-                    'Genotype': session_df['Genotype'].iloc[0],
-                    'Deviation': len(bout.loc[~bout.Region.isin(key_regions), 'Grid Number']) / len(bout),
-                    'Velocity': bout['Velocity'].mean(),
+                    'ind_no': ind,
+                    'session': session_df['Session'].iloc[0],
+                    'genotype': session_df['Genotype'].iloc[0],
+                    'deviation': len(bout.loc[~bout.Region.isin(key_regions), 'Grid Number']) / len(bout),
+                    'velocity': bout['Velocity'].mean(),
                 })
                 ind += 1
     return pd.DataFrame(records)
@@ -167,7 +167,7 @@ def process_deviation_velocity(
     Parameters:
     -----------
     index_df : pd.DataFrame
-        Input DataFrame with 'Deviation', 'Velocity', 'Genotype', and 'Ind_no' columns.
+        Input DataFrame with 'deviation', 'velocity', 'genotype', and 'ind_no' columns.
     genotype : str
         Genotype to filter the DataFrame.
 
@@ -176,22 +176,22 @@ def process_deviation_velocity(
     pd.DataFrame
         Processed DataFrame with smoothed and normalized columns.
     """
-    df = index_df.dropna(subset=['Deviation', 'Velocity'])
-    df = df[df['Genotype'] == genotype].copy()
+    df = index_df.dropna(subset=['deviation', 'velocity'])
+    df = df[df['genotype'] == genotype].copy()
 
     # Normalize and smooth
     robust_scaler = RobustScaler()
-    df['Velocity_robust_scaled'] = robust_scaler.fit_transform(df[['Velocity']])
+    df['velocity_robust_scaled'] = robust_scaler.fit_transform(df[['velocity']])
     
     qt = QuantileTransformer(output_distribution='uniform')
-    df['Velocity_normalized'] = qt.fit_transform(df[['Velocity_robust_scaled']])
-    df['Velocity_smooth_normalized'] = gaussian_filter1d(df['Velocity_normalized'], sigma=2)
-    df['Deviation_smooth'] = gaussian_filter1d(df['Deviation'], sigma=2)
+    df['velocity_normalized'] = qt.fit_transform(df[['velocity_robust_scaled']])
+    df['velocity_smooth_normalized'] = gaussian_filter1d(df['velocity_normalized'], sigma=2)
+    df['deviation_smooth'] = gaussian_filter1d(df['deviation'], sigma=2)
 
     # Curve fitting
-    x_vals = df['Ind_no'].values
-    y_dev = df['Deviation_smooth'].values
-    y_vel = df['Velocity_smooth_normalized'].values
+    x_vals = df['ind_no'].values
+    y_dev = df['deviation_smooth'].values
+    y_vel = df['velocity_smooth_normalized'].values
     
     params_dev, _ = curve_fit(exp_decreasing, x_vals, y_dev, p0=[1, 0.01, 1], maxfev=10000)
     params_vel, _ = curve_fit(exp_decreasing, x_vals, y_vel, p0=[1, 0.01, 1], maxfev=10000)
@@ -239,15 +239,15 @@ def plot_deviation_velocity_fit(
     plt.Figure or None
         The matplotlib figure object if return_fig is True, else None.
     """
-    x_vals = df['Ind_no'].values
+    x_vals = df['ind_no'].values
     x_fit = np.linspace(x_vals.min(), x_vals.max(), 1000)
     y_fit_dev = exp_decreasing(x_fit, *params_dev)
     y_fit_vel = exp_decreasing(x_fit, *params_vel)
 
     plt.figure(figsize=(12, 8))
     sns.lineplot(
-        x='Ind_no',
-        y='Deviation_smooth',
+        x='ind_no',
+        y='deviation_smooth',
         data=df,
         label='Smoothed Deviation',
         linewidth=2,
@@ -255,8 +255,8 @@ def plot_deviation_velocity_fit(
         color='blue',
     )
     sns.lineplot(
-        x='Ind_no',
-        y='Velocity_smooth_normalized',
+        x='ind_no',
+        y='velocity_smooth_normalized',
         data=df,
         label='Normalized Smoothed Velocity',
         linewidth=2,
@@ -330,7 +330,7 @@ def plot_deviation_velocity_all(
     plt.Figure or None
         The matplotlib figure object if return_fig is True, else None.
     """
-    genotypes = index_df['Genotype'].unique()
+    genotypes = index_df['genotype'].unique()
     n = len(genotypes)
     ncols = ceil(sqrt(n))
     nrows = ceil(n / ncols)
@@ -343,9 +343,9 @@ def plot_deviation_velocity_all(
         ax = axes[i]
 
         # Data
-        x_vals = df['Ind_no'].values
-        y_dev = df['Deviation_smooth'].values
-        y_vel = df['Velocity_smooth_normalized'].values
+        x_vals = df['ind_no'].values
+        y_dev = df['deviation_smooth'].values
+        y_vel = df['velocity_smooth_normalized'].values
         x_fit = np.linspace(x_vals.min(), x_vals.max(), 1000)
         y_fit_dev = exp_decreasing(x_fit, *params_dev)
         y_fit_vel = exp_decreasing(x_fit, *params_vel)
@@ -378,7 +378,7 @@ def plot_deviation_velocity_all(
         if max_bouts:
             ax.set_xlim(0, max_bouts)
         else:
-            ax.set_xlim(0, df['Ind_no'].max() + 5)
+            ax.set_xlim(0, df['ind_no'].max() + 5)
         ax.set_ylim(0, 1)
         ax.legend(loc='upper right', fontsize=9, frameon=False)
         ax.grid(True)
