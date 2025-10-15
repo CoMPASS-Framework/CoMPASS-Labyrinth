@@ -62,6 +62,35 @@ jobs:
           source("renv/activate.R")
           renv::restore(prompt = FALSE)
 
+      - name: Restore renv (bootstrap if needed)
+        shell: Rscript {0}
+        run: |
+          # set CRAN repo (Linux/macos via Posit Package Manager; Windows via CRAN)
+          repo <- if (.Platform$OS.type == "windows") {
+            "https://cloud.r-project.org/"
+          } else {
+            "https://packagemanager.posit.co/cran/__linux__/noble/latest"
+          }
+          options(repos = c(CRAN = repo))
+      
+          if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
+          renv::consent(provided = TRUE)
+      
+          if (file.exists("renv/activate.R")) {
+            source("renv/activate.R")
+          }
+      
+          # If there's a lockfile, restore (this will create renv/activate.R if missing)
+          if (file.exists("renv.lock")) {
+            renv::restore(prompt = FALSE)
+          } else {
+            # fallback (rare): initialize a bare project lib so tests can still run
+            renv::init(bare = TRUE)
+          }
+      
+          renv::status()
+
+
       - name: Setup renv (restore & cache)
         uses: r-lib/actions/setup-renv@v2
         with:
