@@ -2,16 +2,13 @@ name: Testing
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - '.github/workflows/testing.yaml'
       - 'src/**'
       - 'tests/**'
   pull_request:
-    branches:
-      - main
-      - dev
+    branches: [main, dev]
     paths:
       - '.github/workflows/testing.yaml'
       - 'src/**'
@@ -26,7 +23,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         python-version: ["3.11"]
-        R-version: [ "4.5.1" ]
+        R-version: ["4.3.1"]   # pin R to the stable version you want
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,7 +34,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install project dependencies
+      - name: Install project dependencies (Python)
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]" --no-cache-dir
@@ -45,7 +43,24 @@ jobs:
         uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.R-version }}
+          use-public-rspm: true
 
+      # Ensure {renv} can be installed before setup-renv tries to use it
+      - name: Install renv (set repo explicitly)
+        run: |
+          Rscript -e "options(repos=c(CRAN = if (.Platform$OS.type == 'windows') 'https://cloud.r-project.org/' else 'https://packagemanager.posit.co/cran/__linux__/noble/latest')); if (!requireNamespace('renv', quietly=TRUE)) install.packages('renv')"
+
+      - name: Setup renv (restore & cache)
+        uses: r-lib/actions/setup-renv@v2
+        with:
+          profile: default
+          cache-version: 2
+
+      # Optional: show renv status (handy debugging)
+      - name: Verify renv status
+        run: Rscript -e "source('renv/activate.R'); renv::status()"
+
+      # System deps (Linux only) for spatial/graphics etc.
       - name: Install R system dependencies
         if: runner.os == 'Linux'
         run: |
@@ -71,8 +86,9 @@ jobs:
             pandoc \
             cmake
 
-      - name: Install R packages via renv
-        run: Rscript init_renv.R
+      # IMPORTANT: do NOT run init_renv.R in CI; setup-renv restored from renv.lock.
+      # - name: Initialize R environment via renv
+      #   run: Rscript init_renv.R
 
       - name: Run tests
         run: |
