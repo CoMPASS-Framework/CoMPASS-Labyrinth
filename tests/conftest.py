@@ -314,3 +314,31 @@ def bout_level_metrics(task_performance):
     df_all_csv_wbouts = assign_bout_indices_from_entry_node(df_all_csv)
 
     return df_all_csv_wbouts
+
+
+@pytest.fixture(scope="session")
+def simulate_agent_fixture(create_project_fixture, task_performance):
+    from compass_labyrinth.behavior.behavior_metrics.simulation_modeling import evaluate_agent_performance
+
+    config, cohort_metadata = create_project_fixture
+    df_all_csv, _ = task_performance
+
+    EPOCH_SIZE = 1000
+    N_BOOTSTRAP = 10000
+    N_SIMULATIONS = 100
+    DECISION_LABEL = "Decision (Reward)"
+    REWARD_LABEL = "Reward Path"
+    GENOTYPE = "WT"
+
+    df_sim = evaluate_agent_performance(
+        df=df_all_csv,
+        epoch_size=EPOCH_SIZE,
+        n_bootstrap=N_BOOTSTRAP,
+        n_simulations=N_SIMULATIONS,
+        decision_label=DECISION_LABEL,
+        reward_label=REWARD_LABEL,
+        genotype=GENOTYPE,
+        trim=True,
+    )
+
+    return df_sim
