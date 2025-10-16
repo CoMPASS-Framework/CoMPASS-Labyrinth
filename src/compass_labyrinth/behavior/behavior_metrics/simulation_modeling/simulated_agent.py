@@ -242,6 +242,44 @@ def segment_data_by_epoch(
     return epochs
 
 
+def trim_to_common_epochs(df_results: pd.DataFrame) -> pd.DataFrame:
+    """
+    Trims the results dataframe to retain only the maximum number of epochs common across all sessions.
+
+    Parameters:
+    -----------
+    df_results : pd.DataFrame
+        The output of evaluate_agent_performance.
+            - 'Session' (str): Column name indicating sessions.
+            - 'Epoch_Number' (str): Column name indicating epoch/bin number.
+
+    Returns:
+    --------
+    pd.DataFrame
+        Trimmed dataframe with only common epochs.
+    """
+    df_trimmed = df_results.copy()
+
+    # Ensure correct dtypes
+    df_trimmed["Session"] = df_trimmed["Session"].astype(int)
+    df_trimmed["Epoch Number"] = df_trimmed["Epoch Number"].astype(int)
+
+    # Find common epochs across all sessions
+    epoch_sets = df_trimmed.groupby("Session")["Epoch Number"].apply(set)
+    common_epochs = set.intersection(*epoch_sets)
+
+    if not common_epochs:
+        print("Warning: No common epochs across sessions. Returning original dataframe.")
+        return df_trimmed
+
+    max_common_epoch = max(common_epochs)
+    print(f" Max common epoch across all sessions: {max_common_epoch}")
+
+    # Filter
+    df_trimmed = df_trimmed[df_trimmed["Epoch Number"] <= max_common_epoch].reset_index(drop=True)
+    return df_trimmed
+
+
 def evaluate_agent_performance(
     df: pd.DataFrame,
     epoch_size: int,
@@ -283,72 +321,45 @@ def evaluate_agent_performance(
     
     # Filter by genotype if specified
     if genotype is not None:
-        df = df.loc[df["Genotype"] == genotype]
+        if genotype not in df["Genotype"].unique():
+            raise ValueError(f"Genotype '{genotype}' not found in DataFrame.")
+        genotypes = [genotype]
+    else:
+        genotypes = df["Genotype"].unique()
 
-    valid_dict, optimal_dict = get_valid_and_optimal_transitions(df, decision_label, reward_label)
-    epochs = segment_data_by_epoch(df, epoch_size)
+    results = dict()
+    for i, genotype in enumerate(genotypes):
+        df_genotype = df.loc[df["Genotype"] == genotype]
 
-    all_results = []
-    for session, epoch_num, segment in epochs:
-        valid = valid_dict.get(session, {})
-        optimal = optimal_dict.get(session, {})
-        result = compute_epoch_metrics(segment, valid, optimal, n_bootstrap, n_simulations, decision_label)
-        result["Session"] = session
-        result["Epoch Number"] = epoch_num
-        all_results.append(result)
+        valid_dict, optimal_dict = get_valid_and_optimal_transitions(df_genotype, decision_label, reward_label)
+        epochs = segment_data_by_epoch(df_genotype, epoch_size)
 
-    if trim:
-        df_results = pd.DataFrame(all_results)
-        return trim_to_common_epochs(df_results)
+        all_results = []
+        for session, epoch_num, segment in epochs:
+            valid = valid_dict.get(session, {})
+            optimal = optimal_dict.get(session, {})
+            result = compute_epoch_metrics(segment, valid, optimal, n_bootstrap, n_simulations, decision_label)
+            result["Session"] = session
+            result["Epoch Number"] = epoch_num
+            all_results.append(result)
 
-    return pd.DataFrame(all_results)
+        if trim:
+            df_results = pd.DataFrame(all_results)
+            df_results = trim_to_common_epochs(df_results)
+        else:
+            df_results = pd.DataFrame(all_results)
 
+        results[genotype] = df_results
 
-# ------------------ Trim max. common epochs ------------------ #
-def trim_to_common_epochs(df_results: pd.DataFrame) -> pd.DataFrame:
-    """
-    Trims the results dataframe to retain only the maximum number of epochs common across all sessions.
-
-    Parameters:
-    -----------
-    df_results : pd.DataFrame
-        The output of evaluate_agent_performance.
-            - 'Session' (str): Column name indicating sessions.
-            - 'Epoch_Number' (str): Column name indicating epoch/bin number.
-
-    Returns:
-    --------
-    pd.DataFrame
-        Trimmed dataframe with only common epochs.
-    """
-    df_trimmed = df_results.copy()
-
-    # Ensure correct dtypes
-    df_trimmed["Session"] = df_trimmed["Session"].astype(int)
-    df_trimmed["Epoch Number"] = df_trimmed["Epoch Number"].astype(int)
-
-    # Find common epochs across all sessions
-    epoch_sets = df_trimmed.groupby("Session")["Epoch Number"].apply(set)
-    common_epochs = set.intersection(*epoch_sets)
-
-    if not common_epochs:
-        print("Warning: No common epochs across sessions. Returning original dataframe.")
-        return df_trimmed
-
-    max_common_epoch = max(common_epochs)
-    print(f" Max common epoch across all sessions: {max_common_epoch}")
-
-    # Filter
-    df_trimmed = df_trimmed[df_trimmed["Epoch Number"] <= max_common_epoch].reset_index(drop=True)
-    return df_trimmed
+    return results
 
 
-##################################################################
+############################################################################
 ## Plot 1: Simulated Agent v/s Mouse Performance across Time
-###################################################################
+#############################################################################
 def plot_agent_transition_performance(
     config: dict,
-    df_result: pd.DataFrame,
+    evaluation_results: dict,
     genotype: str | None = None,
     save_fig: bool = True,
     show_fig: bool = True,
@@ -361,10 +372,10 @@ def plot_agent_transition_performance(
     -----------
     config : dict
         Configuration dictionary with project path.
-    df_result : pd.DataFrame
-        DataFrame with performance metrics per epoch.
+    evaluation_results : dict
+        Dictionary with evaluation results for each genotype.
     genotype : str | None
-        Genotype to label the plot.
+        Specific genotype to plot. If None, plots all genotypes.
     save_fig : bool
         Whether to save the figure.
     show_fig : bool
@@ -377,59 +388,12 @@ def plot_agent_transition_performance(
     plt.Figure or None
         The figure object if return_fig is True, otherwise None.
     """
-    plt.figure(figsize=(12, 6))
-    sns.lineplot(data=df_result, x="Epoch Number", y="Actual Reward Path %", marker="o", label="Mouse", color="black")
-    sns.lineplot(
-        data=df_result,
-        x="Epoch Number",
-        y="Simulated Agent Reward Path %",
-        linestyle="dashed",
-        label="Simulated Agent",
-        color="navy",
-    )
-
-    plt.xlabel("Epochs (in Maze)")
-    plt.ylabel("Proportion of Reward Path Transitions")
-    plt.title("Mouse vs. Simulated Agent: Reward Path Transition Proportion")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    
-    # Save figure
-    if genotype is None:
-        fname = "sim_agent_mouse_perf.pdf"
+    if genotype is not None:
+        if genotype not in evaluation_results:
+            raise ValueError(f"Genotype '{genotype}' not found in evaluation results.")
+        genotypes = [genotype]
     else:
-        fname = f"{genotype}_sim_agent_mouse_perf.pdf"
-    fig = plt.gcf()
-    if save_fig:
-        save_path = Path(config["project_path_full"]) / "figures" / fname
-        plt.savefig(save_path, bbox_inches="tight", dpi=300)
-        print(f"Figure saved at: {save_path}")
-
-    # Show figure
-    if show_fig:
-        plt.show()
-
-    # Return figure
-    if return_fig:
-        return fig
-
-
-############################################################################
-### Simulated Agent v/s Mouse Performance across Time for all Genotypes
-#############################################################################
-
-
-def plot_agent_transition_performance_by_genotype(
-    df_all_csv: pd.DataFrame,
-    epoch_size=1000,
-    n_bootstrap=10000,
-    n_simulations=100,
-    decision_label="Decision (Reward)",
-    reward_label="Reward Path",
-):
-
-    genotypes = df_all_csv["Genotype"].unique()
+        genotypes = evaluation_results.keys()
     n_genotypes = len(genotypes)
 
     n_cols = math.ceil(np.sqrt(n_genotypes))
@@ -440,19 +404,16 @@ def plot_agent_transition_performance_by_genotype(
 
     for i, genotype in enumerate(genotypes):
         ax = axes[i]
-
-        df_sim = evaluate_agent_performance(
-            df=df_all_csv[df_all_csv.Genotype == genotype],
-            epoch_size=epoch_size,
-            n_bootstrap=n_bootstrap,
-            n_simulations=n_simulations,
-            decision_label=decision_label,
-            reward_label=reward_label,
-        )
-        df_result = trim_to_common_epochs(df_sim)
+        df_result = evaluation_results[genotype]
 
         sns.lineplot(
-            data=df_result, x="Epoch Number", y="Actual Reward Path %", marker="o", label="Mouse", color="black", ax=ax
+            data=df_result,
+            x="Epoch Number",
+            y="Actual Reward Path %",
+            marker="o",
+            label="Mouse",
+            color="black",
+            ax=ax,
         )
         sns.lineplot(
             data=df_result,
@@ -476,14 +437,27 @@ def plot_agent_transition_performance_by_genotype(
 
     fig.suptitle("Mouse vs. Simulated Agent: Reward Path Transition Proportion", fontsize=16)
     plt.tight_layout(rect=[0, 0, 1, 0.97])
-    # plt.show()
+    
+    # Save figure
+    fig_name = f"{genotype}_sim_agent_mouse_perf.pdf" if genotype else "all_genotypes_sim_agent_mouse_perf.pdf"
+    fig = plt.gcf()
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / fig_name
+        plt.savefig(save_path, bbox_inches="tight", dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
+
+    # Return figure
+    if return_fig:
+        return fig
 
 
 ##################################################################
 ## Plot 2: Relative Performance across Time
 ###################################################################
-
-
 def plot_relative_agent_performance(df_result):
     plt.figure(figsize=(12, 6))
     sns.lineplot(data=df_result, x="Epoch Number", y="Relative Performance", marker="o", color="black")
