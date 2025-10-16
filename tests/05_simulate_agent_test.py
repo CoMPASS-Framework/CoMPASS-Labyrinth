@@ -16,19 +16,16 @@ class TestPerformanceMetrics:
         from compass_labyrinth.behavior.behavior_metrics.simulation_modeling import plot_agent_transition_performance
         
         config, cohort_metadata = create_project_fixture
-        df_sim = simulate_agent_fixture
-        
-        GENOTYPE = "WT"
+        sim_results = simulate_agent_fixture
 
         fig = plot_agent_transition_performance(
             config=config,
-            df_result=df_sim,
-            genotype=GENOTYPE,
+            evaluation_results=sim_results,
             save_fig=True,
             show_fig=False,
             return_fig=True,
         )
         assert isinstance(fig, plt.Figure)
         plt.close(fig)
-        fig_path = Path(config["project_path_full"]) / "figures" / f"{GENOTYPE}_sim_agent_mouse_perf.pdf"
+        fig_path = Path(config["project_path_full"]) / "figures" / "all_genotypes_sim_agent_mouse_perf.pdf"
         assert fig_path.exists()

@@ -328,17 +328,15 @@ def simulate_agent_fixture(create_project_fixture, task_performance):
     N_SIMULATIONS = 100
     DECISION_LABEL = "Decision (Reward)"
     REWARD_LABEL = "Reward Path"
-    GENOTYPE = "WT"
 
-    df_sim = evaluate_agent_performance(
+    sim_results = evaluate_agent_performance(
         df=df_all_csv,
         epoch_size=EPOCH_SIZE,
         n_bootstrap=N_BOOTSTRAP,
         n_simulations=N_SIMULATIONS,
         decision_label=DECISION_LABEL,
         reward_label=REWARD_LABEL,
-        genotype=GENOTYPE,
         trim=True,
     )
 
-    return df_sim
+    return sim_results
