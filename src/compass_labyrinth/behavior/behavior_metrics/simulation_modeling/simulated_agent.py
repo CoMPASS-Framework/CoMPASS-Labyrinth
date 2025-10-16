@@ -475,8 +475,6 @@ def plot_relative_agent_performance(df_result):
 ##################################################################
 ### Relative Performance across Time all Genotypes
 ###################################################################
-
-
 def plot_relative_agent_performance_by_genotype(
     df_all_csv: pd.DataFrame,
     epoch_size=1000,
@@ -532,8 +530,6 @@ def plot_relative_agent_performance_by_genotype(
 #############################################################################
 ## Plot 3: Avg. Simulated Agent and Mouse Performance across Sessions(/Mice)
 ##############################################################################
-
-
 def reshape_for_mixedlm(df_results):
     """
     Reshape the dataframe to long format for mixed-effects modeling.
@@ -601,8 +597,6 @@ def plot_agent_performance_boxplot(df_long, p_value, palette=None):
 ##########################################################################################################################
 ## Avg. Simulated Agent and Mouse Performance across Sessions(/Mice) for all genotypes (when multiple genotypes)
 ###########################################################################################################################
-
-
 # -----------------------------------------
 # Reshape for MixedLM
 # -----------------------------------------
@@ -744,8 +738,6 @@ def compute_cumulative_chi_square(df):
 ##################################################################
 ## Plot 4: Chi Square Statistic of Agents across Time
 ###################################################################
-
-
 def plot_chi_square_and_rolling(
     df,
     epoch_col="Epoch Number",
@@ -791,8 +783,6 @@ def plot_cumulative_chi_square(df, epoch_col="Epoch Number", cum_col="Cumulative
 #############################################################################################
 ## Chi Square Statistic of Agents across Time for all genotypes (when multiple genotypes)
 #############################################################################################
-
-
 def run_chi_square_analysis_by_genotype(
     df_all_csv,
     epoch_size=1000,

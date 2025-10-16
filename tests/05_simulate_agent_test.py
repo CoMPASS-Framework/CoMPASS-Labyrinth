@@ -9,8 +9,10 @@ import matplotlib.pyplot as plt
 class TestPerformanceMetrics:
 
     def test_simulate_agent_df(self, simulate_agent_fixture):
-        assert isinstance(simulate_agent_fixture, pd.DataFrame)
-        assert not simulate_agent_fixture.empty
+        assert isinstance(simulate_agent_fixture, dict)
+        for genotype, df in simulate_agent_fixture.items():
+            assert isinstance(df, pd.DataFrame)
+            assert not df.empty
 
     def test_agent_transition_performance(self, create_project_fixture, simulate_agent_fixture):
         from compass_labyrinth.behavior.behavior_metrics.simulation_modeling import plot_agent_transition_performance
