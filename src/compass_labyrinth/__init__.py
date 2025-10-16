@@ -52,12 +52,12 @@ def init_project(
     # Project name checks should be alphanumeric and underscores only
     if not project_name.replace("_", "").isalnum():
         raise ValueError("Project name must be alphanumeric and can only contain underscores.")
-    
+
     # Validate source data path
     source_data_path = Path(source_data_path).resolve()
     if not source_data_path.exists():
         raise ValueError(f"Source data path {source_data_path} does not exist.")
-    
+
     # Set up project's base path
     project_path = Path(project_path).resolve()
     project_path_full = project_path / project_name
@@ -71,34 +71,30 @@ def init_project(
     # Create organized directory structure
     all_dirs = {
         # Videos folder - original videos and frames
-        'videos': project_path_full / 'videos',
-        'videos_original': project_path_full / 'videos' / 'original_videos',
-        'frames': project_path_full / 'videos' / 'frames',
-        
+        "videos": project_path_full / "videos",
+        "videos_original": project_path_full / "videos" / "original_videos",
+        "frames": project_path_full / "videos" / "frames",
         # Data folder - analysis inputs and outputs
-        'data': project_path_full / 'data',
-        'dlc_results': project_path_full / 'data' / 'dlc_results',
-        'dlc_cropping': project_path_full / 'data' / 'dlc_cropping_bounds',
-        'grid_files': project_path_full / 'data' / 'grid_files',
-        'grid_boundaries': project_path_full / 'data' / 'grid_boundaries',
-        'metadata': project_path_full / 'data' / 'metadata',
-        'eeg_edfs': project_path_full / 'data' / 'processed_eeg_edfs',
-        
+        "data": project_path_full / "data",
+        "dlc_results": project_path_full / "data" / "dlc_results",
+        "dlc_cropping": project_path_full / "data" / "dlc_cropping_bounds",
+        "grid_files": project_path_full / "data" / "grid_files",
+        "grid_boundaries": project_path_full / "data" / "grid_boundaries",
+        "metadata": project_path_full / "data" / "metadata",
+        "eeg_edfs": project_path_full / "data" / "processed_eeg_edfs",
         # Figures folder - all plots and visualizations
-        'figures': project_path_full / 'figures',
-        
+        "figures": project_path_full / "figures",
         # CSV's folder
-        'csvs': project_path_full / 'csvs',
-        'csvs_individual': project_path_full / 'csvs'/ 'individual',
-        'csvs_combined': project_path_full / 'csvs' / 'combined',
-
+        "csvs": project_path_full / "csvs",
+        "csvs_individual": project_path_full / "csvs" / "individual",
+        "csvs_combined": project_path_full / "csvs" / "combined",
         # Results folders
-        'results': project_path_full / 'results' ,
-        'results_task_performance': project_path_full / 'results' / 'task_performance',
-        'results_simulation_agent': project_path_full / 'results' / 'simulation_agent',
-        'results_compass_level_1': project_path_full / 'results' / 'compass_level_1',
-        'results_compass_level_2': project_path_full / 'results' / 'compass_level_2',
-        'results_ephys_compass': project_path_full / 'results' / 'ephys_compass'
+        "results": project_path_full / "results",
+        "results_task_performance": project_path_full / "results" / "task_performance",
+        "results_simulation_agent": project_path_full / "results" / "simulation_agent",
+        "results_compass_level_1": project_path_full / "results" / "compass_level_1",
+        "results_compass_level_2": project_path_full / "results" / "compass_level_2",
+        "results_ephys_compass": project_path_full / "results" / "ephys_compass",
     }
     for _, dir_path in all_dirs.items():
         dir_path.mkdir(parents=True, exist_ok=True)
@@ -152,9 +148,11 @@ def init_project(
     if construct_metadata:
         cohort_metadata = []
         for sess in session_names:
-            cohort_metadata.append({
-                "session_name": sess,
-            })
+            cohort_metadata.append(
+                {
+                    "session_name": sess,
+                }
+            )
     else:
         user_metadata_file_path = Path(user_metadata_file_path).resolve()
         metadata_df = import_cohort_metadata(

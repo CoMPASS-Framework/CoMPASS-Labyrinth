@@ -72,8 +72,9 @@ jobs:
             cmake
 
       - name: Install R packages via renv
-        run: Rscript init_renv.R
+        run: |
+          Rscript init_renv.R
 
       - name: Run tests
         run: |
-          pytest --cov=src/compass_labyrinth --cov-report=xml --cov-report=term-missing -vx
+          pytest --cov=src/compass_labyrinth --cov-report=xml --cov-report=term-missing -v
