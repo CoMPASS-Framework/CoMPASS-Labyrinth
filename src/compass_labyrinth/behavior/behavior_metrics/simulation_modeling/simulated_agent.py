@@ -8,6 +8,7 @@ Goal:
 import pandas as pd
 import numpy as np
 import random
+from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 from statsmodels.formula.api import mixedlm
@@ -248,6 +249,8 @@ def evaluate_agent_performance(
     n_simulations: int,
     decision_label: str = "Decision (Reward)",
     reward_label: str = "Reward Path",
+    genotype: str | None = None,
+    trim: bool = True,
 ) -> pd.DataFrame:
     """
     Run full evaluation pipeline for simulated agent vs. actual mouse.
@@ -266,12 +269,22 @@ def evaluate_agent_performance(
         Label for decision points.
     reward_label : str
         Label for reward path.
+    genotype : str | None
+        Genotype to filter data.
+    trim : bool
+        Whether to trim to common epochs across sessions.
 
     Returns:
     --------
     pd.DataFrame
         DataFrame with performance metrics per epoch.
     """
+    df = df.copy()
+    
+    # Filter by genotype if specified
+    if genotype is not None:
+        df = df.loc[df["Genotype"] == genotype]
+
     valid_dict, optimal_dict = get_valid_and_optimal_transitions(df, decision_label, reward_label)
     epochs = segment_data_by_epoch(df, epoch_size)
 
@@ -283,6 +296,10 @@ def evaluate_agent_performance(
         result["Session"] = session
         result["Epoch Number"] = epoch_num
         all_results.append(result)
+
+    if trim:
+        df_results = pd.DataFrame(all_results)
+        return trim_to_common_epochs(df_results)
 
     return pd.DataFrame(all_results)
 
@@ -329,7 +346,37 @@ def trim_to_common_epochs(df_results: pd.DataFrame) -> pd.DataFrame:
 ##################################################################
 ## Plot 1: Simulated Agent v/s Mouse Performance across Time
 ###################################################################
-def plot_agent_transition_performance(df_result):
+def plot_agent_transition_performance(
+    config: dict,
+    df_result: pd.DataFrame,
+    genotype: str | None = None,
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
+    """
+    Plot performance comparison between actual mouse and simulated agent over time.
+
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary with project path.
+    df_result : pd.DataFrame
+        DataFrame with performance metrics per epoch.
+    genotype : str | None
+        Genotype to label the plot.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    plt.Figure or None
+        The figure object if return_fig is True, otherwise None.
+    """
     plt.figure(figsize=(12, 6))
     sns.lineplot(data=df_result, x="Epoch Number", y="Actual Reward Path %", marker="o", label="Mouse", color="black")
     sns.lineplot(
@@ -347,7 +394,25 @@ def plot_agent_transition_performance(df_result):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    # plt.show()
+    
+    # Save figure
+    if genotype is None:
+        fname = "sim_agent_mouse_perf.pdf"
+    else:
+        fname = f"{genotype}_sim_agent_mouse_perf.pdf"
+    fig = plt.gcf()
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / fname
+        plt.savefig(save_path, bbox_inches="tight", dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
+
+    # Return figure
+    if return_fig:
+        return fig
 
 
 ############################################################################
