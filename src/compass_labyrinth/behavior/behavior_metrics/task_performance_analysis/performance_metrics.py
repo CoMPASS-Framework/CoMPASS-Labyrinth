@@ -20,7 +20,7 @@ from statsmodels.stats.multitest import multipletests
 from statsmodels.formula.api import mixedlm
 from scipy.stats import entropy, ttest_ind
 
-from compass_labyrinth.constants import REGION_LENGTHS
+from compass_labyrinth.constants import REGION_LENGTHS, REGION_NAMES
 
 
 warnings.filterwarnings("ignore")
@@ -539,6 +539,7 @@ def plot_region_heatmaps(
 
         # Reindex and round values
         pivot_tab = pivot_tab.reindex(region_order).fillna(np.nan)
+        pivot_tab.index = pivot_tab.index.map(lambda x: REGION_NAMES.get(x, x))
         rounded = pivot_tab.round(2)
 
         # Create sub-grid for each bin
@@ -699,6 +700,7 @@ def plot_region_heatmaps_all_genotypes(
             valid_sessions = df_all_csv.loc[df_all_csv["Genotype"] == genotype, "Session"].unique()
             pivot_tab = pivot_tab[[s for s in pivot_tab.columns if s in valid_sessions]]
             pivot_tab = pivot_tab.reindex(region_order).fillna(np.nan)
+            pivot_tab.index = pivot_tab.index.map(lambda x: REGION_NAMES.get(x, x))
 
             sns.heatmap(
                 data=pivot_tab,
@@ -1140,7 +1142,7 @@ def plot_region_usage_over_bins(
     plt.yticks(size=12, color="black")
     plt.xlabel("Cumulative time in maze (frames)", size=15)
     plt.ylabel("Proportion of Usage", size=15)
-    plt.title(region_name, fontsize=15, weight="bold")
+    plt.title(REGION_NAMES[region_name], fontsize=15, weight="bold")
     ax.set(yticks=np.arange(ylim[0], ylim[1] + 0.1, 0.1))
 
     # Save figure
@@ -1220,7 +1222,7 @@ def plot_all_regions_usage_over_bins(
             data=region_data, x="Bin", y=region, hue="Genotype", errorbar="se", palette=palette, capsize=0.15, ax=ax
         )
 
-        ax.set_title(region, fontsize=14, weight="bold")
+        ax.set_title(REGION_NAMES[region], fontsize=14, weight="bold")
         ax.set_xlabel("Frames", fontsize=12)
         ax.set_ylabel("Usage Proportion", fontsize=12)
         ax.set_ylim(ylim)
