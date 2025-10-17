@@ -24,7 +24,7 @@ warnings.filterwarnings("ignore")
 def get_valid_and_optimal_transitions(
     df: pd.DataFrame,
     decision_label: str = "Decision (Reward)",
-    reward_label: str = "Reward Path",
+    reward_label: str = "reward_path",
 ) -> tuple[dict, dict]:
     """
     Extract valid and optimal transitions per session.
@@ -286,7 +286,7 @@ def evaluate_agent_performance(
     n_bootstrap: int,
     n_simulations: int,
     decision_label: str = "Decision (Reward)",
-    reward_label: str = "Reward Path",
+    reward_label: str = "reward_path",
     genotype: str | None = None,
     trim: bool = True,
 ) -> pd.DataFrame:
@@ -439,10 +439,9 @@ def plot_agent_transition_performance(
     plt.tight_layout(rect=[0, 0, 1, 0.97])
     
     # Save figure
-    fig_name = f"{genotype}_sim_agent_mouse_perf.pdf" if genotype else "all_genotypes_sim_agent_mouse_perf.pdf"
     fig = plt.gcf()
     if save_fig:
-        save_path = Path(config["project_path_full"]) / "figures" / fig_name
+        save_path = Path(config["project_path_full"]) / "figures" / "all_genotypes_sim_agent_mouse_perf.pdf"
         plt.savefig(save_path, bbox_inches="tight", dpi=300)
         print(f"Figure saved at: {save_path}")
 
@@ -458,89 +457,109 @@ def plot_agent_transition_performance(
 ##################################################################
 ## Plot 2: Relative Performance across Time
 ###################################################################
-def plot_relative_agent_performance(df_result):
-    plt.figure(figsize=(12, 6))
-    sns.lineplot(data=df_result, x="Epoch Number", y="Relative Performance", marker="o", color="black")
-    plt.axhline(y=1, color="black", linestyle="dashed", label="Simulated Agent Baseline")
+def plot_relative_agent_performance(
+    config: dict,
+    evaluation_results: dict,
+    genotype: str | None = None,
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
+    """
+    Plot relative performance of mouse vs simulated agent over time.
+    
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary with project path.
+    evaluation_results : dict
+        Dictionary with evaluation results for each genotype.
+    genotype : str | None
+        Specific genotype to plot. If None, plots all genotypes.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
 
-    plt.xlabel("Epochs (in Maze)")
-    plt.ylabel("Relative Performance (Mouse / Simulated)")
-    plt.title("Mouse vs. Simulated Agent: Relative Performance Over Time")
-    plt.legend(["Relative Performance", "Simulated Agent Baseline"])
-    plt.grid(True)
-    plt.tight_layout()
-    # plt.show()
-
-
-##################################################################
-### Relative Performance across Time all Genotypes
-###################################################################
-def plot_relative_agent_performance_by_genotype(
-    df_all_csv: pd.DataFrame,
-    epoch_size=1000,
-    n_bootstrap=10000,
-    n_simulations=100,
-    decision_label="Decision (Reward)",
-    reward_label="Reward Path",
-    palette=None,
-):
-    genotypes = df_all_csv["Genotype"].unique()
+    Returns:
+    --------
+    plt.Figure or None
+        The figure object if return_fig is True, otherwise None.
+    """
+    if genotype is not None:
+        if genotype not in evaluation_results:
+            raise ValueError(f"Genotype '{genotype}' not found in evaluation results.")
+        genotypes = [genotype]
+    else:
+        genotypes = evaluation_results.keys()
     n_genotypes = len(genotypes)
 
-    # Calculate subplot grid dimensions
-    n_cols = math.ceil(np.sqrt(n_genotypes))
-    n_rows = math.ceil(n_genotypes / n_cols)
+    n_cols = 1
+    n_rows = n_genotypes
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(6 * n_cols, 5 * n_rows), squeeze=False)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12, 5 * n_rows), squeeze=False)
     axes = axes.flatten()
 
     for i, genotype in enumerate(genotypes):
         ax = axes[i]
-
-        df_sim = evaluate_agent_performance(
-            df=df_all_csv[df_all_csv.Genotype == genotype],
-            epoch_size=epoch_size,
-            n_bootstrap=n_bootstrap,
-            n_simulations=n_simulations,
-            decision_label=decision_label,
-            reward_label=reward_label,
+        df_result = evaluation_results[genotype]
+        sns.lineplot(
+            data=df_result,
+            x="Epoch Number",
+            y="Relative Performance",
+            marker="o",
+            color="black",
+            ax=ax,
         )
-        df_result = trim_to_common_epochs(df_sim)
+        ax.axhline(
+            y=1,
+            color="black",
+            linestyle="dashed",
+            label="Simulated Agent Baseline",
+        )
 
-        if palette is None:
-            palette = "black"
-        sns.lineplot(data=df_result, x="Epoch Number", y="Relative Performance", marker="o", color=palette[i], ax=ax)
-        ax.axhline(y=1, color="black", linestyle="dashed", label="Simulated Agent Baseline")
-
-        ax.set_title(f"{genotype}: Relative Performance Over Time")
         ax.set_xlabel("Epochs (in Maze)")
-        ax.set_ylabel("Mouse / Simulated")
+        ax.set_ylabel("Relative Performance (Mouse / Simulated)")
+        ax.set_title(f"{genotype}: Mouse vs. Simulated Agent - Relative Performance Over Time")
+        ax.legend(["Relative Performance", "Simulated Agent Baseline"])
         ax.grid(True)
-        ax.legend()
+        plt.tight_layout()
 
-    # Hide any unused axes
-    for j in range(len(genotypes), len(axes)):
-        fig.delaxes(axes[j])
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / "all_genotypes_relative_perf.pdf"
+        plt.savefig(save_path, bbox_inches="tight", dpi=300)
+        print(f"Figure saved at: {save_path}")
 
-    fig.suptitle("Mouse vs. Simulated Agent: Relative Performance by Genotype", fontsize=16)
-    plt.tight_layout(rect=[0, 0, 1, 0.97])
-    # plt.show()
+    # Show figure
+    if show_fig:
+        plt.show()
 
+    # Return figure
+    if return_fig:
+        return fig
+        
 
 #############################################################################
 ## Plot 3: Avg. Simulated Agent and Mouse Performance across Sessions(/Mice)
 ##############################################################################
-def reshape_for_mixedlm(df_results):
+def reshape_for_mixedlm(df_results: pd.DataFrame) -> pd.DataFrame:
     """
     Reshape the dataframe to long format for mixed-effects modeling.
 
     Parameters:
-    - df_results (pd.DataFrame): DataFrame with columns 'Actual Reward Path %', 'Simulated Agent Reward Path %'.
-    - 'Session' (str): Name of the column representing session/group.
-    - 'Epoch Number' (str): Name of the epoch/bin column.
+    -----------
+    df_results : pd.DataFrame
+        DataFrame with columns 'Actual Reward Path %', 'Simulated Agent Reward Path %'.
+            - 'Session' (str): Name of the column representing session/group.
+            - 'Epoch Number' (str): Name of the epoch/bin column.
 
     Returns:
-    - pd.DataFrame: Melted dataframe suitable for mixedlm.
+    --------
+    pd.DataFrame
+        Melted dataframe suitable for mixedlm.
     """
     df_long = pd.melt(
         df_results,
@@ -555,16 +574,19 @@ def reshape_for_mixedlm(df_results):
     return df_long.reset_index(drop=True)
 
 
-def fit_mixed_effects_model(df_long):
+def fit_mixed_effects_model(df_long: pd.DataFrame) -> tuple:
     """
     Fit a linear mixed-effects model comparing agent types.
 
     Parameters:
-    - df_long (pd.DataFrame): Long-form DataFrame with columns 'AgentType', 'Performance', and session info.
+    -----------
+    df_long : pd.DataFrame
+        Long-form DataFrame with columns 'AgentType', 'Performance', and session info.
 
     Returns:
-    - result: Fitted model object.
-    - p_value (float): P-value for AgentType effect.
+    --------
+    tuple
+        Tuple with result (Fitted model object) and p_value (P-value for AgentType effect).
     """
     model = mixedlm("Performance ~ AgentType", df_long, groups=df_long["Session"])
     result = model.fit()
@@ -575,13 +597,26 @@ def fit_mixed_effects_model(df_long):
     return result, p_value
 
 
-def plot_agent_performance_boxplot(df_long, p_value, palette=None):
+def plot_agent_performance_boxplot(
+    df_long: pd.DataFrame,
+    p_value: float,
+    palette: None | list = None
+) -> None:
     """
     Plot boxplot comparing actual vs simulated agent with p-value annotation.
 
     Parameters:
-    - df_long (pd.DataFrame): Long-form DataFrame.
-    - p_value (float): P-value from mixed model.
+    -----------
+    df_long : pd.DataFrame
+        Long-form DataFrame.
+    p_value : float
+        P-value from mixed model.
+    palette : list or None
+        Color palette for the boxplot.
+
+    Returns:
+    --------
+    None
     """
     plt.figure(figsize=(6, 6))
     sns.boxplot(x="AgentType", y="Performance", data=df_long, palette=palette, showfliers=False)
@@ -591,7 +626,6 @@ def plot_agent_performance_boxplot(df_long, p_value, palette=None):
     plt.ylabel("Proportion of Optimal Transitions", fontsize=11)
     plt.xticks(ticks=[0, 1], labels=["Mouse", "Simulated Agent"], fontsize=10)
     plt.tight_layout()
-    # plt.show()
 
 
 ##########################################################################################################################
@@ -600,7 +634,21 @@ def plot_agent_performance_boxplot(df_long, p_value, palette=None):
 # -----------------------------------------
 # Reshape for MixedLM
 # -----------------------------------------
-def reshape_for_mixedlm(df_results):
+def reshape_for_mixedlm(df_results: pd.DataFrame) -> pd.DataFrame:
+    """
+    Reshape the dataframe to long format for mixed-effects modeling.
+
+    Parameters:
+    -----------
+    df_results : pd.DataFrame
+        DataFrame with columns 'Actual Reward Path %', 'Simulated Agent Reward Path %',
+        'Session', 'Epoch Number' and 'Genotype'.
+
+    Returns:
+    --------
+    pd.DataFrame
+        Long-form DataFrame suitable for mixedlm.
+    """
     df_long = pd.melt(
         df_results,
         id_vars=["Session", "Epoch Number", "Genotype"],
@@ -616,7 +664,20 @@ def reshape_for_mixedlm(df_results):
 # -----------------------------------------
 # Fit Mixed Effects Model
 # -----------------------------------------
-def fit_mixed_effects_model(df_long):
+def fit_mixed_effects_model(df_long: pd.DataFrame) -> tuple:
+    """
+    Fit a linear mixed-effects model comparing agent types.
+
+    Parameters:
+    -----------
+    df_long : pd.DataFrame
+        Long-form DataFrame.
+
+    Returns:
+    --------
+    tuple
+        Tuple with result (Fitted model object) and p_value (P-value for AgentType effect).
+    """
     model = mixedlm("Performance ~ AgentType", df_long, groups=df_long["Session"])
     result = model.fit()
     coef_key = [key for key in result.pvalues.keys() if "Simulated Agent" in key]
@@ -627,7 +688,33 @@ def fit_mixed_effects_model(df_long):
 # -----------------------------------------
 # Plotting per Axes
 # -----------------------------------------
-def plot_agent_performance_boxplot_ax(ax, df_long, p_value, palette=None, genotype=None):
+def plot_agent_performance_boxplot_ax(
+    ax: plt.Axes,
+    df_long: pd.DataFrame,
+    p_value: float,
+    palette: list | None = None,
+    genotype: str | None = None,
+) -> None:
+    """
+    Plot a boxplot of agent performance.
+
+    Parameters:
+    -----------
+    ax : plt.Axes
+        Matplotlib Axes object to plot on.
+    df_long : pd.DataFrame
+        Long-form DataFrame.
+    p_value : float
+        P-value from mixed model.
+    palette : list or None
+        Color palette for the boxplot.
+    genotype : str or None
+        Genotype name for the title.
+
+    Returns:
+    --------
+    None
+    """
     sns.boxplot(x="AgentType", y="Performance", data=df_long, palette=palette, showfliers=False, ax=ax)
     title = f"Mouse vs. Agent Performance\n{genotype} | LMM p = {p_value:.4f}"
     ax.set_title(title, fontsize=11)
@@ -639,22 +726,41 @@ def plot_agent_performance_boxplot_ax(ax, df_long, p_value, palette=None, genoty
 # Main Runner: Across Genotypes
 # -----------------------------------------
 def run_mixedlm_for_all_genotypes(
-    df_all_csv: pd.DataFrame,
-    epoch_size=1000,
-    n_bootstrap=10000,
-    n_simulations=100,
-    decision_label="Decision (Reward)",
-    reward_label="Reward Path",
+    config: dict,
+    evaluation_results: dict,
     plot_palette=None,
-):
+    save_fig: bool = True,
+    show_fig: bool = True,
+) -> dict:
+    """
+    Run mixed-effects modeling and plot results for all genotypes.
+
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary for this project.
+    evaluation_results : dict
+        Dictionary with evaluation results for each genotype.
+    plot_palette : list or None
+        Color palette for the boxplots.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+
+    Returns:
+    --------
+    dict
+        Dictionary with p-values for each genotype.
+    """
     genotype_pvals = {}
     all_dfs_long = []
 
-    genotypes = sorted(df_all_csv["Genotype"].unique())
+    genotypes = evaluation_results.keys()
     n_genotypes = len(genotypes)
+
     n_cols = math.ceil(n_genotypes**0.5)
     n_rows = math.ceil(n_genotypes / n_cols)
-
     fig, axs = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 5 * n_rows))
 
     # Safe handling: ensure axs is always iterable
@@ -664,15 +770,7 @@ def run_mixedlm_for_all_genotypes(
         axs = [axs]
 
     for i, genotype in enumerate(genotypes):
-        df_eval = evaluate_agent_performance(
-            df=df_all_csv[df_all_csv.Genotype == genotype],
-            epoch_size=epoch_size,
-            n_bootstrap=n_bootstrap,
-            n_simulations=n_simulations,
-            decision_label=decision_label,
-            reward_label=reward_label,
-        )
-        df_eval = trim_to_common_epochs(df_eval)
+        df_eval = evaluation_results[genotype]
         df_eval["Genotype"] = genotype
 
         df_long = reshape_for_mixedlm(df_eval)
@@ -687,7 +785,15 @@ def run_mixedlm_for_all_genotypes(
         fig.delaxes(axs[j])
 
     plt.tight_layout()
-    # plt.show()
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / "cumulative_sim_agent_mouse_perf.pdf"
+        plt.savefig(save_path, bbox_inches="tight", dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
 
     return genotype_pvals
 
@@ -695,8 +801,6 @@ def run_mixedlm_for_all_genotypes(
 ##################################################################
 # Chi Square Analysis
 ###################################################################
-
-
 def compute_chi_square_statistic(df):
     """Compute the chi-square statistic between actual and simulated reward path usage
     for each row in the DataFrame. Also ensures 'Epoch Number' and 'Session' are integers.

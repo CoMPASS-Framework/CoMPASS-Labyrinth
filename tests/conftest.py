@@ -327,7 +327,7 @@ def simulate_agent_fixture(create_project_fixture, task_performance):
     N_BOOTSTRAP = 10000
     N_SIMULATIONS = 100
     DECISION_LABEL = "Decision (Reward)"
-    REWARD_LABEL = "Reward Path"
+    REWARD_LABEL = "reward_path"
 
     sim_results = evaluate_agent_performance(
         df=df_all_csv,

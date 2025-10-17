@@ -179,7 +179,7 @@ def evaluate_agent_performance_multi(
     n_bootstrap,
     n_simulations,
     decision_label="Decision (Reward)",
-    reward_label="Reward Path",
+    reward_label="reward_path",
     three_nodes=None,
     four_nodes=None,
 ):

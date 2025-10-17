@@ -15,19 +15,45 @@ class TestPerformanceMetrics:
             assert not df.empty
 
     def test_agent_transition_performance(self, create_project_fixture, simulate_agent_fixture):
-        from compass_labyrinth.behavior.behavior_metrics.simulation_modeling import plot_agent_transition_performance
+        from compass_labyrinth.behavior.behavior_metrics.simulation_modeling import (
+            plot_agent_transition_performance,
+            plot_relative_agent_performance,
+            run_mixedlm_for_all_genotypes,
+        )
         
         config, cohort_metadata = create_project_fixture
         sim_results = simulate_agent_fixture
 
-        fig = plot_agent_transition_performance(
+        fig_1 = plot_agent_transition_performance(
             config=config,
             evaluation_results=sim_results,
             save_fig=True,
             show_fig=False,
             return_fig=True,
         )
-        assert isinstance(fig, plt.Figure)
-        plt.close(fig)
+        assert isinstance(fig_1, plt.Figure)
+        plt.close(fig_1)
         fig_path = Path(config["project_path_full"]) / "figures" / "all_genotypes_sim_agent_mouse_perf.pdf"
+        assert fig_path.exists()
+
+        fig_2 = plot_relative_agent_performance(
+            config=config,
+            evaluation_results=sim_results,
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+        assert isinstance(fig_2, plt.Figure)
+        plt.close(fig_2)
+        fig_path = Path(config["project_path_full"]) / "figures" / "all_genotypes_relative_perf.pdf"
+        assert fig_path.exists()
+
+        pvals = run_mixedlm_for_all_genotypes(
+            config=config,
+            evaluation_results=sim_results,
+            save_fig=True,
+            show_fig=False,
+        )
+        assert isinstance(pvals, dict)
+        fig_path = Path(config["project_path_full"]) / "figures" / "cumulative_sim_agent_mouse_perf.pdf"
         assert fig_path.exists()
