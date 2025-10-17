@@ -545,35 +545,6 @@ def plot_relative_agent_performance(
 #############################################################################
 ## Plot 3: Avg. Simulated Agent and Mouse Performance across Sessions(/Mice)
 ##############################################################################
-def reshape_for_mixedlm(df_results: pd.DataFrame) -> pd.DataFrame:
-    """
-    Reshape the dataframe to long format for mixed-effects modeling.
-
-    Parameters:
-    -----------
-    df_results : pd.DataFrame
-        DataFrame with columns 'Actual Reward Path %', 'Simulated Agent Reward Path %'.
-            - 'Session' (str): Name of the column representing session/group.
-            - 'Epoch Number' (str): Name of the epoch/bin column.
-
-    Returns:
-    --------
-    pd.DataFrame
-        Melted dataframe suitable for mixedlm.
-    """
-    df_long = pd.melt(
-        df_results,
-        id_vars=["Session", "Epoch Number"],
-        value_vars=["Actual Reward Path %", "Simulated Agent Reward Path %"],
-        var_name="AgentType",
-        value_name="Performance",
-    )
-
-    df_long = df_long.dropna(subset=["Performance"])
-    df_long["Session"] = df_long["Session"].astype(str)
-    return df_long.reset_index(drop=True)
-
-
 def fit_mixed_effects_model(df_long: pd.DataFrame) -> tuple:
     """
     Fit a linear mixed-effects model comparing agent types.
@@ -801,14 +772,20 @@ def run_mixedlm_for_all_genotypes(
 ##################################################################
 # Chi Square Analysis
 ###################################################################
-def compute_chi_square_statistic(df):
-    """Compute the chi-square statistic between actual and simulated reward path usage
+def compute_chi_square_statistic(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute the chi-square statistic between actual and simulated reward path usage
     for each row in the DataFrame. Also ensures 'Epoch Number' and 'Session' are integers.
 
     Parameters:
-        df (pd.DataFrame): DataFrame with columns 'Actual Reward Path %' and 'Simulated Agent Reward Path %'.
+    -----------
+    df : pd.DataFrame
+        DataFrame with columns 'Actual Reward Path %' and 'Simulated Agent Reward Path %'.
+    
     Returns:
-        pd.DataFrame: Updated DataFrame with 'Chi Square Statistic' and cleaned column types.
+    --------
+    pd.DataFrame
+        Updated DataFrame with 'Chi Square Statistic' and cleaned column types.
     """
     df = df.copy()
     chi_square = ((df["Actual Reward Path %"] - df["Simulated Agent Reward Path %"]) ** 2) / df[
@@ -823,8 +800,22 @@ def compute_chi_square_statistic(df):
     return df
 
 
-def compute_rolling_chi_square(df, window=3):
-    """Compute rolling average of chi-square statistic within each session."""
+def compute_rolling_chi_square(df: pd.DataFrame, window: int = 3) -> pd.DataFrame:
+    """
+    Compute rolling average of chi-square statistic within each session.
+    
+    Patameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame with 'Chi Square Statistic' column.
+    window : int
+        Window size for rolling average.
+
+    Returns:
+    --------
+    pd.DataFrame
+        Updated DataFrame with 'Rolling Chi Square' column.
+    """
     df = df.copy()
     df["Rolling Chi Square"] = df.groupby("Session")["Chi Square Statistic"].transform(
         lambda x: x.rolling(window=window, min_periods=1).mean()
@@ -832,140 +823,180 @@ def compute_rolling_chi_square(df, window=3):
     return df
 
 
-def compute_cumulative_chi_square(df):
-    """Compute cumulative sum of chi-square statistic within each session."""
+def compute_cumulative_chi_square(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute cumulative sum of chi-square statistic within each session.
+    
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame with 'Chi Square Statistic' column.
+
+    Returns:
+    --------
+    pd.DataFrame
+        Updated DataFrame with 'Cumulative Chi Square' column.
+    """
     df = df.copy()
     df["Cumulative Chi Square"] = df.groupby("Session")["Chi Square Statistic"].cumsum()
     return df
 
 
-##################################################################
-## Plot 4: Chi Square Statistic of Agents across Time
-###################################################################
-def plot_chi_square_and_rolling(
-    df,
-    epoch_col="Epoch Number",
-    chi_col="Chi Square Statistic",
-    rolling_col="Rolling Chi Square",
-    session_col="Session",
-):
-    """Plot raw and rolling chi-square statistic over epochs."""
-    plt.figure(figsize=(10, 5))
-    sns.barplot(data=df, x=epoch_col, y=chi_col, errorbar="se", palette="viridis")
-    sns.lineplot(
-        data=df, x=epoch_col, y=rolling_col, hue=session_col, palette="coolwarm", alpha=0.7, lw=2, legend="full"
-    )
-    plt.xlabel("Epochs")
-    plt.ylabel("Chi-Square Statistic")
-    plt.title("Chi-Square Statistic Across Epochs")
-    plt.tight_layout()
-    # plt.show()
-
-
-def plot_rolling_mean(df, epoch_col="Epoch Number", rolling_col="Rolling Chi Square"):
-    """Plot average rolling chi-square statistic."""
-    plt.figure(figsize=(10, 5))
-    sns.barplot(data=df, x=epoch_col, y=rolling_col, errorbar="se", palette="Blues")
-    plt.xlabel("Epochs")
-    plt.ylabel("Rolling Chi-Square Statistic")
-    plt.title("Average Rolling Chi-Square Statistic over Time")
-    plt.tight_layout()
-    # plt.show()
-
-
-def plot_cumulative_chi_square(df, epoch_col="Epoch Number", cum_col="Cumulative Chi Square"):
-    """Plot average cumulative chi-square statistic."""
-    plt.figure(figsize=(10, 5))
-    sns.barplot(data=df, x=epoch_col, y=cum_col, errorbar="se", palette="magma")
-    plt.xlabel("Epochs")
-    plt.ylabel("Cumulative Chi-Square Statistic")
-    plt.title("Cumulative Chi-Square Statistic over Time")
-    plt.tight_layout()
-    # plt.show()
-
-
 #############################################################################################
-## Chi Square Statistic of Agents across Time for all genotypes (when multiple genotypes)
+## Chi Square Statistic of Agents across Time
 #############################################################################################
-def run_chi_square_analysis_by_genotype(
-    df_all_csv,
-    epoch_size=1000,
-    n_bootstrap=10000,
-    n_simulations=100,
-    decision_label="Decision (Reward)",
-    reward_label="Reward Path",
-    rolling_window=3,
-):
-    results = []
-    genotypes = df_all_csv["Genotype"].unique()
-
+def run_chi_square_analysis(
+    config: dict,
+    evaluation_results: dict,
+    rolling_window: int = 3,
+) -> dict:
+    """
+    Run chi-square analysis for each genotype in the evaluation results.
+    """
+    genotypes = evaluation_results.keys()
+    results = dict()
     for genotype in genotypes:
-        df_result = evaluate_agent_performance(
-            df=df_all_csv[df_all_csv.Genotype == genotype],
-            epoch_size=epoch_size,
-            n_bootstrap=n_bootstrap,
-            n_simulations=n_simulations,
-            decision_label=decision_label,
-            reward_label=reward_label,
-        )
-        df_result = trim_to_common_epochs(df_result)
+        df_result = evaluation_results[genotype].copy()
         df_result["Genotype"] = genotype
-
-        df_chisq = compute_chi_square_statistic(df_result)
-        df_chisq = compute_rolling_chi_square(df_chisq, window=rolling_window)
-        df_chisq = compute_cumulative_chi_square(df_chisq)
-
-        results.append(df_chisq)
-
-    df_combined = pd.concat(results, ignore_index=True)
-    return df_combined
+        df_chisq = compute_chi_square_statistic(df=df_result)
+        df_chisq = compute_rolling_chi_square(df=df_chisq, window=rolling_window)
+        df_chisq = compute_cumulative_chi_square(df=df_chisq)
+        results[genotype] = df_chisq
+    return results
 
 
-def plot_chi_square_and_rolling_subplots(
-    df, epoch_col="Epoch Number", chi_col="Chi Square Statistic", rolling_col="Rolling Chi Square"
-):
-    genotypes = df["Genotype"].unique()
-    n = len(genotypes)
-    n_cols = math.ceil(np.sqrt(n))
-    n_rows = math.ceil(n / n_cols)
+def plot_chi_square_and_rolling(
+    config: dict,
+    chisquare_results: dict,
+    epoch_col: str = "Epoch Number",
+    chi_col: str = "Chi Square Statistic",
+    rolling_col: str = "Rolling Chi Square",
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
+    """
+    Plot chi-square and rolling statistics for each genotype.
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(6 * n_cols, 5 * n_rows), squeeze=False)
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary for this project.
+    chisquare_results : dict
+        Chi-square results dictionary.
+    epoch_col : str
+        Column name for epochs.
+    chi_col : str
+        Column name for chi-square statistic.
+    rolling_col : str
+        Column name for rolling chi-square.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    plt.Figure or None
+        The figure object if return_fig is True, otherwise None.
+    """
+    genotypes = chisquare_results.keys()
+    n_genotypes = len(genotypes)
+    n_cols = 1
+    n_rows = n_genotypes
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12, 5 * n_rows), squeeze=False)
     axes = axes.flatten()
 
     for i, genotype in enumerate(genotypes):
         ax = axes[i]
-        df_geno = df[df["Genotype"] == genotype]
+        df_geno = chisquare_results[genotype]
 
-        sns.barplot(data=df_geno, x=epoch_col, y=chi_col, errorbar="se", palette="viridis", ax=ax)
-        sns.lineplot(data=df_geno, x=epoch_col, y=rolling_col, color="black", lw=2, ax=ax)
+        sns.barplot(data=df_geno, x=epoch_col, y=chi_col, errorbar="se", palette="viridis", ax=ax,)
+        sns.lineplot(data=df_geno, x=epoch_col, y=rolling_col, color="black", lw=2, ax=ax,)
 
         ax.set_title(f"{genotype}: Chi-Square & Rolling")
         ax.set_xlabel("Epochs")
         ax.set_ylabel("Chi-Square")
 
     # Hide unused subplots
-    for j in range(len(genotypes), len(axes)):
+    for j in range(n_genotypes, len(axes)):
         fig.delaxes(axes[j])
 
     fig.suptitle("Chi-Square Statistic + Rolling Average by Genotype", fontsize=16)
     plt.tight_layout(rect=[0, 0, 1, 0.97])
-    # plt.show()
+    
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / "all_genotypes_chi_square_rolling.pdf"
+        plt.savefig(save_path, bbox_inches="tight", dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
+
+    # Return figure
+    if return_fig:
+        return fig
 
 
-def plot_rolling_mean_subplots(df, epoch_col="Epoch Number", rolling_col="Rolling Chi Square"):
-    genotypes = df["Genotype"].unique()
-    n = len(genotypes)
-    n_cols = math.ceil(np.sqrt(n))
-    n_rows = math.ceil(n / n_cols)
+def plot_rolling_mean(
+    config: dict,
+    chisquare_results: dict,
+    epoch_col: str = "Epoch Number",
+    rolling_col: str = "Rolling Chi Square",
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
+    """
+    Plot rolling chi-square statistics for each genotype.
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(6 * n_cols, 5 * n_rows), squeeze=False)
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary for this project.
+    chisquare_results : dict
+        Chi-square results dictionary.
+    epoch_col : str
+        Column name for epochs.
+    rolling_col : str
+        Column name for rolling chi-square.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    plt.Figure or None
+        The figure object if return_fig is True, otherwise None.
+    """
+    genotypes = chisquare_results.keys()
+    n_genotypes = len(genotypes)
+    n_cols = 1
+    n_rows = n_genotypes
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12, 5 * n_rows), squeeze=False)
     axes = axes.flatten()
 
     for i, genotype in enumerate(genotypes):
         ax = axes[i]
-        df_geno = df[df["Genotype"] == genotype]
+        df_geno = chisquare_results[genotype]
 
-        sns.barplot(data=df_geno, x=epoch_col, y=rolling_col, errorbar="se", palette="Blues", ax=ax)
+        sns.barplot(
+            data=df_geno,
+            x=epoch_col,
+            y=rolling_col,
+            errorbar="se",
+            palette="Blues",
+            ax=ax,
+        )
         ax.set_title(f"{genotype}: Rolling Chi-Square")
         ax.set_xlabel("Epochs")
         ax.set_ylabel("Rolling Stat")
@@ -975,23 +1006,69 @@ def plot_rolling_mean_subplots(df, epoch_col="Epoch Number", rolling_col="Rollin
 
     fig.suptitle("Rolling Chi-Square by Genotype", fontsize=16)
     plt.tight_layout(rect=[0, 0, 1, 0.97])
-    # plt.show()
+    
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / "all_genotypes_average_chi_square_rolling.pdf"
+        plt.savefig(save_path, bbox_inches="tight", dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
+
+    # Return figure
+    if return_fig:
+        return fig
 
 
-def plot_cumulative_chi_square_subplots(df, epoch_col="Epoch Number", cum_col="Cumulative Chi Square"):
-    genotypes = df["Genotype"].unique()
-    n = len(genotypes)
-    n_cols = math.ceil(np.sqrt(n))
-    n_rows = math.ceil(n / n_cols)
+def plot_cumulative_chi_square(
+    config: dict,
+    chisquare_results: dict,
+    epoch_col: str = "Epoch Number",
+    cum_col: str = "Cumulative Chi Square",
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
+    """
+    Plot cumulative chi-square statistics for each genotype.
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(6 * n_cols, 5 * n_rows), squeeze=False)
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary for this project.
+    chisquare_results : dict
+        Chi-square results dictionary.
+    epoch_col : str
+        Column name for epochs.
+    cum_col : str
+        Column name for cumulative chi-square.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    plt.Figure or None
+        The figure object if return_fig is True, otherwise None.
+    """
+    genotypes = chisquare_results.keys()
+    n_genotypes = len(genotypes)
+    n_cols = 1
+    n_rows = n_genotypes
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12, 5 * n_rows), squeeze=False)
     axes = axes.flatten()
 
     for i, genotype in enumerate(genotypes):
         ax = axes[i]
-        df_geno = df[df["Genotype"] == genotype]
+        df_geno = chisquare_results[genotype]
 
-        sns.barplot(data=df_geno, x=epoch_col, y=cum_col, errorbar="se", palette="magma", ax=ax)
+        sns.barplot(data=df_geno, x=epoch_col, y=cum_col, errorbar="se", palette="magma", ax=ax,)
         ax.set_title(f"{genotype}: Cumulative Chi-Square")
         ax.set_xlabel("Epochs")
         ax.set_ylabel("Cumulative Stat")
@@ -1001,4 +1078,17 @@ def plot_cumulative_chi_square_subplots(df, epoch_col="Epoch Number", cum_col="C
 
     fig.suptitle("Cumulative Chi-Square by Genotype", fontsize=16)
     plt.tight_layout(rect=[0, 0, 1, 0.97])
-    # plt.show()
+
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / "all_genotypes_cumulative_chi_square.pdf"
+        plt.savefig(save_path, bbox_inches="tight", dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
+
+    # Return figure
+    if return_fig:
+        return fig
