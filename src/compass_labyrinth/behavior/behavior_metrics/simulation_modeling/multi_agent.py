@@ -19,7 +19,22 @@ from compass_labyrinth.behavior.behavior_metrics.simulation_modeling.explore_exp
 # Simulated Agent, Binary Agent, 3/4-way Agent Modelling & Comparison
 ###################################################################
 # -------------------- Step 0: Chunking Utility -------------------- #
-def split_into_epochs_multi(df, epoch_size):
+def split_into_epochs_multi(df: pd.DataFrame, epoch_size: int) -> list:
+    """
+    Split the DataFrame into epochs of specified size for each session.
+
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame containing navigation data.
+    epoch_size : int
+        Number of steps per epoch.
+
+    Returns:
+    --------
+    list
+        A list of tuples containing (session, epoch index, chunk DataFrame).
+    """
     epochs = []
     for session, sess_df in df.groupby("Session"):
         for i in range(0, len(sess_df), epoch_size):
@@ -30,7 +45,30 @@ def split_into_epochs_multi(df, epoch_size):
 
 
 # -------------------- Step 1: Transition Tracking -------------------- #
-def track_valid_transitions_multi(df, decision_label, reward_label):
+def track_valid_transitions_multi(
+    df: pd.DataFrame,
+    decision_label: str,
+    reward_label: str,
+) -> tuple[dict, dict]:
+    """
+    Track valid and optimal transitions for each session.
+
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame containing navigation data.
+    decision_label : str
+        Label for decision nodes.
+    reward_label : str
+        Label for reward path regions.
+
+    Returns:
+    --------
+    tuple[dict, dict]
+        A tuple containing two dictionaries:
+        - session_valid: Maps session to valid transitions.
+        - session_optimal: Maps session to optimal transitions.
+    """
     session_valid = {}
     session_optimal = {}
 
@@ -56,7 +94,36 @@ def track_valid_transitions_multi(df, decision_label, reward_label):
 
 
 # -------------------- Step 2: Simulated Agent Logic -------------------- #
-def simulate_random_agent_multi(chunk, valid_dict, optimal_dict, decision_label, n_simulations):
+def simulate_random_agent_multi(
+    chunk: pd.DataFrame,
+    valid_dict: dict,
+    optimal_dict: dict,
+    decision_label: str,
+    n_simulations: int,
+) -> tuple[list, list]:
+    """
+    Simulate a random agent's performance over the given chunk of data.
+
+    Parameters:
+    -----------
+    chunk : pd.DataFrame
+        DataFrame chunk representing an epoch of navigation data.
+    valid_dict : dict
+        Dictionary mapping current grid numbers to valid next grid numbers.
+    optimal_dict : dict
+        Dictionary mapping current grid numbers to optimal next grid numbers.
+    decision_label : str
+        Label for decision nodes.
+    n_simulations : int
+        Number of simulations to run for estimating performance.
+
+    Returns:
+    --------
+    tuple[list, list]
+        A tuple containing two lists:
+        - actual: List of actual performance (1 for optimal transition, 0 otherwise).
+        - random_perf: List of average performance from random agent simulations.
+    """
     actual, random_perf = [], []
 
     for i in range(len(chunk) - 1):
@@ -78,7 +145,34 @@ def simulate_random_agent_multi(chunk, valid_dict, optimal_dict, decision_label,
     return actual, random_perf
 
 
-def simulate_binary_agent_multi(chunk, valid_dict, optimal_dict, decision_label, n_simulations):
+def simulate_binary_agent_multi(
+    chunk: pd.DataFrame,
+    valid_dict: dict,
+    optimal_dict: dict,
+    decision_label: str,
+    n_simulations: int,
+) -> list:
+    """
+    Simulate a binary agent's performance over the given chunk of data.
+
+    Parameters:
+    -----------
+    chunk : pd.DataFrame
+        DataFrame chunk representing an epoch of navigation data.
+    valid_dict : dict
+        Dictionary mapping current grid numbers to valid next grid numbers.
+    optimal_dict : dict
+        Dictionary mapping current grid numbers to optimal next grid numbers.
+    decision_label : str
+        Label for decision nodes.
+    n_simulations : int
+        Number of simulations to run for estimating performance.
+
+    Returns:
+    --------
+    list
+        A list containing the average performance of the binary agent simulations.
+    """
     binary_perf = []
 
     for i in range(len(chunk) - 1):
@@ -103,20 +197,42 @@ def simulate_binary_agent_multi(chunk, valid_dict, optimal_dict, decision_label,
 
 
 def simulate_multiway_agent_multi(
-    chunk, valid_dict, optimal_dict, decision_label, three_nodes, four_nodes, n_simulations
-):
-    perf = []
+    chunk: pd.DataFrame,
+    decision_label: str,
+    three_nodes: list,
+    four_nodes: list,
+    n_simulations: int,
+) -> list:
+    """
+    Simulate a multiway agent's performance over the given chunk of data.
 
+    Parameters:
+    -----------
+    chunk : pd.DataFrame
+        DataFrame chunk representing an epoch of navigation data.
+    decision_label : str
+        Label for decision nodes.
+    three_nodes : list
+        List of grid numbers for three-way decision nodes.
+    four_nodes : list
+        List of grid numbers for four-way decision nodes.
+    n_simulations : int
+        Number of simulations to run for estimating performance.
+
+    Returns:
+    --------
+    list
+        A list containing the average performance of the multiway agent simulations.
+    """
+    perf = []
     for i in range(len(chunk) - 1):
         if chunk.iloc[i]["NodeType"] == decision_label:
             curr = chunk.iloc[i]["Grid Number"]
-
             prob = None
             if curr in three_nodes:
                 prob = 1 / 3
             elif curr in four_nodes:
                 prob = 1 / 4
-
             if prob:
                 perf.append(np.mean([1 if random.random() < prob else 0 for _ in range(n_simulations)]))
 
@@ -129,16 +245,65 @@ def bootstrap_means_multi(data, n):
 
 
 def evaluate_epoch_multi(
-    chunk, valid_dict, optimal_dict, decision_label, reward_label, three_nodes, four_nodes, n_bootstrap, n_simulations
-):
+    chunk: pd.DataFrame,
+    valid_dict: dict,
+    optimal_dict: dict,
+    decision_label: str,
+    three_nodes: list,
+    four_nodes: list,
+    n_bootstrap: int,
+    n_simulations: int,
+) -> pd.Series:
+    """
+    Evaluate performance metrics for all agent types over a given epoch chunk.
 
+    Parameters:
+    -----------
+    chunk : pd.DataFrame
+        DataFrame chunk representing an epoch of navigation data.
+    valid_dict : dict
+        Dictionary mapping current grid numbers to valid next grid numbers.
+    optimal_dict : dict
+        Dictionary mapping current grid numbers to optimal next grid numbers.
+    decision_label : str
+        Label for decision nodes.
+    three_nodes : list
+        List of grid numbers for three-way decision nodes.
+    four_nodes : list
+        List of grid numbers for four-way decision nodes.
+    n_bootstrap : int
+        Number of bootstrap samples for confidence intervals.
+    n_simulations : int
+        Number of simulations for agent performance.
+
+    Returns:
+    --------
+    pd.Series
+        Series containing performance metrics for the epoch.
+    """
     if chunk.empty or decision_label not in chunk["NodeType"].values:
         return pd.Series(dtype="float64")  # Empty metrics
 
-    actual, random_perf = simulate_random_agent_multi(chunk, valid_dict, optimal_dict, decision_label, n_simulations)
-    binary_perf = simulate_binary_agent_multi(chunk, valid_dict, optimal_dict, decision_label, n_simulations)
+    actual, random_perf = simulate_random_agent_multi(
+        chunk=chunk,
+        valid_dict=valid_dict,
+        optimal_dict=optimal_dict,
+        decision_label=decision_label,
+        n_simulations=n_simulations,
+    )
+    binary_perf = simulate_binary_agent_multi(
+        chunk=chunk,
+        valid_dict=valid_dict,
+        optimal_dict=optimal_dict,
+        decision_label=decision_label,
+        n_simulations=n_simulations,
+    )
     multiway_perf = simulate_multiway_agent_multi(
-        chunk, valid_dict, optimal_dict, decision_label, three_nodes, four_nodes, n_simulations
+        chunk=chunk,
+        decision_label=decision_label,
+        three_nodes=three_nodes,
+        four_nodes=four_nodes,
+        n_simulations=n_simulations,
     )
 
     if not (actual and random_perf and binary_perf and multiway_perf):
@@ -181,20 +346,49 @@ def evaluate_agent_performance_multi(
     n_simulations: int,
     decision_label: str = "Decision (Reward)",
     reward_label: str = "reward_path",
-    genotype: str | None = None,
     trim: bool = True,
     three_nodes: list | None = None,
     four_nodes: list | None = None,
-):
+) -> pd.DataFrame:
     """
     Evaluate the performance of different agent types over multiple epochs.
+
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame containing navigation data.
+    epoch_size : int
+        Number of steps per epoch.
+    n_bootstrap : int
+        Number of bootstrap samples for confidence intervals.
+    n_simulations : int
+        Number of simulations for agent performance.
+    decision_label : str
+        Label for decision nodes.
+    reward_label : str
+        Label for reward path regions.
+    trim : bool
+        Whether to trim results to common epochs across sessions.
+    three_nodes : list, optional
+        List of grid numbers for three-way decision nodes.
+    four_nodes : list, optional
+        List of grid numbers for four-way decision nodes.
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame with performance metrics for each epoch.
     """
     if three_nodes is None:
         three_nodes = [20, 17, 39, 51, 63, 60, 77, 89, 115, 114, 110, 109, 98]
     if four_nodes is None:
         four_nodes = [32, 14]
 
-    valid_dict_all, optimal_dict_all = track_valid_transitions_multi(df, decision_label, reward_label)
+    valid_dict_all, optimal_dict_all = track_valid_transitions_multi(
+        df,
+        decision_label,
+        reward_label,
+    )
     epochs = split_into_epochs_multi(df, epoch_size)
 
     all_results = []
@@ -202,15 +396,14 @@ def evaluate_agent_performance_multi(
         valid_dict = valid_dict_all.get(session, {})
         optimal_dict = optimal_dict_all.get(session, {})
         metrics = evaluate_epoch_multi(
-            chunk,
-            valid_dict,
-            optimal_dict,
-            decision_label,
-            reward_label,
-            three_nodes,
-            four_nodes,
-            n_bootstrap,
-            n_simulations,
+            chunk=chunk,
+            valid_dict=valid_dict,
+            optimal_dict=optimal_dict,
+            decision_label=decision_label,
+            three_nodes=three_nodes,
+            four_nodes=four_nodes,
+            n_bootstrap=n_bootstrap,
+            n_simulations=n_simulations,
         )
         metrics["Session"] = int(session)
         metrics["Epoch Number"] = int(idx)
@@ -226,7 +419,12 @@ def evaluate_agent_performance_multi(
 ##################################################################
 ## Plot 5: All Agents Comparative Performance over time
 ###################################################################
-def plot_agent_vs_mouse_performance_multi(df_metrics, mouseinfo, genotype, figsize=(12, 6)):
+def plot_agent_vs_mouse_performance_multi(
+    df_metrics,
+    mouseinfo,
+    genotype,
+    figsize=(12, 6),
+):
     """
     Plot actual vs. simulated agent reward path performance across epochs for a specified genotype.
 
@@ -270,7 +468,12 @@ def plot_agent_vs_mouse_performance_multi(df_metrics, mouseinfo, genotype, figsi
 ###################################################################
 ## Plot 6: Cumulative Agent Performance
 ###################################################################
-def plot_cumulative_agent_comparison_boxplot_multi(df_metrics, mouseinfo, genotype, figsize=(10, 6)):
+def plot_cumulative_agent_comparison_boxplot_multi(
+    df_metrics,
+    mouseinfo,
+    genotype,
+    figsize=(10, 6),
+):
     """
     Plots a boxplot comparing the cumulative reward path transition percentage
     across all sessions for the specified genotype for mouse and simulated agents.

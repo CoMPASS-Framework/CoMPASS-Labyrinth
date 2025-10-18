@@ -5,6 +5,7 @@ Goal:
    ├── Simulated Agent Modeling & Visualisation
    ├── Chi Square Analysis, Visualisation
 """
+
 import pandas as pd
 import numpy as np
 import random
@@ -18,6 +19,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
+
 ##################################################################
 # Simulated Agent Modelling
 ###################################################################
@@ -28,7 +30,7 @@ def get_valid_and_optimal_transitions(
 ) -> tuple[dict, dict]:
     """
     Extract valid and optimal transitions per session.
-    
+
     Parameters:
     -----------
     df : pd.DataFrame
@@ -60,15 +62,15 @@ def get_valid_and_optimal_transitions(
 
 
 def simulate_agent_vs_actual(
-    df_slice : pd.DataFrame,
-    valid_dict : dict,
-    optimal_dict : dict,
-    n_simulations : int,
-    decision_label : str = "Decision (Reward)",
+    df_slice: pd.DataFrame,
+    valid_dict: dict,
+    optimal_dict: dict,
+    n_simulations: int,
+    decision_label: str = "Decision (Reward)",
 ) -> tuple[list, list]:
     """
     Simulate random agent transitions and compare with actual.
-    
+
     Parameters:
     -----------
     df_slice : pd.DataFrame
@@ -114,7 +116,7 @@ def bootstrap_distribution(
 ) -> np.ndarray:
     """
     Generate bootstrap sample means.
-    
+
     Parameters:
     -----------
     data : list
@@ -132,16 +134,16 @@ def bootstrap_distribution(
 
 
 def compute_epoch_metrics(
-    df_slice : pd.DataFrame,
-    valid_dict : dict,
-    optimal_dict : dict,
-    n_bootstrap : int,
-    n_simulations : int,
-    decision_label : str = "Decision (Reward)",
+    df_slice: pd.DataFrame,
+    valid_dict: dict,
+    optimal_dict: dict,
+    n_bootstrap: int,
+    n_simulations: int,
+    decision_label: str = "Decision (Reward)",
 ) -> pd.Series:
     """
     Compute performance metrics for a single epoch of navigation.
-    
+
     Parameters:
     -----------
     df_slice : pd.DataFrame
@@ -220,7 +222,7 @@ def segment_data_by_epoch(
 ) -> list:
     """
     Split DataFrame by genotype and session into sequential time-based epochs.
-    
+
     Parameters:
     -----------
     df : pd.DataFrame
@@ -318,7 +320,7 @@ def evaluate_agent_performance(
         DataFrame with performance metrics per epoch.
     """
     df = df.copy()
-    
+
     # Filter by genotype if specified
     if genotype is not None:
         if genotype not in df["Genotype"].unique():
@@ -437,7 +439,7 @@ def plot_agent_transition_performance(
 
     fig.suptitle("Mouse vs. Simulated Agent: Reward Path Transition Proportion", fontsize=16)
     plt.tight_layout(rect=[0, 0, 1, 0.97])
-    
+
     # Save figure
     fig = plt.gcf()
     if save_fig:
@@ -467,7 +469,7 @@ def plot_relative_agent_performance(
 ) -> None | plt.Figure:
     """
     Plot relative performance of mouse vs simulated agent over time.
-    
+
     Parameters:
     -----------
     config : dict
@@ -540,7 +542,7 @@ def plot_relative_agent_performance(
     # Return figure
     if return_fig:
         return fig
-        
+
 
 #############################################################################
 ## Plot 3: Avg. Simulated Agent and Mouse Performance across Sessions(/Mice)
@@ -568,11 +570,7 @@ def fit_mixed_effects_model(df_long: pd.DataFrame) -> tuple:
     return result, p_value
 
 
-def plot_agent_performance_boxplot(
-    df_long: pd.DataFrame,
-    p_value: float,
-    palette: None | list = None
-) -> None:
+def plot_agent_performance_boxplot(df_long: pd.DataFrame, p_value: float, palette: None | list = None) -> None:
     """
     Plot boxplot comparing actual vs simulated agent with p-value annotation.
 
@@ -781,7 +779,7 @@ def compute_chi_square_statistic(df: pd.DataFrame) -> pd.DataFrame:
     -----------
     df : pd.DataFrame
         DataFrame with columns 'Actual Reward Path %' and 'Simulated Agent Reward Path %'.
-    
+
     Returns:
     --------
     pd.DataFrame
@@ -803,7 +801,7 @@ def compute_chi_square_statistic(df: pd.DataFrame) -> pd.DataFrame:
 def compute_rolling_chi_square(df: pd.DataFrame, window: int = 3) -> pd.DataFrame:
     """
     Compute rolling average of chi-square statistic within each session.
-    
+
     Patameters:
     -----------
     df : pd.DataFrame
@@ -826,7 +824,7 @@ def compute_rolling_chi_square(df: pd.DataFrame, window: int = 3) -> pd.DataFram
 def compute_cumulative_chi_square(df: pd.DataFrame) -> pd.DataFrame:
     """
     Compute cumulative sum of chi-square statistic within each session.
-    
+
     Parameters:
     -----------
     df : pd.DataFrame
@@ -914,8 +912,22 @@ def plot_chi_square_and_rolling(
         ax = axes[i]
         df_geno = chisquare_results[genotype]
 
-        sns.barplot(data=df_geno, x=epoch_col, y=chi_col, errorbar="se", palette="viridis", ax=ax,)
-        sns.lineplot(data=df_geno, x=epoch_col, y=rolling_col, color="black", lw=2, ax=ax,)
+        sns.barplot(
+            data=df_geno,
+            x=epoch_col,
+            y=chi_col,
+            errorbar="se",
+            palette="viridis",
+            ax=ax,
+        )
+        sns.lineplot(
+            data=df_geno,
+            x=epoch_col,
+            y=rolling_col,
+            color="black",
+            lw=2,
+            ax=ax,
+        )
 
         ax.set_title(f"{genotype}: Chi-Square & Rolling")
         ax.set_xlabel("Epochs")
@@ -927,7 +939,7 @@ def plot_chi_square_and_rolling(
 
     fig.suptitle("Chi-Square Statistic + Rolling Average by Genotype", fontsize=16)
     plt.tight_layout(rect=[0, 0, 1, 0.97])
-    
+
     # Save figure
     if save_fig:
         save_path = Path(config["project_path_full"]) / "figures" / "all_genotypes_chi_square_rolling.pdf"
@@ -1006,7 +1018,7 @@ def plot_rolling_mean(
 
     fig.suptitle("Rolling Chi-Square by Genotype", fontsize=16)
     plt.tight_layout(rect=[0, 0, 1, 0.97])
-    
+
     # Save figure
     if save_fig:
         save_path = Path(config["project_path_full"]) / "figures" / "all_genotypes_average_chi_square_rolling.pdf"
@@ -1068,7 +1080,14 @@ def plot_cumulative_chi_square(
         ax = axes[i]
         df_geno = chisquare_results[genotype]
 
-        sns.barplot(data=df_geno, x=epoch_col, y=cum_col, errorbar="se", palette="magma", ax=ax,)
+        sns.barplot(
+            data=df_geno,
+            x=epoch_col,
+            y=cum_col,
+            errorbar="se",
+            palette="magma",
+            ax=ax,
+        )
         ax.set_title(f"{genotype}: Cumulative Chi-Square")
         ax.set_xlabel("Epochs")
         ax.set_ylabel("Cumulative Stat")

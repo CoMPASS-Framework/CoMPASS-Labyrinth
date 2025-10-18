@@ -1,12 +1,10 @@
-from logging import config
 import pytest
 from pathlib import Path
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 
 
-class TestPerformanceMetrics:
+class TestSimulateAgent:
 
     def test_simulate_agent_df(self, simulate_agent_fixture):
         assert isinstance(simulate_agent_fixture, dict)
