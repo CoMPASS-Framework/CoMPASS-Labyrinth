@@ -11,7 +11,8 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import seaborn as sns
-from statsmodels.formula.api import mixedlm
+
+from compass_labyrinth.behavior.behavior_metrics.simulation_modeling.explore_exploit_agent import trim_to_common_epochs
 
 
 ##################################################################
@@ -174,20 +175,24 @@ def evaluate_epoch_multi(
 
 # -------------------- Step 4: Main Evaluation Wrapper -------------------- #
 def evaluate_agent_performance_multi(
-    df,
-    epoch_size,
-    n_bootstrap,
-    n_simulations,
-    decision_label="Decision (Reward)",
-    reward_label="reward_path",
-    three_nodes=None,
-    four_nodes=None,
+    df: pd.DataFrame,
+    epoch_size: int,
+    n_bootstrap: int,
+    n_simulations: int,
+    decision_label: str = "Decision (Reward)",
+    reward_label: str = "reward_path",
+    genotype: str | None = None,
+    trim: bool = True,
+    three_nodes: list | None = None,
+    four_nodes: list | None = None,
 ):
-
+    """
+    Evaluate the performance of different agent types over multiple epochs.
+    """
     if three_nodes is None:
-        three_nodes = {20, 17, 39, 51, 63, 60, 77, 89, 115, 114, 110, 109, 98}
+        three_nodes = [20, 17, 39, 51, 63, 60, 77, 89, 115, 114, 110, 109, 98]
     if four_nodes is None:
-        four_nodes = {32, 14}
+        four_nodes = [32, 14]
 
     valid_dict_all, optimal_dict_all = track_valid_transitions_multi(df, decision_label, reward_label)
     epochs = split_into_epochs_multi(df, epoch_size)
@@ -211,14 +216,16 @@ def evaluate_agent_performance_multi(
         metrics["Epoch Number"] = int(idx)
         all_results.append(metrics)
 
-    return pd.DataFrame(all_results)
+    results = pd.DataFrame(all_results)
+    if trim:
+        results = trim_to_common_epochs(results)
+
+    return results
 
 
 ##################################################################
 ## Plot 5: All Agents Comparative Performance over time
 ###################################################################
-
-
 def plot_agent_vs_mouse_performance_multi(df_metrics, mouseinfo, genotype, figsize=(12, 6)):
     """
     Plot actual vs. simulated agent reward path performance across epochs for a specified genotype.
@@ -263,8 +270,6 @@ def plot_agent_vs_mouse_performance_multi(df_metrics, mouseinfo, genotype, figsi
 ###################################################################
 ## Plot 6: Cumulative Agent Performance
 ###################################################################
-
-
 def plot_cumulative_agent_comparison_boxplot_multi(df_metrics, mouseinfo, genotype, figsize=(10, 6)):
     """
     Plots a boxplot comparing the cumulative reward path transition percentage
