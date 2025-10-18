@@ -9,6 +9,7 @@ Goal:
 import pandas as pd
 import numpy as np
 import random
+from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -420,19 +421,41 @@ def evaluate_agent_performance_multi(
 ## Plot 5: All Agents Comparative Performance over time
 ###################################################################
 def plot_agent_vs_mouse_performance_multi(
-    df_metrics,
-    mouseinfo,
-    genotype,
-    figsize=(12, 6),
-):
+    config: dict,
+    df_metrics: pd.DataFrame,
+    cohort_metadata: pd.DataFrame,
+    genotype: str,
+    figsize: tuple = (12, 6),
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
     """
     Plot actual vs. simulated agent reward path performance across epochs for a specified genotype.
 
     Parameters:
-        df_metrics (pd.DataFrame): Output from evaluate_agent_performance_multi().
-        mouseinfo (pd.DataFrame): Metadata mapping sessions to genotypes.
-        genotype (str): Genotype to filter (e.g., 'WT-WT').
-        figsize (tuple): Size of the plot.
+    -----------
+    config : dict
+        Configuration dictionary with project path.
+    df_metrics : pd.DataFrame
+        Output from evaluate_agent_performance_multi().
+    cohort_metadata : pd.DataFrame
+        Metadata mapping sessions to genotypes.
+    genotype : str
+        Genotype to filter (e.g., 'WT-WT').
+    figsize : tuple
+        Size of the plot.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    plt.Figure or None
+        The figure object if return_fig is True, otherwise None.
     """
     # --- Constants ---
     x_col = "Epoch Number"
@@ -443,46 +466,112 @@ def plot_agent_vs_mouse_performance_multi(
     title = "Mouse vs. Agent Reward Path Transition Proportion"
 
     # --- Filter sessions by genotype ---
-    sessions_reqd = mouseinfo.loc[mouseinfo.Genotype == genotype, "Session #"].unique()
+    sessions_reqd = cohort_metadata.loc[cohort_metadata.Genotype == genotype, "Session #"].unique()
     df_filtered = df_metrics[df_metrics["Session"].isin(sessions_reqd)].copy()
 
     # --- Plot ---
-    plt.figure(figsize=figsize)
+    fig = plt.figure(figsize=figsize)
 
-    sns.lineplot(data=df_filtered, x=x_col, y=y_col_actual, marker="o", label="Mouse", color="black")
-    sns.lineplot(data=df_filtered, x=x_col, y=y_col_random, linestyle="dashed", label="Random Agent", color="navy")
-    sns.lineplot(data=df_filtered, x=x_col, y=y_col_binary, linestyle="dashed", label="Binary Agent", color="green")
     sns.lineplot(
-        data=df_filtered, x=x_col, y=y_col_multi, linestyle="dashed", label="Three/Four Way Agent", color="maroon"
+        data=df_filtered,
+        x=x_col,
+        y=y_col_actual,
+        marker="o",
+        label="Mouse",
+        color="black",
+    )
+    sns.lineplot(
+        data=df_filtered,
+        x=x_col,
+        y=y_col_random,
+        linestyle="dashed",
+        label="Random Agent",
+        color="navy",
+    )
+    sns.lineplot(
+        data=df_filtered,
+        x=x_col,
+        y=y_col_binary,
+        linestyle="dashed",
+        label="Binary Agent",
+        color="green",
+    )
+    sns.lineplot(
+        data=df_filtered,
+        x=x_col,
+        y=y_col_multi,
+        linestyle="dashed",
+        label="Three/Four Way Agent",
+        color="maroon",
     )
 
     plt.xlabel("Epochs (in maze)", fontsize=12)
     plt.ylabel("Proportion of Reward Path Transitions", fontsize=12)
     plt.title(title, fontsize=14, fontweight="bold")
     plt.grid(True)
-    plt.legend(loc="center left", bbox_to_anchor=(1.02, 0.5), frameon=False, title="Agent")
+    plt.legend(
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
+        frameon=False,
+        title="Agent",
+    )
     plt.tight_layout()
-    # plt.show()
+
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / f"{genotype}_multiple_agent.pdf"
+        plt.savefig(save_path, bbox_inches="tight", dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
+
+    # Return figure
+    if return_fig:
+        return fig
 
 
 ###################################################################
 ## Plot 6: Cumulative Agent Performance
 ###################################################################
 def plot_cumulative_agent_comparison_boxplot_multi(
-    df_metrics,
-    mouseinfo,
-    genotype,
-    figsize=(10, 6),
-):
+    config: dict,
+    df_metrics: pd.DataFrame,
+    cohort_metadata: pd.DataFrame,
+    genotype: str,
+    figsize: tuple = (10, 6),
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
     """
     Plots a boxplot comparing the cumulative reward path transition percentage
     across all sessions for the specified genotype for mouse and simulated agents.
 
     Parameters:
-        df_metrics (pd.DataFrame): Output of `evaluate_agent_performance_multi()`.
-        mouseinfo (pd.DataFrame): DataFrame with genotype and session mapping.
-        genotype (str): Genotype to filter for comparison.
-        show (bool): Whether to display the plot immediately.
+    -----------
+    config : dict
+        Configuration dictionary with project path.
+    df_metrics : pd.DataFrame
+        Output from evaluate_agent_performance_multi().
+    cohort_metadata : pd.DataFrame
+        Metadata mapping sessions to genotypes.
+    genotype : str
+        Genotype to filter (e.g., 'WT-WT').
+    figsize : tuple
+        Size of the plot.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    plt.Figure or None
+        The figure object if return_fig is True, otherwise None.
     """
     # --- Constants ---
     metric_cols = {
@@ -493,7 +582,7 @@ def plot_cumulative_agent_comparison_boxplot_multi(
     }
 
     # --- Filter sessions for the genotype ---
-    sessions_reqd = mouseinfo.loc[mouseinfo.Genotype == genotype, "Session #"].unique()
+    sessions_reqd = cohort_metadata.loc[cohort_metadata.Genotype == genotype, "Session #"].unique()
     df_filtered = df_metrics[df_metrics["Session"].isin(sessions_reqd)].copy()
 
     # --- Aggregate to session level (mean across epochs) ---
@@ -504,9 +593,22 @@ def plot_cumulative_agent_comparison_boxplot_multi(
     df_melt["Agent"] = df_melt["Agent"].map({v: k for k, v in metric_cols.items()})
 
     # --- Plot ---
-    plt.figure(figsize=figsize)
-    sns.boxplot(data=df_melt, x="Agent", y="Reward Path %", palette="Set2")
-    sns.stripplot(data=df_melt, x="Agent", y="Reward Path %", color="black", size=4, jitter=True, alpha=0.6)
+    fig = plt.figure(figsize=figsize)
+    sns.boxplot(
+        data=df_melt,
+        x="Agent",
+        y="Reward Path %",
+        palette="Set2",
+    )
+    sns.stripplot(
+        data=df_melt,
+        x="Agent",
+        y="Reward Path %",
+        color="black",
+        size=4,
+        jitter=True,
+        alpha=0.6,
+    )
 
     plt.title(
         f"Cumulative Reward Path Transition % across Sessions\nGenotype: {genotype}", fontsize=14, fontweight="bold"
@@ -516,3 +618,17 @@ def plot_cumulative_agent_comparison_boxplot_multi(
     plt.ylim(0, 1)
     plt.grid(axis="y", linestyle="--", alpha=0.7)
     plt.tight_layout()
+
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / f"{genotype}_cumulative_multiple_agent.pdf"
+        plt.savefig(save_path, bbox_inches="tight", dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
+
+    # Return figure
+    if return_fig:
+        return fig
