@@ -2,37 +2,38 @@ name: Testing
 
 on:
   push:
-    branches: [main]
-    paths: ['.github/workflows/testing.yaml','src/**','tests/**','renv.lock','init_renv.R']
+    branches: [ main ]
+    paths:
+      - '.github/workflows/testing.yml'
+      - 'src/**'
+      - 'tests/**'
   pull_request:
-    branches: [main, dev]
-    paths: ['.github/workflows/testing.yaml','src/**','tests/**','renv.lock','init_renv.R']
+    branches: [ main, dev ]
+    paths:
+      - '.github/workflows/testing.yml'
+      - 'src/**'
+      - 'tests/**'
 
 jobs:
   run:
-    name: ${{ matrix.os }} • Py ${{ matrix.python }} • R ${{ matrix.r }}
-    runs-on: ${{ matrix.os }}
+    name: windows-latest • Python ${{ matrix.python-version }} • R ${{ matrix.r-version }}
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
-        python: ["3.11"]
-        r: ["4.4.3"]
-
-    env:
-      # Don’t attempt TinyTeX in CI
-      CI: "true"
+        python-version: ["3.11"]
+        r-version: ["4.4.3"]
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python }}
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install Python deps
+      - name: Install project dependencies (Python)
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]" --no-cache-dir
@@ -40,40 +41,15 @@ jobs:
       - name: Setup R
         uses: r-lib/actions/setup-r@v2
         with:
-          r-version: ${{ matrix.r }}
-          # RSPM speeds Linux only; macOS/Windows will use CRAN automatically
+          r-version: ${{ matrix.r-version }}
           use-public-rspm: true
 
-      # Make sure we can install 'renv' with a sane CRAN per OS
-      - name: Preinstall renv (set CRAN per-OS)
-        shell: bash
+      # Windows only: robust CRAN + renv setup (or fallback install)
+      - name: Prepare R libraries (renv or fallback)
+        shell: Rscript {0}
         run: |
-          Rscript -e "repo <- if (tolower(Sys.info()[['sysname']]) == 'windows') 'https://cloud.r-project.org/' else if (tolower(Sys.info()[['sysname']]) == 'darwin') 'https://cloud.r-project.org/' else 'https://packagemanager.posit.co/cran/__linux__/noble/latest'; options(repos=c(CRAN=repo)); if (!requireNamespace('renv', quietly=TRUE)) install.packages('renv'); cat('Using CRAN repo: ', repo, '\n')"
-
-      # Restore packages from lockfile (fast via cache)
-      - name: Setup renv (restore & cache)
-        uses: r-lib/actions/setup-renv@v2
-        with:
-          profile: default
-          cache-version: 3
-
-      # Double-check renv can activate/restore (helps fail early if lockfile missing)
-      - name: Activate renv & verify
-        run: |
-          Rscript -e "source('renv/activate.R'); renv::restore(prompt=FALSE); renv::status()"
-
-      # Linux-only: system libs for spatial stack
-      - name: Install system libs (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libcurl4-openssl-dev libssl-dev libxml2-dev \
-            libfontconfig1-dev libfreetype6-dev libharfbuzz-dev libfribidi-dev \
-            libpng-dev libjpeg-dev libtiff-dev libgit2-dev \
-            libudunits2-dev libgdal-dev gdal-bin libgeos-dev libproj-dev \
-            libx11-dev cmake
+          source("scripts/ci_setup.R")
 
       - name: Run tests
         run: |
-          pytest --cov=src/compass_labyrinth --cov-report=xml --cov-report=term-missing -v
+          pytest --cov=src/compass_labyrinth --cov-report=xml --cov-report=term-missing -vx
