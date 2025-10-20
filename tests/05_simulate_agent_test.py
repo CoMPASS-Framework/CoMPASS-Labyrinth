@@ -110,3 +110,44 @@ class TestSimulateAgent:
         fig_path = Path(config["project_path_full"]) / "figures" / "all_genotypes_cumulative_chi_square.pdf"
         assert fig_path.exists()
 
+    def test_multi_agents_df(self, simulate_agent_multi_fixture):
+        assert isinstance(simulate_agent_multi_fixture, pd.DataFrame)
+        assert not simulate_agent_multi_fixture.empty
+
+    def test_multi_agents_plots(self, create_project_fixture, simulate_agent_multi_fixture):
+        from compass_labyrinth.behavior.behavior_metrics.simulation_modeling import (
+            plot_agent_vs_mouse_performance_multi,
+            plot_cumulative_agent_comparison_boxplot_multi,
+        )
+
+        config, cohort_metadata = create_project_fixture
+
+        GENOTYPE = 'WT'
+
+        fig_1 = plot_agent_vs_mouse_performance_multi(
+            config=config,
+            df_metrics=simulate_agent_multi_fixture,
+            cohort_metadata=cohort_metadata,
+            genotype=GENOTYPE,
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+        assert isinstance(fig_1, plt.Figure)
+        plt.close(fig_1)
+        fig_path = Path(config["project_path_full"]) / "figures" / f"{GENOTYPE}_multiple_agent.pdf"
+        assert fig_path.exists()
+
+        fig_2 = plot_cumulative_agent_comparison_boxplot_multi(
+            config=config,
+            df_metrics=simulate_agent_multi_fixture,
+            cohort_metadata=cohort_metadata,
+            genotype=GENOTYPE,
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+        assert isinstance(fig_2, plt.Figure)
+        plt.close(fig_2)
+        fig_path = Path(config["project_path_full"]) / "figures" / f"{GENOTYPE}_cumulative_multiple_agent.pdf"
+        assert fig_path.exists()
