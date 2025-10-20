@@ -97,6 +97,15 @@ RIGHT_DEAD_ENDS = [
 DEAD_ENDS = LEFT_DEAD_ENDS + RIGHT_DEAD_ENDS
 # ------------------------------------------------------#
 
+REGION_NAMES = {
+    "target_zone": "Target Zone",
+    "entry_zone": "Entry Zone",
+    "reward_path": "Reward Path",
+    "dead_ends": "Dead Ends",
+    "neutral_zone": "Neutral Zone",
+    "loops": "Loops",
+}
+
 # -------CHOOSE REGION NAMES (KEY), MAPPED TO LIST OF GRID NODES IN THAT REGION (VALUE)--------#
 REGION_MAPPING = {
     "target_zone": TARGET_ZONE,
@@ -231,10 +240,8 @@ NODE_TYPE_MAPPING = {
 # ----------------PACKAGE DATA-------------------------#
 # Load adjacency matrix from package data
 ADJACENCY_MATRIX = pd.read_csv(
-    files('compass_labyrinth.data').joinpath('4step_adjacency_matrix.csv'),
+    files("compass_labyrinth.data").joinpath("4step_adjacency_matrix.csv"),
 )
 
 # Load value function from package data
-VALUE_FUNCTION = pd.read_csv(
-    files('compass_labyrinth.data').joinpath('value_function_per_grid_cell.csv')
-)
+VALUE_FUNCTION = pd.read_csv(files("compass_labyrinth.data").joinpath("value_function_per_grid_cell.csv"))
