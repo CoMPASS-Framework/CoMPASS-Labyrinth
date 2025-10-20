@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -18,7 +19,7 @@ class TestSimulateAgent:
             plot_relative_agent_performance,
             run_mixedlm_for_all_genotypes,
         )
-        
+
         config, cohort_metadata = create_project_fixture
         sim_results = simulate_agent_fixture
 
@@ -122,7 +123,7 @@ class TestSimulateAgent:
 
         config, cohort_metadata = create_project_fixture
 
-        GENOTYPE = 'WT'
+        GENOTYPE = "WT"
 
         fig_1 = plot_agent_vs_mouse_performance_multi(
             config=config,
@@ -150,4 +151,28 @@ class TestSimulateAgent:
         assert isinstance(fig_2, plt.Figure)
         plt.close(fig_2)
         fig_path = Path(config["project_path_full"]) / "figures" / f"{GENOTYPE}_cumulative_multiple_agent.pdf"
+        assert fig_path.exists()
+
+    def test_simulate_explore_exploit_agent(self, create_project_fixture, task_performance):
+        from compass_labyrinth.behavior.behavior_metrics.simulation_modeling import plot_exploration_rate_performance_EE
+
+        config, _ = create_project_fixture
+        df_all_csv, _ = task_performance
+
+        EXPLORATION_RATE_RANGE = np.arange(0.5, 1.0, 0.2)
+        SEGMENT_SIZE = 1000
+
+        fig = plot_exploration_rate_performance_EE(
+            config=config,
+            df_source=df_all_csv,
+            exploration_rates=EXPLORATION_RATE_RANGE,
+            segment_size=SEGMENT_SIZE,
+            trim=True,
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+        assert isinstance(fig, plt.Figure)
+        plt.close(fig)
+        fig_path = Path(config["project_path_full"]) / "figures" / "ee_agent.pdf"
         assert fig_path.exists()

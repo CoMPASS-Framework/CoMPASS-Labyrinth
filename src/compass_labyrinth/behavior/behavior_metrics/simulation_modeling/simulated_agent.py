@@ -373,7 +373,7 @@ def plot_agent_transition_performance(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary with project path.
+        Configuration dictionary containing project settings.
     evaluation_results : dict
         Dictionary with evaluation results for each genotype.
     genotype : str | None
@@ -473,7 +473,7 @@ def plot_relative_agent_performance(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary with project path.
+        Configuration dictionary containing project settings.
     evaluation_results : dict
         Dictionary with evaluation results for each genotype.
     genotype : str | None
@@ -707,7 +707,7 @@ def run_mixedlm_for_all_genotypes(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary for this project.
+        Configuration dictionary containing project settings..
     evaluation_results : dict
         Dictionary with evaluation results for each genotype.
     plot_palette : list or None
@@ -879,7 +879,7 @@ def plot_chi_square_and_rolling(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary for this project.
+        Configuration dictionary containing project settings..
     chisquare_results : dict
         Chi-square results dictionary.
     epoch_col : str
@@ -970,7 +970,7 @@ def plot_rolling_mean(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary for this project.
+        Configuration dictionary containing project settings..
     chisquare_results : dict
         Chi-square results dictionary.
     epoch_col : str
@@ -1049,7 +1049,7 @@ def plot_cumulative_chi_square(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary for this project.
+        Configuration dictionary containing project settings..
     chisquare_results : dict
         Chi-square results dictionary.
     epoch_col : str

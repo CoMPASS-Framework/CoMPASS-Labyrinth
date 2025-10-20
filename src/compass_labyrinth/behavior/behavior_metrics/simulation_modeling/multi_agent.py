@@ -13,7 +13,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from compass_labyrinth.behavior.behavior_metrics.simulation_modeling.explore_exploit_agent import trim_to_common_epochs
+from .simulated_agent import trim_to_common_epochs
 
 
 ##################################################################
@@ -436,7 +436,7 @@ def plot_agent_vs_mouse_performance_multi(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary with project path.
+        Configuration dictionary containing project settings.
     df_metrics : pd.DataFrame
         Output from evaluate_agent_performance_multi().
     cohort_metadata : pd.DataFrame
@@ -552,7 +552,7 @@ def plot_cumulative_agent_comparison_boxplot_multi(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary with project path.
+        Configuration dictionary containing project settings.
     df_metrics : pd.DataFrame
         Output from evaluate_agent_performance_multi().
     cohort_metadata : pd.DataFrame
