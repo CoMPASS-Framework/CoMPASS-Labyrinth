@@ -227,7 +227,7 @@ def plot_target_usage_vs_frames(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary containing project details.
+        Configuration dictionary containing project settings.
     summary_df : pd.DataFrame
         DataFrame containing the summary of target zone usage.
     save_fig : bool
@@ -348,7 +348,7 @@ def plot_target_usage_with_exclusions(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary containing project details.
+        Configuration dictionary containing project settings.
     summary_df : pd.DataFrame
         DataFrame containing the summary of target zone usage.
     sessions_to_exclude : list
@@ -480,7 +480,7 @@ def plot_region_heatmaps(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary containing project details.
+        Configuration dictionary containing project settings.
     pivot_dict : dict
         Dictionary with Genotype as keys and list of pivot DataFrames as values.
     group_name : str
@@ -623,7 +623,7 @@ def plot_region_heatmaps_all_genotypes(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary containing project details.
+        Configuration dictionary containing project settings.
     pivot_dict : dict
         Dictionary with Genotype as keys and list of pivot DataFrames as values.
     df_all_csv : pd.DataFrame
@@ -841,7 +841,7 @@ def plot_entropy_over_bins(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary containing project details.
+        Configuration dictionary containing project settings.
     entropy_df : pd.DataFrame
         DataFrame containing 'Session', 'Bin', 'Entropy', and 'Genotype' columns
     palette : list | None
@@ -1105,7 +1105,7 @@ def plot_region_usage_over_bins(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary containing project details.
+        Configuration dictionary containing project settings.
     region_data : pd.DataFrame
         Output from compute_region_usage_over_bins().
     region_name : str
@@ -1180,7 +1180,7 @@ def plot_all_regions_usage_over_bins(
     Parameters:
     -----------
     config : dict
-        Configuration dictionary containing project details.
+        Configuration dictionary containing project settings.
     pivot_dict : dict
         Dictionary with genotype keys and binned pivot tables.
     df_all_csv : pd.DataFrame

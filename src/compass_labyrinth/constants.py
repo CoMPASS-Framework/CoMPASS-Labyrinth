@@ -127,6 +127,19 @@ REGION_LENGTHS = {
 }
 
 # ----------------NODE-TYPES-------------------------#
+NODE_NAMES = {
+    "decision_reward": "Decision (Reward)",
+    "nondecision_reward": "Non-Decision (Reward)",
+    "corner_reward": "Corner (Reward)",
+    "decision_nonreward": "Decision (Non-Reward)",
+    "nondecision_nonreward": "Non-Decision (Non-Reward)",
+    "corner_nonreward": "Corner (Non-Reward)",
+    "entry_zone": "Entry Zone",
+    "target_zone": "Target Zone",
+    "decision_3way": "3-Way Decision",
+    "decision_4way": "4-Way Decision",
+}
+
 DECISION_REWARD = [20, 32, 17, 14, 39, 51, 63, 60, 77, 89, 115, 114, 110, 109, 98]
 NONDECISION_REWARD = [34, 21, 31, 30, 4, 3, 62, 61, 73, 74, 75, 76, 102, 125, 136, 123, 97]
 CORNER_REWARD = [22, 29, 5, 2, 26, 27, 72, 101, 103, 113, 137, 135, 111, 108, 96]
