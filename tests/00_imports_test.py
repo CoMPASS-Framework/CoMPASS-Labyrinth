@@ -1,10 +1,3 @@
-"""
-Test suite for verifying module imports in CoMPASS-Labyrinth.
-
-These tests verify that all main modules and submodules can be imported
-without errors. They run after installation tests.
-"""
-
 import pytest
 
 

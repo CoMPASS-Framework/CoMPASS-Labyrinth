@@ -1,10 +1,3 @@
-"""
-Test suite for init_project function and test_project fixture.
-
-This module demonstrates the usage of the test_project fixture
-and validates the init_project function behavior.
-"""
-
 import pytest
 from pathlib import Path
 import pandas as pd
