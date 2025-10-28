@@ -1,6 +1,6 @@
 # CoMPASS Level-1 (HMM Behavioral State Modeling)
 
-This module documents the pipeline for **Hidden Markov Model (HMM)**-based classification of behavioral states using step length and turning angle parameters, implemented in **R** via the [`momentuHMM`](https://cran.r-project.org/web/packages/momentuHMM/index.html) package. It is designed to capture latent navigation states in freely behaving animals based on movement features.
+This module documents the pipeline for **Hidden Markov Model (HMM)**-based classification of behavioral states using step length and turning angle parameters. It is designed to capture latent navigation states in freely behaving animals based on movement features.
 
 ---
 
