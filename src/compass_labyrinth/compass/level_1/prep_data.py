@@ -262,4 +262,10 @@ def prep_data(
 
     df.attrs["coords"] = coord_cols
 
+    df = (
+        df
+        .dropna()
+        .reset_index(drop=True)
+    )
+
     return df
