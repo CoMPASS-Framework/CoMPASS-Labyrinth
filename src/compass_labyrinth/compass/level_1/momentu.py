@@ -6,65 +6,87 @@ from scipy.special import gammaln, i0e
 from scipy.optimize import minimize
 from tqdm.auto import tqdm
 
+
 # =========================
 # Helpers (IQR/MAD, utils)
 # =========================
 def _mad(x):
     x = np.asarray(x, dtype=float)
     x = x[np.isfinite(x)]
-    if x.size == 0: return 0.0
+    if x.size == 0:
+        return 0.0
     med = np.median(x)
     return 1.4826 * np.median(np.abs(x - med))
+
 
 def _iqr(x):
     x = np.asarray(x, dtype=float)
     x = x[np.isfinite(x)]
-    if x.size == 0: return 0.0
+    if x.size == 0:
+        return 0.0
     return float(np.percentile(x, 75) - np.percentile(x, 25))
 
+
 def _wrap_angle(a):
-    return (a + np.pi) % (2*np.pi) - np.pi
+    return (a + np.pi) % (2 * np.pi) - np.pi
+
 
 def _contig_lengths(ids):
     lengths, last, c = [], None, 0
     for v in ids:
-        if last is None or v == last: c += 1
-        else: lengths.append(c); c = 1
+        if last is None or v == last:
+            c += 1
+        else:
+            lengths.append(c)
+            c = 1
         last = v
-    if c > 0: lengths.append(c)
+    if c > 0:
+        lengths.append(c)
     return lengths
+
 
 def _aic_from_loglik(loglik, n_states, angle_model: str):
     # params: start (S-1) + trans S(S-1) + emissions per state
     # step gamma: (k_step, theta_step) = 2
     # angle vm: (mu, kappa) = 2  |  angle gamma: (k_angle, theta_angle) = 2
     k_emiss = 4  # both cases = 4 per state
-    k = (n_states - 1) + n_states*(n_states - 1) + k_emiss*n_states
-    return 2*k - 2*loglik
+    k = (n_states - 1) + n_states * (n_states - 1) + k_emiss * n_states
+    return 2 * k - 2 * loglik
+
 
 # =========================
 # Parameter ranges (for init)
 # =========================
-def compute_parameter_ranges(df: pd.DataFrame, angle_var: str, use_vm: bool = False) -> Dict[str, Tuple[float,float]]:
+def compute_parameter_ranges(
+    df: pd.DataFrame,
+    angle_var: str,
+    use_vm: bool = False,
+) -> Dict[str, Tuple[float, float]]:
     step = df["step"].to_numpy(float)
-    step_iqr = _iqr(step); step_median = np.nanmedian(step)
+    step_iqr = _iqr(step)
+    step_median = np.nanmedian(step)
     step_mean_range = (max(1e-6, step_median - step_iqr), step_median + step_iqr)
     step_sd_range = (0.1, max(0.2, 1.5 * _mad(step)))
 
     angle = df[angle_var].to_numpy(float)
-    angle_median = np.nanmedian(angle); angle_iqr = _iqr(angle)
+    angle_median = np.nanmedian(angle)
+    angle_iqr = _iqr(angle)
     angle_mean_range = (max(0.0, angle_median - angle_iqr), angle_median + angle_iqr)
     angle_sd_range = (0.1, max(0.2, 1.5 * _mad(angle)))
 
     angle_conc_range = None
     if use_vm:
-        c = np.nanmean(np.cos(angle)); s = np.nanmean(np.sin(angle))
+        c = np.nanmean(np.cos(angle))
+        s = np.nanmean(np.sin(angle))
         R = np.sqrt(c**2 + s**2) if np.isfinite(c) and np.isfinite(s) else 0.0
         if R > 0:
-            if R < 0.53: kappa = 2*R + R**3 + (5*R**5)/6
-            elif R < 0.85: kappa = -0.4 + 1.39*R + 0.43/(1 - R)
-            else: kappa = 1/(R**3 - 4*R**2 + 3*R)
-            angle_conc_range = (1.0, float(min(max(5.0, 2*kappa + 1.0), 50.0)))
+            if R < 0.53:
+                kappa = 2 * R + R**3 + (5 * R**5) / 6
+            elif R < 0.85:
+                kappa = -0.4 + 1.39 * R + 0.43 / (1 - R)
+            else:
+                kappa = 1 / (R**3 - 4 * R**2 + 3 * R)
+            angle_conc_range = (1.0, float(min(max(5.0, 2 * kappa + 1.0), 50.0)))
         else:
             angle_conc_range = (1.0, 15.0)
 
@@ -73,8 +95,9 @@ def compute_parameter_ranges(df: pd.DataFrame, angle_var: str, use_vm: bool = Fa
         step_sd_range=step_sd_range,
         angle_mean_range=angle_mean_range,
         angle_sd_range=angle_sd_range,
-        angle_conc_range=angle_conc_range
+        angle_conc_range=angle_conc_range,
     )
+
 
 # =========================
 # Emission log-densities
@@ -84,13 +107,15 @@ def logpdf_gamma(x, k, theta):
     x = np.clip(x, 1e-12, None)
     k = np.clip(k, 1e-8, None)
     theta = np.clip(theta, 1e-8, None)
-    return (k - 1) * np.log(x) - (x/theta) - k*np.log(theta) - gammaln(k)
+    return (k - 1) * np.log(x) - (x / theta) - k * np.log(theta) - gammaln(k)
+
 
 def logpdf_vonmises(phi, mu, kappa):
     kappa = np.clip(kappa, 0.0, None)
     # stable log C = -log(2πI0(k)), with i0e handling exp(k) internally
-    logC = -(np.log(2*np.pi) + (np.log(i0e(kappa)) + np.abs(kappa)))
+    logC = -(np.log(2 * np.pi) + (np.log(i0e(kappa)) + np.abs(kappa)))
     return kappa * np.cos(phi - mu) + logC
+
 
 # =========================
 # Forward–Backward & Viterbi
@@ -98,38 +123,46 @@ def logpdf_vonmises(phi, mu, kappa):
 def forward_backward(log_lik, startprob, transmat, lengths):
     S = startprob.shape[0]
     N = log_lik.shape[0]
-    alpha = np.zeros((N, S)); scales = np.zeros(N)
+    alpha = np.zeros((N, S))
+    scales = np.zeros(N)
     idx = 0
     for L in lengths:
         a0 = np.log(startprob + 1e-15) + log_lik[idx]
-        c0 = np.logaddexp.reduce(a0); alpha[idx] = a0 - c0; scales[idx] = c0
-        for t in range(idx+1, idx+L):
-            at = alpha[t-1][:, None] + np.log(transmat + 1e-15)
+        c0 = np.logaddexp.reduce(a0)
+        alpha[idx] = a0 - c0
+        scales[idx] = c0
+        for t in range(idx + 1, idx + L):
+            at = alpha[t - 1][:, None] + np.log(transmat + 1e-15)
             a = np.logaddexp.reduce(at, axis=0) + log_lik[t]
-            ct = np.logaddexp.reduce(a); alpha[t] = a - ct; scales[t] = ct
+            ct = np.logaddexp.reduce(a)
+            alpha[t] = a - ct
+            scales[t] = ct
         idx += L
     beta = np.zeros((N, S))
     idx = 0
     for L in lengths:
-        for t in range(idx+L-2, idx-1, -1):
-            btn = (beta[t+1] + log_lik[t+1])[None, :] + np.log(transmat + 1e-15)
+        for t in range(idx + L - 2, idx - 1, -1):
+            btn = (beta[t + 1] + log_lik[t + 1])[None, :] + np.log(transmat + 1e-15)
             b = np.logaddexp.reduce(btn, axis=1)
             beta[t] = b - np.logaddexp.reduce(b)
         idx += L
     g = alpha + beta
     g -= np.max(g, axis=1, keepdims=True)
-    g = np.exp(g); g /= g.sum(axis=1, keepdims=True)
+    g = np.exp(g)
+    g /= g.sum(axis=1, keepdims=True)
     xisum = np.zeros_like(transmat)
     idx = 0
     for L in lengths:
-        for t in range(idx, idx+L-1):
-            M = (alpha[t][:, None] + np.log(transmat + 1e-15)
-                 + log_lik[t+1][None, :] + beta[t+1][None, :])
-            M -= np.max(M); P = np.exp(M); P /= P.sum()
+        for t in range(idx, idx + L - 1):
+            M = alpha[t][:, None] + np.log(transmat + 1e-15) + log_lik[t + 1][None, :] + beta[t + 1][None, :]
+            M -= np.max(M)
+            P = np.exp(M)
+            P /= P.sum()
             xisum += P
         idx += L
     total_ll = float(scales.sum())
     return g, xisum, total_ll
+
 
 def viterbi(log_lik, startprob, transmat, lengths):
     S = startprob.shape[0]
@@ -139,18 +172,21 @@ def viterbi(log_lik, startprob, transmat, lengths):
     for L in lengths:
         delta = np.log(startprob + 1e-15) + log_lik[idx]
         psi = np.zeros((L, S), dtype=int)
-        deltas = np.zeros((L, S)); deltas[0] = delta
+        deltas = np.zeros((L, S))
+        deltas[0] = delta
         for t in range(1, L):
-            prev = deltas[t-1][:, None] + np.log(transmat + 1e-15)
+            prev = deltas[t - 1][:, None] + np.log(transmat + 1e-15)
             psi[t] = np.argmax(prev, axis=0)
             deltas[t] = np.max(prev, axis=0) + log_lik[idx + t]
-        sT = int(np.argmax(deltas[L-1]))
-        seq = np.empty(L, dtype=int); seq[L-1] = sT
-        for t in range(L-2, -1, -1):
-            seq[t] = psi[t+1, seq[t+1]]
-        path[idx:idx+L] = seq
+        sT = int(np.argmax(deltas[L - 1]))
+        seq = np.empty(L, dtype=int)
+        seq[L - 1] = sT
+        for t in range(L - 2, -1, -1):
+            seq[t] = psi[t + 1, seq[t + 1]]
+        path[idx : idx + L] = seq
         idx += L
     return path
+
 
 # =========================
 # HMM class: Gamma(step) + VM(angle) or Gamma(abs(angle))
@@ -161,9 +197,18 @@ class GammaHMM:
         - "vm"       : use angle (radians) ~ von Mises
         - "absgamma" : use |angle| ~ Gamma
     """
-    def __init__(self, n_states=2, angle_model="vm", max_iter=200, tol=1e-4,
-                 method="L-BFGS-B", random_state=0, stationary=True,
-                 angle_bias: Optional[Tuple[float, float]] = None):
+
+    def __init__(
+        self,
+        n_states=2,
+        angle_model="vm",
+        max_iter=200,
+        tol=1e-4,
+        method="L-BFGS-B",
+        random_state=0,
+        stationary=True,
+        angle_bias: Optional[Tuple[float, float]] = None,
+    ):
         self.S = n_states
         self.angle_model = angle_model
         self.max_iter = max_iter
@@ -175,19 +220,23 @@ class GammaHMM:
 
     def _init_params(self, step, angle):
         S = self.S
-        self.startprob_ = np.full(S, 1.0/S)
+        self.startprob_ = np.full(S, 1.0 / S)
         diag = 0.95 if self.stationary else 0.90
-        self.transmat_ = np.full((S, S), (1 - diag)/(S - 1)); np.fill_diagonal(self.transmat_, diag)
+        self.transmat_ = np.full((S, S), (1 - diag) / (S - 1))
+        np.fill_diagonal(self.transmat_, diag)
 
         # Step Gamma init
         s_med, s_iqr = np.nanmedian(step), _iqr(step)
-        mean1, mean2 = max(1e-3, s_med - 0.3*s_iqr), max(1e-3, s_med + 0.3*s_iqr)
-        var_guess = (max(1e-6, 0.5*s_iqr))**2 + 1e-6
-        def ktheta(m, v): 
+        mean1, mean2 = max(1e-3, s_med - 0.3 * s_iqr), max(1e-3, s_med + 0.3 * s_iqr)
+        var_guess = (max(1e-6, 0.5 * s_iqr)) ** 2 + 1e-6
+
+        def ktheta(m, v):
             k = m**2 / v
             th = v / m
-            return max(1e-3,k), max(1e-3,th)
-        k1, t1 = ktheta(mean1, var_guess); k2, t2 = ktheta(mean2, var_guess)
+            return max(1e-3, k), max(1e-3, th)
+
+        k1, t1 = ktheta(mean1, var_guess)
+        k2, t2 = ktheta(mean2, var_guess)
         self.k_step_ = np.array([k1, k2][:S], dtype=float)
         self.theta_step_ = np.array([t1, t2][:S], dtype=float)
 
@@ -200,52 +249,76 @@ class GammaHMM:
         else:
             # abs(angle) as gamma
             a_med, a_iqr = np.nanmedian(angle), _iqr(angle)
-            ma1, ma2 = max(1e-3, a_med - 0.3*a_iqr), max(1e-3, a_med + 0.3*a_iqr)
-            v_ag = (max(1e-6, 0.5*a_iqr))**2 + 1e-6
-            ka1, tha1 = ktheta(ma1, v_ag); ka2, tha2 = ktheta(ma2, v_ag)
+            ma1, ma2 = max(1e-3, a_med - 0.3 * a_iqr), max(1e-3, a_med + 0.3 * a_iqr)
+            v_ag = (max(1e-6, 0.5 * a_iqr)) ** 2 + 1e-6
+            ka1, tha1 = ktheta(ma1, v_ag)
+            ka2, tha2 = ktheta(ma2, v_ag)
             self.k_ang_ = np.array([ka1, ka2][:S], dtype=float)
             self.theta_ang_ = np.array([tha1, tha2][:S], dtype=float)
 
     def _loglik(self, step, angle):
-        N = len(step); L = np.zeros((N, self.S))
+        N = len(step)
+        L = np.zeros((N, self.S))
         if self.angle_model == "vm":
             for s in range(self.S):
-                L[:, s] = logpdf_gamma(step, self.k_step_[s], self.theta_step_[s]) + \
-                          logpdf_vonmises(angle, self.mu_[s], self.kappa_[s])
+                L[:, s] = logpdf_gamma(step, self.k_step_[s], self.theta_step_[s]) + logpdf_vonmises(
+                    angle, self.mu_[s], self.kappa_[s]
+                )
         else:
             for s in range(self.S):
-                L[:, s] = logpdf_gamma(step, self.k_step_[s], self.theta_step_[s]) + \
-                          logpdf_gamma(angle, self.k_ang_[s], self.theta_ang_[s])
+                L[:, s] = logpdf_gamma(step, self.k_step_[s], self.theta_step_[s]) + logpdf_gamma(
+                    angle, self.k_ang_[s], self.theta_ang_[s]
+                )
         return L
 
     def _mstep_emissions(self, step, angle, gamma):
         for s in range(self.S):
-            w = gamma[:, s]; w = w/(w.sum() + 1e-12)
+            w = gamma[:, s]
+            w = w / (w.sum() + 1e-12)
             if self.angle_model == "vm":
+
                 def nll(p):
                     logk_s, logth_s, mu, logkp1 = p
-                    k_s = np.exp(logk_s); th_s = np.exp(logth_s); kp = np.exp(logkp1) - 1.0
+                    k_s = np.exp(logk_s)
+                    th_s = np.exp(logth_s)
+                    kp = np.exp(logkp1) - 1.0
                     return -(w * (logpdf_gamma(step, k_s, th_s) + logpdf_vonmises(angle, mu, kp))).sum()
-                x0 = np.array([np.log(self.k_step_[s]), np.log(self.theta_step_[s]),
-                               self.mu_[s], np.log(self.kappa_[s] + 1.0)])
+
+                x0 = np.array(
+                    [np.log(self.k_step_[s]), np.log(self.theta_step_[s]), self.mu_[s], np.log(self.kappa_[s] + 1.0)]
+                )
                 res = minimize(nll, x0, method=self.method, options=dict(maxiter=500, disp=False))
                 if res.success:
                     logk_s, logth_s, mu, logkp1 = res.x
-                    self.k_step_[s] = np.exp(logk_s); self.theta_step_[s] = np.exp(logth_s)
-                    self.mu_[s] = _wrap_angle(mu); self.kappa_[s] = np.exp(logkp1) - 1.0
+                    self.k_step_[s] = np.exp(logk_s)
+                    self.theta_step_[s] = np.exp(logth_s)
+                    self.mu_[s] = _wrap_angle(mu)
+                    self.kappa_[s] = np.exp(logkp1) - 1.0
             else:
+
                 def nll(p):
                     logk_s, logth_s, logk_a, logth_a = p
-                    k_s = np.exp(logk_s); th_s = np.exp(logth_s)
-                    k_a = np.exp(logk_a); th_a = np.exp(logth_a)
+                    k_s = np.exp(logk_s)
+                    th_s = np.exp(logth_s)
+                    k_a = np.exp(logk_a)
+                    th_a = np.exp(logth_a)
                     return -(w * (logpdf_gamma(step, k_s, th_s) + logpdf_gamma(angle, k_a, th_a))).sum()
-                x0 = np.array([np.log(self.k_step_[s]), np.log(self.theta_step_[s]),
-                               np.log(self.k_ang_[s]),  np.log(self.theta_ang_[s])])
+
+                x0 = np.array(
+                    [
+                        np.log(self.k_step_[s]),
+                        np.log(self.theta_step_[s]),
+                        np.log(self.k_ang_[s]),
+                        np.log(self.theta_ang_[s]),
+                    ]
+                )
                 res = minimize(nll, x0, method=self.method, options=dict(maxiter=500, disp=False))
                 if res.success:
                     logk_s, logth_s, logk_a, logth_a = res.x
-                    self.k_step_[s] = np.exp(logk_s); self.theta_step_[s] = np.exp(logth_s)
-                    self.k_ang_[s] = np.exp(logk_a);  self.theta_ang_[s] = np.exp(logth_a)
+                    self.k_step_[s] = np.exp(logk_s)
+                    self.theta_step_[s] = np.exp(logth_s)
+                    self.k_ang_[s] = np.exp(logk_a)
+                    self.theta_ang_[s] = np.exp(logth_a)
 
     def fit(self, df, id_col="Session", step_col="step", angle_col="angle"):
         ids = df[id_col].to_numpy()
@@ -265,17 +338,23 @@ class GammaHMM:
             gamma, xisum, ll = forward_backward(logL, self.startprob_, self.transmat_, lengths)
 
             # start probs (average of posteriors at sequence starts)
-            start = np.zeros(self.S); idx = 0
-            for L in lengths: start += gamma[idx]; idx += L
-            self.startprob_ = (start/len(lengths)).clip(1e-12); self.startprob_ /= self.startprob_.sum()
+            start = np.zeros(self.S)
+            idx = 0
+            for L in lengths:
+                start += gamma[idx]
+                idx += L
+            self.startprob_ = (start / len(lengths)).clip(1e-12)
+            self.startprob_ /= self.startprob_.sum()
 
             # transition matrix
-            A = xisum.clip(1e-12); self.transmat_ = A / A.sum(axis=1, keepdims=True)
+            A = xisum.clip(1e-12)
+            self.transmat_ = A / A.sum(axis=1, keepdims=True)
 
             # emissions with chosen optimizer
             self._mstep_emissions(step, ang, gamma)
 
-            if ll - prev_ll < self.tol: break
+            if ll - prev_ll < self.tol:
+                break
             prev_ll = ll
 
         self.posterior_ = gamma
@@ -288,7 +367,8 @@ class GammaHMM:
         # State diagnostics for objective
         step_means = np.zeros(self.S)
         for s in range(self.S):
-            w = self.posterior_[:, s]; w /= (w.sum() + 1e-12)
+            w = self.posterior_[:, s]
+            w /= w.sum() + 1e-12
             step_means[s] = np.sum(w * step)
         self.step_means_ = step_means
         if self.angle_model == "vm":
@@ -297,7 +377,8 @@ class GammaHMM:
             # for gamma |angle|, larger mean ≈ more turning
             ang_means = np.zeros(self.S)
             for s in range(self.S):
-                w = self.posterior_[:, s]; w /= (w.sum() + 1e-12)
+                w = self.posterior_[:, s]
+                w /= w.sum() + 1e-12
                 ang_means[s] = np.sum(w * ang)
             self.turn_metric_ = ang_means
         return self
@@ -317,17 +398,22 @@ class GammaHMM:
         order = np.asarray(order, dtype=int)
         self.startprob_ = self.startprob_[order]
         self.transmat_ = self.transmat_[order][:, order]
-        self.k_step_ = self.k_step_[order]; self.theta_step_ = self.theta_step_[order]
+        self.k_step_ = self.k_step_[order]
+        self.theta_step_ = self.theta_step_[order]
         if self.angle_model == "vm":
-            self.mu_ = self.mu_[order]; self.kappa_ = self.kappa_[order]
+            self.mu_ = self.mu_[order]
+            self.kappa_ = self.kappa_[order]
         else:
-            self.k_ang_ = self.k_ang_[order]; self.theta_ang_ = self.theta_ang_[order]
+            self.k_ang_ = self.k_ang_[order]
+            self.theta_ang_ = self.theta_ang_[order]
         if hasattr(self, "posterior_"):
             self.posterior_ = self.posterior_[:, order]
             self.states_post_ = np.argmax(self.posterior_, axis=1)
         if hasattr(self, "viterbi_"):
-            inv = np.empty_like(order); inv[order] = np.arange(len(order))
+            inv = np.empty_like(order)
+            inv[order] = np.arange(len(order))
             self.viterbi_ = inv[self.viterbi_]
+
 
 # =========================
 # Summaries & Orchestrator
@@ -344,7 +430,7 @@ def _summarize(model: GammaHMM) -> Dict[str, Any]:
         "step_k": np.round(model.k_step_, 3).tolist(),
         "step_theta": np.round(model.theta_step_, 3).tolist(),
         "step_means": np.round(model.step_means_, 4).tolist(),
-        "turn_metric": np.round(model.turn_metric_, 4).tolist()
+        "turn_metric": np.round(model.turn_metric_, 4).tolist(),
     }
     if model.angle_model == "vm":
         d["vm_mu"] = np.round(model.mu_, 3).tolist()
@@ -353,6 +439,7 @@ def _summarize(model: GammaHMM) -> Dict[str, Any]:
         d["ang_k"] = np.round(model.k_ang_, 3).tolist()
         d["ang_theta"] = np.round(model.theta_ang_, 3).tolist()
     return d
+
 
 def print_hmm_summary(model_summary: Dict[str, Any], best_model: GammaHMM):
     s = model_summary
@@ -371,6 +458,7 @@ def print_hmm_summary(model_summary: Dict[str, Any], best_model: GammaHMM):
         print(f"• |angle| Gamma theta: {s['ang_theta']}")
     print("• Final state ordering: State 1 = low step + high turn; State 2 = high step + low turn\n")
 
+
 @dataclass
 class BestResult:
     model: GammaHMM
@@ -378,11 +466,11 @@ class BestResult:
     records: pd.DataFrame
     data: pd.DataFrame
 
+
 def _enforce_or_reject(model: GammaHMM) -> bool:
     step = model.step_means_
     turn = model.turn_metric_
-    s1 = int(np.argmax(-(step - step.mean())/(step.std()+1e-12) +
-                        (turn - turn.mean())/(turn.std()+1e-12)))
+    s1 = int(np.argmax(-(step - step.mean()) / (step.std() + 1e-12) + (turn - turn.mean()) / (turn.std() + 1e-12)))
     s2 = 1 - s1 if model.S == 2 else [i for i in range(model.S) if i != s1][0]
     if not (step[s1] <= step[s2] and turn[s1] >= turn[s2]):
         return False
@@ -390,18 +478,19 @@ def _enforce_or_reject(model: GammaHMM) -> bool:
         model.reorder_states([s1, s2])
     return True
 
+
 def fit_best_hmm(
     preproc_df: pd.DataFrame,
     n_states: int = 2,
     n_iter: int = 20,
     opt_methods: Tuple[str, ...] = ("BFGS", "L-BFGS-B", "Nelder-Mead", "Powell"),
-    use_abs_angle: Tuple[bool, ...] = (True, False),          # True => |angle|~Gamma ; False => angle~VM
+    use_abs_angle: Tuple[bool, ...] = (True, False),  # True => |angle|~Gamma ; False => angle~VM
     stationary_flag: str | bool = "auto",
     use_data_driven_ranges: bool = True,
-    angle_mean_biased: Tuple[float, float] = (np.pi/2, 0.0),  # only for VM branch
+    angle_mean_biased: Tuple[float, float] = (np.pi / 2, 0.0),  # only for VM branch
     session_col: str = "Session",
     seed: int = 123,
-    show_progress: bool = True
+    show_progress: bool = True,
 ) -> BestResult:
 
     rng = np.random.default_rng(seed)
@@ -434,10 +523,12 @@ def fit_best_hmm(
                     model = GammaHMM(
                         n_states=n_states,
                         angle_model=("absgamma" if abs_flag else "vm"),
-                        max_iter=200, tol=1e-4,
-                        method=opt, random_state=this_seed,
+                        max_iter=200,
+                        tol=1e-4,
+                        method=opt,
+                        random_state=this_seed,
                         stationary=stationary,
-                        angle_bias=(angle_mean_biased if not abs_flag else None)
+                        angle_bias=(angle_mean_biased if not abs_flag else None),
                     )
                     model.fit(df_use, id_col=session_col, step_col="step", angle_col="angle")
 
@@ -446,13 +537,15 @@ def fit_best_hmm(
                         continue
 
                     summ = _summarize(model)
-                    records.append({
-                        "abs_angle": abs_flag,
-                        "optimizer": opt,
-                        "seed": this_seed,
-                        "AIC": summ["AIC"],
-                        "loglik": summ["loglik"]
-                    })
+                    records.append(
+                        {
+                            "abs_angle": abs_flag,
+                            "optimizer": opt,
+                            "seed": this_seed,
+                            "AIC": summ["AIC"],
+                            "loglik": summ["loglik"],
+                        }
+                    )
 
                     # attach states/posteriors back to the original df rows
                     out = preproc_df.copy()
@@ -461,7 +554,11 @@ def fit_best_hmm(
                         out[f"Post_Prob_{s+1}"] = np.nan
                     # valid mask (same as fit)
                     m = np.isfinite(preproc_df["step"].to_numpy(float)) & np.isfinite(
-                        (np.abs(preproc_df["angle"].to_numpy(float)) if abs_flag else preproc_df["angle"].to_numpy(float))
+                        (
+                            np.abs(preproc_df["angle"].to_numpy(float))
+                            if abs_flag
+                            else preproc_df["angle"].to_numpy(float)
+                        )
                     )
                     out.loc[m, "HMM_State"] = int(model.viterbi_ + 1)  # 1/2 labeling
                     # for s in range(model.S):      # Optional add the State Probs
@@ -472,14 +569,18 @@ def fit_best_hmm(
                 except Exception:
                     pass
                 finally:
-                    if pbar: pbar.update(1)
+                    if pbar:
+                        pbar.update(1)
 
-    if pbar: pbar.close()
+    if pbar:
+        pbar.close()
     if len(candidates) == 0:
         raise RuntimeError("No valid models met the behavioral objective across configurations.")
 
     # Select best by AIC
     best_idx = int(np.argmin([c[2]["AIC"] for c in candidates]))
     best_model, df_with_states, best_summary = candidates[best_idx]
-    rec_df = pd.DataFrame.from_records(records).sort_values(["AIC", "optimizer"], ascending=[True, True], kind="mergesort")
+    rec_df = pd.DataFrame.from_records(records).sort_values(
+        ["AIC", "optimizer"], ascending=[True, True], kind="mergesort"
+    )
     return BestResult(model=best_model, summary=best_summary, records=rec_df, data=df_with_states)
