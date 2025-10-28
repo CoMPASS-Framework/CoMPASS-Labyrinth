@@ -26,14 +26,14 @@ def load_project(project_path: Path | str) -> tuple[dict, pd.DataFrame]:
     if not config_file_path.exists():
         raise FileNotFoundError(f"Configuration file not found at {config_file_path}")
 
-    with open(config_file_path, 'r') as file:
+    with open(config_file_path, "r") as file:
         config = yaml.safe_load(file)
 
     # Load metadata CSV
     metadata_file_path = project_path / "cohort_metadata.csv"
     if not metadata_file_path.exists():
         raise FileNotFoundError(f"Metadata file not found at {metadata_file_path}")
-    
+
     metadata_df = pd.read_csv(metadata_file_path)
 
     return (config, metadata_df)
@@ -57,7 +57,7 @@ def load_cohort_metadata(config: dict) -> pd.DataFrame:
     metadata_file_path = project_path / "cohort_metadata.csv"
     if not metadata_file_path.exists():
         raise FileNotFoundError(f"Metadata file not found at {metadata_file_path}")
-    
+
     metadata_df = pd.read_csv(metadata_file_path)
     return metadata_df
 
@@ -65,9 +65,9 @@ def load_cohort_metadata(config: dict) -> pd.DataFrame:
 def save_figure(
     config: dict,
     fig_name: str,
-    subdir: str = 'results/task_performance',
+    subdir: str = "results/task_performance",
     dpi: int = 300,
-    ext: str = 'pdf'
+    ext: str = "pdf",
 ):
     """
     Save the current matplotlib figure to a standardized results folder.
@@ -87,9 +87,9 @@ def save_figure(
         File extension, e.g., 'pdf', 'png', etc.
     """
     import matplotlib.pyplot as plt
-    
+
     base_path = config["project_path_full"]
     os.makedirs(os.path.join(base_path, subdir), exist_ok=True)
     save_path = os.path.join(base_path, subdir, f"{fig_name}.{ext}")
-    plt.savefig(save_path, bbox_inches='tight', dpi=dpi)
+    plt.savefig(save_path, bbox_inches="tight", dpi=dpi)
     print(f"Saved: {save_path}")
