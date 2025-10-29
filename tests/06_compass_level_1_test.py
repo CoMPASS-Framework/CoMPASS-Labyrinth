@@ -29,21 +29,43 @@ class TestCompasLevel1:
         assert save_path.exists()
 
     def test_run_compass_fit_hmm(self, compass_level_1_fixture):
-        from compass_labyrinth.compass.level_1 import fit_best_hmm
+        from compass_labyrinth.compass.level_1 import (
+            fit_best_hmm,
+            GammaHMM,
+            print_hmm_summary,
+        )
         import numpy as np
 
-        ## TODO - run and create asserts once the function is optimized
+        res = fit_best_hmm(
+            preproc_df=compass_level_1_fixture,
+            n_states=2,
+            n_repetitions=1,
+            opt_methods=["L-BFGS-B"],
+            max_iter=50,
+            use_abs_angle=(False,),
+            stationary_flag="auto",
+            use_data_driven_ranges=True,
+            angle_mean_biased=(np.pi/2, 0.0),
+            session_col="Session",
+            seed=123,
+            enforce_behavioral_constraints=False,
+            show_progress=False,
+        )
+        assert hasattr(res, "model")
+        assert isinstance(res.model, GammaHMM)
+        
+        assert hasattr(res, "summary")
+        assert isinstance(res.summary, dict)
 
-        # res = fit_best_hmm(
-        #     preproc_df=compass_level_1_fixture,
-        #     n_states=2,
-        #     n_iter=5,
-        #     opt_methods=("L-BFGS-B",),
-        #     use_abs_angle=(True, False),
-        #     stationary_flag="auto",
-        #     use_data_driven_ranges=True,
-        #     angle_mean_biased=(np.pi/2, 0.0),
-        #     session_col="Session",
-        #     seed=123,
-        #     show_progress=True
-        # )
+        assert hasattr(res, "records")
+        assert isinstance(res.records, pd.DataFrame)
+        assert not res.records.empty
+
+        assert hasattr(res, "data")
+        assert isinstance(res.data, pd.DataFrame)
+        assert not res.data.empty
+
+        print_hmm_summary(
+            model_summary=res.summary,
+            model=res.model,
+        )

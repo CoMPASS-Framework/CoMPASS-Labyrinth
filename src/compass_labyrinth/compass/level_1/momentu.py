@@ -431,6 +431,7 @@ def _summarize(model: GammaHMM) -> Dict[str, Any]:
         "step_theta": np.round(model.theta_step_, 3).tolist(),
         "step_means": np.round(model.step_means_, 4).tolist(),
         "turn_metric": np.round(model.turn_metric_, 4).tolist(),
+        "behavioral_constraint_met": _enforce_or_reject(model),
     }
     if model.angle_model == "vm":
         d["vm_mu"] = np.round(model.mu_, 3).tolist()
@@ -441,7 +442,7 @@ def _summarize(model: GammaHMM) -> Dict[str, Any]:
     return d
 
 
-def print_hmm_summary(model_summary: Dict[str, Any], best_model: GammaHMM):
+def print_hmm_summary(model_summary: Dict[str, Any], model: GammaHMM):
     s = model_summary
     print("\n Best Model Characteristics:")
     print(f"• Angle type: {s['angle_type']}")
@@ -450,12 +451,13 @@ def print_hmm_summary(model_summary: Dict[str, Any], best_model: GammaHMM):
     print(f"• Start probs: {s['startprob']}")
     print("• Transmat:\n", np.array(s["transmat"]))
     print(f"• Step Means: {s['step_means']}")
-    if best_model.angle_model == "vm":
+    if model.angle_model == "vm":
         print(f"• VM mu: {s['vm_mu']}")
         print(f"• VM kappa: {s['vm_kappa']}")
     else:
         print(f"• |angle| Gamma k: {s['ang_k']}")
         print(f"• |angle| Gamma theta: {s['ang_theta']}")
+    print(f"• Met behavioral constraints: {s['behavioral_constraint_met']}")
     print("• Final state ordering: State 1 = low step + high turn; State 2 = high step + low turn\n")
 
 
@@ -482,14 +484,16 @@ def _enforce_or_reject(model: GammaHMM) -> bool:
 def fit_best_hmm(
     preproc_df: pd.DataFrame,
     n_states: int = 2,
-    n_iter: int = 20,
-    opt_methods: Tuple[str, ...] = ("BFGS", "L-BFGS-B", "Nelder-Mead", "Powell"),
-    use_abs_angle: Tuple[bool, ...] = (True, False),  # True => |angle|~Gamma ; False => angle~VM
+    n_repetitions: int = 20,
+    opt_methods: list[str] = ["BFGS", "L-BFGS-B", "Nelder-Mead", "Powell"],
+    max_iter: int = 200,
+    use_abs_angle: tuple[bool, ...] = (True, False),  # True => |angle|~Gamma ; False => angle~VM
     stationary_flag: str | bool = "auto",
     use_data_driven_ranges: bool = True,
-    angle_mean_biased: Tuple[float, float] = (np.pi / 2, 0.0),  # only for VM branch
+    angle_mean_biased: tuple[float, float] = (np.pi / 2, 0.0),  # only for VM branch
     session_col: str = "Session",
     seed: int = 123,
+    enforce_behavioral_constraints: bool = True,
     show_progress: bool = True,
 ) -> BestResult:
 
@@ -505,7 +509,7 @@ def fit_best_hmm(
     records = []
     candidates: List[Tuple[GammaHMM, pd.DataFrame, Dict[str, Any]]] = []
 
-    total = len(use_abs_angle) * len(opt_methods) * n_iter
+    total = len(use_abs_angle) * len(opt_methods) * n_repetitions
     pbar = tqdm(total=total, desc="Gamma/VM HMM search", leave=False) if show_progress else None
 
     for abs_flag in use_abs_angle:
@@ -517,13 +521,13 @@ def fit_best_hmm(
             _ = compute_parameter_ranges(df_use, angle_var, use_vm=(not abs_flag))
 
         for opt in opt_methods:
-            for it in range(n_iter):
+            for it in range(n_repetitions):
                 this_seed = int(rng.integers(0, 10_000_000))
                 try:
                     model = GammaHMM(
                         n_states=n_states,
                         angle_model=("absgamma" if abs_flag else "vm"),
-                        max_iter=200,
+                        max_iter=max_iter,
                         tol=1e-4,
                         method=opt,
                         random_state=this_seed,
@@ -533,7 +537,7 @@ def fit_best_hmm(
                     model.fit(df_use, id_col=session_col, step_col="step", angle_col="angle")
 
                     # Strict behavioral gate + enforce ordering
-                    if not _enforce_or_reject(model):
+                    if enforce_behavioral_constraints and not _enforce_or_reject(model):
                         continue
 
                     summ = _summarize(model)
@@ -560,7 +564,7 @@ def fit_best_hmm(
                             else preproc_df["angle"].to_numpy(float)
                         )
                     )
-                    out.loc[m, "HMM_State"] = int(model.viterbi_ + 1)  # 1/2 labeling
+                    out.loc[m, "HMM_State"] = (model.viterbi_ + 1).astype(int)  # 1/2 labeling
                     # for s in range(model.S):      # Optional add the State Probs
                     #     out.loc[m, f"Post_Prob_{s+1}"] = model.posterior_[:, s]
 
@@ -581,6 +585,13 @@ def fit_best_hmm(
     best_idx = int(np.argmin([c[2]["AIC"] for c in candidates]))
     best_model, df_with_states, best_summary = candidates[best_idx]
     rec_df = pd.DataFrame.from_records(records).sort_values(
-        ["AIC", "optimizer"], ascending=[True, True], kind="mergesort"
+        ["AIC", "optimizer"],
+        ascending=[True, True],
+        kind="mergesort",
     )
-    return BestResult(model=best_model, summary=best_summary, records=rec_df, data=df_with_states)
+    return BestResult(
+        model=best_model,
+        summary=best_summary,
+        records=rec_df,
+        data=df_with_states,
+    )
