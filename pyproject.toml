@@ -23,6 +23,7 @@ dependencies = [
     # Visualization
     "matplotlib",
     "seaborn",
+    "plotly",
     
     # Geospatial
     "geopandas",
