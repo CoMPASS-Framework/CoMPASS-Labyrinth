@@ -28,13 +28,15 @@ class TestCompasLevel1:
         save_path = Path(config["project_path_full"]) / "figures" / "step_and_angle_distribution.pdf"
         assert save_path.exists()
 
-    def test_run_compass_fit_hmm(self, compass_level_1_fixture):
+    def test_run_compass_fit_hmm(self, create_project_fixture, compass_level_1_fixture):
         from compass_labyrinth.compass.level_1 import (
             fit_best_hmm,
             GammaHMM,
             print_hmm_summary,
         )
         import numpy as np
+
+        config, _ = create_project_fixture
 
         res = fit_best_hmm(
             preproc_df=compass_level_1_fixture,
@@ -69,3 +71,19 @@ class TestCompasLevel1:
             model_summary=res.summary,
             model=res.model,
         )
+
+        res.save(config=config)
+        results_path = Path(config["project_path_full"]) / "results" / "compass_level_1"
+        assert results_path.exists()
+
+        model_path = results_path / "fitted_model.joblib"
+        assert model_path.exists()
+
+        records_path = results_path / "model_selection_records.csv"
+        assert records_path.exists()
+
+        data_path = results_path / "data_with_states.csv"
+        assert data_path.exists()
+
+        summary_path = results_path / "model_summary.json"
+        assert summary_path.exists()

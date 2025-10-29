@@ -1,5 +1,8 @@
+import json
+import joblib
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Dict, Any, List, Tuple, Optional
 from scipy.special import gammaln, i0e
@@ -391,7 +394,12 @@ class GammaHMM:
         m = np.isfinite(step) & np.isfinite(ang)
         ids, step, ang = ids[m], step[m], ang[m]
         lengths = _contig_lengths(ids)
-        _, _, ll = forward_backward(self._loglik(step, ang), self.startprob_, self.transmat_, lengths)
+        _, _, ll = forward_backward(
+            self._loglik(step, ang),
+            self.startprob_,
+            self.transmat_,
+            lengths,
+        )
         return float(ll)
 
     def reorder_states(self, order: List[int]):
@@ -467,6 +475,9 @@ class BestResult:
     summary: Dict[str, Any]
     records: pd.DataFrame
     data: pd.DataFrame
+
+    def save(self, config: Dict[str, Any]):
+        save_compass_level_1_results(config, self)
 
 
 def _enforce_or_reject(model: GammaHMM) -> bool:
@@ -595,3 +606,53 @@ def fit_best_hmm(
         records=rec_df,
         data=df_with_states,
     )
+
+
+def save_compass_level_1_results(
+    config: Dict[str, Any],
+    results: BestResult,
+):
+    """
+    Save CoMPASS Level 1 HMM results to disk.
+
+    Exports:
+        - model_summary.json: Model parameters and statistics
+        - data_with_states.csv: Full dataset with HMM state assignments
+        - model_selection_records.csv: All candidate models tried during fitting
+        - fitted_model.joblib: Serialized GammaHMM object (if joblib available)
+
+    Parameters
+    ----------
+    config : dict
+        Project configuration containing 'project_path_full'
+    results : BestResult
+        Result object from fit_best_hmm()
+    """
+    dest_dir = Path(config["project_path_full"]) / "results" / "compass_level_1"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+
+    # 1. Save model summary as JSON
+    summary_path = dest_dir / "model_summary.json"
+    with open(summary_path, "w") as f:
+        json.dump(results.summary, f, indent=2)
+    print(f"  ✓ Saved model summary: {summary_path.name}")
+
+    # 2. Save data with state assignments
+    data_path = dest_dir / "data_with_states.csv"
+    results.data.to_csv(data_path, index=False)
+    print(f"  ✓ Saved data with states: {data_path.name}")
+
+    # 3. Save model selection records
+    records_path = dest_dir / "model_selection_records.csv"
+    results.records.to_csv(records_path, index=False)
+    print(f"  ✓ Saved model selection records: {records_path.name}")
+
+    # 4. Save fitted model object (if joblib available)
+    if joblib is not None:
+        model_path = dest_dir / "fitted_model.joblib"
+        joblib.dump(results.model, model_path)
+        print(f"  ✓ Saved fitted model: {model_path.name}")
+    else:
+        print(f"  ⚠ Skipped model serialization (joblib not installed)")
+
+    print(f"\n📁 All CoMPASS Level 1 results saved to: {dest_dir}")
