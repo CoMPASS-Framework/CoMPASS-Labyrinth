@@ -366,3 +366,23 @@ def simulate_agent_multi_fixture(create_project_fixture, task_performance):
     )
 
     return df_all_simulated
+
+
+@pytest.fixture(scope="session")
+def compass_level_1_fixture(create_project_fixture, task_performance):
+    from compass_labyrinth.compass.level_1 import prep_data
+
+    config, cohort_metadata = create_project_fixture
+    df_all_csv, _ = task_performance
+
+    final_df = prep_data(
+        data=df_all_csv,
+        type="UTM",
+        coordNames=("x", "y"),
+        covNames=[],
+        centers=None,
+        centroids=None,
+        angleCovs=None,
+        altCoordNames=None
+    )
+    return final_df
