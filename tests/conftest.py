@@ -54,9 +54,17 @@ def create_project_fixture(tmp_path_factory):
         "Session-7withGrids.csv",
     ]
 
-    for csv_file in csv_files:
-        src = assets_dir / csv_file
-        dst = source_data_path / csv_file
+    shape_files = [
+        "Session-3 grid.dbf",
+        "Session-3 grid.shp",
+        "Session-3 grid.shx",
+    ]
+
+    all_files = csv_files + shape_files
+
+    for f in all_files:
+        src = assets_dir / f
+        dst = source_data_path / f
         shutil.copy2(src, dst)
 
     # Copy metadata file
