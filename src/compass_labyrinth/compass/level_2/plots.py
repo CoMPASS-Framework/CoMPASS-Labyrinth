@@ -153,7 +153,7 @@ def compute_detailed_bout_summary(df, feature_cols, node_filter='Decision (Rewar
             prob_list.append(prob)
             row['Probability_1'] = np.nanmedian(prob_list)
 
-            if bout['Grid.Number'].nunique() > valid_bout_threshold:
+            if bout['Grid Number'].nunique() > valid_bout_threshold:
                 row['Valid_bout'] = 'Valid'
             row['Successful_bout'] = 'Successful' if target_zone in bout['Region'].values else 'Unsuccessful'
 

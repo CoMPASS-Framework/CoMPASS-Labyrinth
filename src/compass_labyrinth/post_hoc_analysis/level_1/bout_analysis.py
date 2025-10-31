@@ -36,7 +36,7 @@ def assign_bout_indices(
         bout_indices = []
 
         for _, row in sess_df.iterrows():
-            if row["Grid.Number"] == delimiter_node:
+            if row["Grid Number"] == delimiter_node:
                 bout_id += 1
             bout_indices.append(bout_id)
 
@@ -58,7 +58,7 @@ def compute_surveillance_probabilities(
 
         for bout_num, (_, bout_df) in enumerate(bouts, 1):
             success = "Successful" if "Target Zone" in bout_df["Region"].values else "Unsuccessful"
-            state_probs = bout_df[bout_df["Grid.Number"].isin(decision_nodes)]["HMM_State"].value_counts(normalize=True)
+            state_probs = bout_df[bout_df["Grid Number"].isin(decision_nodes)]["HMM_State"].value_counts(normalize=True)
             prob_state_1 = state_probs.get(1, np.nan)
 
             records.append(

@@ -191,7 +191,37 @@ def plot_all_genotype_heatmaps(
     show_fig: bool = True,
     return_fig: bool = False,
 ) -> None | plt.Figure:
-    """Plot grid heatmaps for all genotypes."""
+    """
+    Plot grid heatmaps for all genotypes.
+
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary containing project details.
+    df_hmm : pd.DataFrame
+        DataFrame containing HMM data with 'Genotype' and 'Grid Number' columns.
+    grid_filename : str
+        Filename of the grid shapefile.
+    highlight_grids : str | None
+        Node type to highlight (e.g., "decision_reward").
+    target_grids : str | None
+        Node type to mark as target (e.g., "target_zone").
+    hmm_state : int
+        HMM state to filter.
+    cmap : str
+        Colormap to use for the heatmap.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    fig : plt.Figure | None
+        Matplotlib Figure object if return_fig is True, else None.
+    """
     genotypes = sorted(df_hmm["Genotype"].unique())
     n_genotypes = len(genotypes)
     n_cols = math.ceil(n_genotypes**0.5)
@@ -283,7 +313,7 @@ def overlay_trajectory_lines_plotly(
 ):
     """
     Overlay trajectory lines on the interactive heatmap.
-    
+
     Parameters:
     -----------
     fig : go.Figure
@@ -485,7 +515,7 @@ def plot_interactive_heatmap(
                 font=dict(color="black", size=14, family="Arial"),
                 xanchor="center",
             )
-    
+
     # Save figure
     if save_fig:
         save_path = Path(config["project_path_full"]) / "figures" / f"{genotype_name}_interactive_grid_heatmap.html"
@@ -519,7 +549,7 @@ def plot_all_genotype_interactive_heatmaps(
 ) -> None | go.Figure:
     """
     Plot interactive grid heatmaps for all genotypes.
-    
+
     Parameters:
     -----------
     config : dict

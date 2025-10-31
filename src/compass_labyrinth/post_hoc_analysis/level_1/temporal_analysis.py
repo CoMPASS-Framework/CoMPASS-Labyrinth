@@ -35,8 +35,8 @@ def compute_node_state_medians_over_time(
     Parameters:
     - df_hmm: HMM imported file
     - state_types: List of HMM states to compute proportions for (e.g., [2])
-    - decision_nodes: List of Grid.Number values representing decision nodes
-    - nondecision_nodes: List of Grid.Number values representing non-decision nodes
+    - decision_nodes: List of Grid Number values representing decision nodes
+    - nondecision_nodes: List of Grid Number values representing non-decision nodes
     - lower_lim, upper_lim: Range of rows to consider per session
     - bin_size: Number of rows per time bin
 
@@ -60,16 +60,16 @@ def compute_node_state_medians_over_time(
                     df_subset = session_df.iloc[k : k + bin_size, :]
 
                     # Count by HMM state
-                    st_cnt = df_subset.groupby(["Grid.Number", "HMM_State"]).size().rename("cnt").reset_index()
-                    gn_cnt = df_subset.groupby(["Grid.Number"]).size().rename("tot").reset_index()
-                    x_y = df_subset.groupby(["Grid.Number"]).agg({"x": "mean", "y": "mean"}).reset_index()
+                    st_cnt = df_subset.groupby(["Grid Number", "HMM_State"]).size().rename("cnt").reset_index()
+                    gn_cnt = df_subset.groupby(["Grid Number"]).size().rename("tot").reset_index()
+                    x_y = df_subset.groupby(["Grid Number"]).agg({"x": "mean", "y": "mean"}).reset_index()
 
-                    state_count = st_cnt.merge(gn_cnt, on="Grid.Number", how="left")
+                    state_count = st_cnt.merge(gn_cnt, on="Grid Number", how="left")
                     state_count["prop"] = state_count["cnt"] / state_count["tot"]
-                    state_count = state_count.merge(x_y, on="Grid.Number", how="left")
+                    state_count = state_count.merge(x_y, on="Grid Number", how="left")
 
                     subset = state_count[
-                        (state_count["HMM_State"].isin(state_types)) & (state_count["Grid.Number"].isin(node_type_list))
+                        (state_count["HMM_State"].isin(state_types)) & (state_count["Grid Number"].isin(node_type_list))
                     ]
 
                     if not subset.empty:

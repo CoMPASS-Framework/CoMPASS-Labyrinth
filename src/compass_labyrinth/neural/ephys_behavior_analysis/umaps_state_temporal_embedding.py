@@ -33,7 +33,7 @@ from matplotlib.cm import ScalarMappable
 #######################################################
 
 def prepare_sliding_window_data(df, window_size=20, feature_col='gamma',
-                                 state_col='HHMM State', grid_col='Grid.Number',
+                                 state_col='HHMM State', grid_col='Grid Number',
                                  node_list=None):
     gamma_windows = []
     state_labels = []
@@ -92,7 +92,7 @@ def add_time_index(df, session_col='Session'):
 
 
 def prepare_sliding_window_data_temporal(df, window_size=20, gamma_col='gamma',
-                                         state_col='HHMM State', grid_col='Grid.Number',
+                                         state_col='HHMM State', grid_col='Grid Number',
                                          decision_nodes=None):
     gamma_windows = []
     state_labels = []
@@ -119,7 +119,7 @@ def prepare_sliding_window_data_temporal(df, window_size=20, gamma_col='gamma',
 
 
 def compute_umap_embedding_temporal(df, window_size=20, gamma_col='gamma',
-                                    state_col='HHMM State', grid_col='Grid.Number',
+                                    state_col='HHMM State', grid_col='Grid Number',
                                     decision_nodes=None, session_filter=None):
     if session_filter is not None:
         df = df[df['Session'] == session_filter].reset_index(drop=True)

@@ -26,7 +26,7 @@ import textwrap
 
 def assign_bout_numbers(df, grid_anchor=47):
     """
-    Assign bout numbers based on visits to a specific anchor node (default: Grid.Number == 47).
+    Assign bout numbers based on visits to a specific anchor node (default: Grid Number == 47).
     """
     session_groups = [x for _, x in df.groupby('Session')]
     for dflin in session_groups:
@@ -34,7 +34,7 @@ def assign_bout_numbers(df, grid_anchor=47):
         dflin['Bout_num'] = 0
         j = 1
         for i in range(len(dflin)):
-            if dflin.loc[i, 'Grid.Number'] != grid_anchor:
+            if dflin.loc[i, 'Grid Number'] != grid_anchor:
                 dflin.loc[i, 'Bout_num'] = j
             else:
                 dflin.loc[i, 'Bout_num'] = 0
@@ -72,7 +72,7 @@ def compute_decision_node_metrics(df, decision_nodes, features=['gamma', 'theta'
     Parameters
     ----------
     df : pd.DataFrame
-        DataFrame with at least columns: 'Session', 'Genotype', 'Grid.Number', 'Region', and features.
+        DataFrame with at least columns: 'Session', 'Genotype', 'Grid Number', 'Region', and features.
     decision_nodes : list
         List of decision node grid numbers.
     features : list
@@ -116,10 +116,10 @@ def compute_decision_node_metrics(df, decision_nodes, features=['gamma', 'theta'
             for combo in node_combos:
                 total, opt, opt_idx, nonopt_idx = 0, 0, [], []
                 for node in combo:
-                    node_locs = bout.index[bout['Grid.Number'] == node].tolist()
+                    node_locs = bout.index[bout['Grid Number'] == node].tolist()
                     for idx in node_locs:
                         future = bout.index[bout.index > idx]
-                        next_diff = next((j for j in future if bout.loc[j, 'Grid.Number'] != bout.loc[idx, 'Grid.Number']), None)
+                        next_diff = next((j for j in future if bout.loc[j, 'Grid Number'] != bout.loc[idx, 'Grid Number']), None)
                         if next_diff is not None:
                             next_region = bout.loc[next_diff, 'Region']
                             total += 1

@@ -85,7 +85,7 @@ def compute_basic_bout_summary(
             region_subset = bout[bout[condition_col] == condition_filter]
             for feat in features:
                 row[feat] = region_subset[feat].median()
-            row['Valid_bout'] = 'Valid' if bout['Grid.Number'].nunique() > valid_bout_threshold else 'Invalid'
+            row['Valid_bout'] = 'Valid' if bout['Grid Number'].nunique() > valid_bout_threshold else 'Invalid'
             row['Successful_bout'] = 'Successful' if target_zone in bout['Region'].values else 'Unsuccessful'
             index_df.loc[j] = row
             j += 1

@@ -11,7 +11,7 @@ def assign_bouts_per_session(df, terminal_values=[47], bout_col='Bout_ID'):
     if the specified bout column does not already exist.
 
     Parameters:
-        df (pd.DataFrame): Input DataFrame with 'Grid.Number' column.
+        df (pd.DataFrame): Input DataFrame with 'Grid Number' column.
         terminal_values (list): List of grid numbers that signify end-of-bout events.
         bout_col (str): Name of the output column to store bout numbers.
 
@@ -27,7 +27,7 @@ def assign_bouts_per_session(df, terminal_values=[47], bout_col='Bout_ID'):
     bout_nums = []
 
     for i in range(len(df)):
-        current = df.iloc[i]['Grid.Number']
+        current = df.iloc[i]['Grid Number']
 
         if current not in terminal_values:
             in_non_terminal_phase = True
@@ -39,10 +39,10 @@ def assign_bouts_per_session(df, terminal_values=[47], bout_col='Bout_ID'):
 
         if current in terminal_values and not in_non_terminal_phase:
             if i > 0:
-                prev_vals = df.iloc[:i]['Grid.Number']
+                prev_vals = df.iloc[:i]['Grid Number']
                 last_terminal_idx = prev_vals[prev_vals.isin(terminal_values)].last_valid_index()
 
-                if last_terminal_idx is not None and any(~df.iloc[last_terminal_idx + 1:i]['Grid.Number'].isin(terminal_values)):
+                if last_terminal_idx is not None and any(~df.iloc[last_terminal_idx + 1:i]['Grid Number'].isin(terminal_values)):
                     if i + 1 < len(df):
                         bout_num += 1
 

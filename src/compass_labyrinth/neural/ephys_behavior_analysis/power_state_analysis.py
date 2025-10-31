@@ -795,7 +795,7 @@ def aggregate_metric_trend(df,
                            window_size=25,
                            states=['Ambulatory, Reward-oriented', 'Active Surveillance, Reward-oriented'],
                            node_filter=None,
-                           node_col='Grid.Number',
+                           node_col='Grid Number',
                            state_col='HHMM State'):
     """
     Extract and plot aligned metric trends around specific HHMM states at decision nodes.
@@ -811,7 +811,7 @@ def aggregate_metric_trend(df,
     states : list of str
         HHMM states to align on.
     node_filter : list of int
-        Grid.Number values defining node subset.
+        Grid Number values defining node subset.
     node_col : str
         Name of the node/grid column.
     state_col : str
