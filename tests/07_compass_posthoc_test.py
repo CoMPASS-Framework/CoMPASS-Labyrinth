@@ -100,3 +100,52 @@ class TestCompasPosthocAnalysis:
         )
         assert isinstance(ttest_results, pd.DataFrame)
         assert not ttest_results.empty
+
+    def test_compass_posthoc_temporal_analysis(self, create_project_fixture):
+        from compass_labyrinth.post_hoc_analysis.level_1 import (
+            get_max_session_row_bracket,
+            get_min_session_row_bracket,
+            compute_node_state_medians_over_time,
+            plot_node_state_median_curve,
+        )
+
+        config, _ = create_project_fixture
+        project_path = Path(config["project_path_full"])
+        df_hmm = pd.read_csv(project_path / "results" / "compass_level_1" / "data_with_states.csv")
+
+        lower_limit = 0
+        upper_limit = get_max_session_row_bracket(df_hmm)
+        threshold =  get_min_session_row_bracket(df_hmm)  # Only show bins where all sessions are present
+        bin_size = 2000
+        palette = ['grey', 'black']
+        figure_ylimit = (0.6, 1.1)
+
+        # Step 1: Compute median probability of being in State 1 across time bins
+        deci_df = compute_node_state_medians_over_time(
+            df_hmm=df_hmm,
+            state_types=[2],
+            lower_lim=lower_limit,
+            upper_lim=upper_limit,
+            bin_size=bin_size
+        )
+
+        # Step 2: Optional filter to only plot early session bins
+        deci_df = deci_df.loc[deci_df.Time_Bins < threshold]
+
+        # Step 3: Plot time-evolving median probability curves
+        fig = plot_node_state_median_curve(
+            config=config,
+            deci_df=deci_df,
+            palette=palette,
+            figure_ylimit=figure_ylimit,
+            fig_title = 'Median Probability of Ambulatory State',
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+        assert isinstance(fig, plt.Figure)
+        plt.close(fig)
+        save_path = (
+            Path(config["project_path_full"]) / "figures" / "temporal_median_state_probability_curve.pdf"
+        )
+        assert save_path.exists()

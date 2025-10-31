@@ -9,47 +9,59 @@ Goal:
 import pandas as pd
 import numpy as np
 import seaborn as sns
+from pathlib import Path
 import matplotlib.pyplot as plt
 from statistics import median
 import warnings
+
+from compass_labyrinth.constants import NODE_TYPE_MAPPING
 
 
 warnings.filterwarnings("ignore")
 
 
-##################################################################
-# Plot 3: Probability of States over Times
-###################################################################
 def compute_node_state_medians_over_time(
-    df_hmm,
-    state_types,
-    decision_nodes,
-    nondecision_nodes,
-    lower_lim,
-    upper_lim,
-    bin_size,
-):
+    df_hmm: pd.DataFrame,
+    state_types: list,
+    lower_lim: int,
+    upper_lim: int,
+    bin_size: int,
+    decision_nodes: str = "decision_reward",
+    nondecision_nodes: str = "nondecision_reward",
+) -> pd.DataFrame:
     """
     Compute time-binned medians of HMM state proportions for decision and non-decision nodes.
 
     Parameters:
-    - df_hmm: HMM imported file
-    - state_types: List of HMM states to compute proportions for (e.g., [2])
-    - decision_nodes: List of Grid Number values representing decision nodes
-    - nondecision_nodes: List of Grid Number values representing non-decision nodes
-    - lower_lim, upper_lim: Range of rows to consider per session
-    - bin_size: Number of rows per time bin
+    -----------
+    df_hmm : pd.DataFrame
+        Dataframe with 'Genotype', 'Session', 'HMM_State', and 'Grid Number'.
+    state_types : list
+        List of HMM states to compute proportions for (e.g., [2])
+    lower_lim : int
+        Range of rows to consider per session
+    upper_lim : int
+        Range of rows to consider per session
+    bin_size : int
+        Number of rows per time bin
+    decision_nodes : str
+        List of Grid Number values representing decision nodes
+    nondecision_nodes : str
+        List of Grid Number values representing non-decision nodes
 
     Returns:
-    - DataFrame with median proportions per session, time bin, node type, and genotype
+    --------
+    pd.DataFrame
+        Dataframe with median proportions per session, time bin, node type, and genotype
     """
     li_node_genotype = []
-
+    decision_nodes_ids = NODE_TYPE_MAPPING.get(decision_nodes, [])
+    nondecision_nodes_ids = NODE_TYPE_MAPPING.get(nondecision_nodes, [])
     for genotype in df_hmm["Genotype"].unique():
         sess_li = [x for _, x in df_hmm[df_hmm["Genotype"] == genotype].groupby("Session")]
 
         for node_type_list, node_type_label in zip(
-            [decision_nodes, nondecision_nodes], ["Decision node", "Non-Decision node"]
+            [decision_nodes_ids, nondecision_nodes_ids], ["Decision node", "Non-Decision node"]
         ):
             med_df = pd.DataFrame(columns=["Time_Bins", "Session", "Median_Probability"])
 
@@ -87,33 +99,51 @@ def compute_node_state_medians_over_time(
             med_df["Genotype"] = genotype
             li_node_genotype.append(med_df)
 
-    Deci_DF = pd.concat(li_node_genotype).reset_index(drop=True)
-    Deci_DF["Genotype + Node Type"] = Deci_DF["Genotype"] + " , " + Deci_DF["Node Type"]
-    Deci_DF["Time_Bins"] = Deci_DF["Time_Bins"].astype(int)
+    deci_df = pd.concat(li_node_genotype).reset_index(drop=True)
+    deci_df["Genotype + Node Type"] = deci_df["Genotype"] + " , " + deci_df["Node Type"]
+    deci_df["Time_Bins"] = deci_df["Time_Bins"].astype(int)
 
-    return Deci_DF
+    return deci_df
 
 
 def plot_node_state_median_curve(
-    Deci_DF,
-    palette,
-    figure_ylimit,
-    fig_title=None,
-):
+    config: dict,
+    deci_df: pd.DataFrame,
+    figure_ylimit: tuple = (0., 1.1),
+    palette: list = ['grey', 'black'],
+    fig_title: str | None = None,
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
     """
     Plot time-binned inverse median probabilities (1 - median) for decision and non-decision nodes.
 
     Parameters:
-    - Deci_DF: DataFrame containing 'Time_Bins', '1-Median_Probability', and 'Genotype + Node Type'
-    - palette: list of colors to apply to each unique category in hue
-    - figure_ylimit: tuple like (0, 0.6) for y-axis limits
+    -----------
+    deci_df : pd.DataFrame
+        DataFrame containing 'Time_Bins', '1-Median_Probability', and 'Genotype + Node Type'
+    palette : list
+        List of colors to apply to each unique category in hue
+    figure_ylimit : tuple
+        Tuple like (0, 0.6) for y-axis limits
+    fig_title : str | None
+        Title of the figure
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
 
     Returns:
-    - ax: Seaborn FacetGrid object
+    --------
+    plt.Figure
+        Seaborn FacetGrid object
     """
 
     ax = sns.catplot(
-        data=Deci_DF,
+        data=deci_df,
         x="Time_Bins",
         y="Median_Probability",
         hue="Genotype + Node Type",
@@ -139,41 +169,67 @@ def plot_node_state_median_curve(
         ax._legend.set_title("")
     plt.title(fig_title, fontsize=15)
     plt.tight_layout()
-    return ax
+    
+    # Save figure
+    fig = plt.gcf()
+    if save_fig:
+        save_path = (
+            Path(config["project_path_full"]) / "figures" / "temporal_median_state_probability_curve.pdf"
+        )
+        plt.savefig(save_path, bbox_inches="tight", dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
+
+    # Return figure
+    if return_fig:
+        return fig
 
 
-#######################################################################################################
-# Finds the session with the maximum number of rows and returns the largest lower multiple of 10,000
-#######################################################################################################
-def get_max_session_row_bracket(df_combined, session_col="Session"):
+def get_max_session_row_bracket(
+    df_combined: pd.DataFrame,
+    session_col: str = "Session",
+) -> int:
     """
     Finds the session with the maximum number of rows and returns the largest lower multiple of 10,000.
 
     Parameters:
-        df_combined (pd.DataFrame): Combined dataframe containing multiple sessions.
-        session_col (str): Name of the column representing session ID.
+    -----------
+    df_combined : pd.DataFrame
+        Combined dataframe containing multiple sessions.
+    session_col : str
+        Name of the column representing session ID.
 
     Returns:
-        int: Lower bracketed row count (e.g., 20000 if max session has 23567 rows).
+    --------
+    int
+        Lower bracketed row count (e.g., 20000 if max session has 23567 rows).
     """
     session_counts = df_combined[session_col].value_counts()
     max_rows = session_counts.max()
     return int(np.floor(max_rows / 10000) * 10000)
 
 
-#######################################################################################################
-# Finds the session with the minimum number of rows and returns the largest lower multiple of 10,000
-######################################################################################################
-def get_min_session_row_bracket(df_combined, session_col="Session"):
+def get_min_session_row_bracket(
+    df_combined: pd.DataFrame,
+    session_col: str = "Session",
+) -> int:
     """
     Finds the session with the minimum number of rows and returns the largest lower multiple of 10,000.
 
     Parameters:
-        df_combined (pd.DataFrame): Combined dataframe containing multiple sessions.
-        session_col (str): Name of the column representing session ID.
+    -----------
+    df_combined : pd.DataFrame
+        Combined dataframe containing multiple sessions.
+    session_col : str
+        Name of the column representing session ID.
 
     Returns:
-        int: Lower bracketed row count (e.g., 10000 if min session has 10234 rows).
+    --------
+    int
+        Lower bracketed row count (e.g., 10000 if min session has 10234 rows).
     """
     session_counts = df_combined[session_col].value_counts()
     min_rows = session_counts.min()
