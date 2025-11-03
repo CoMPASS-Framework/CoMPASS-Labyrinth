@@ -173,7 +173,7 @@ class TestCompasPosthocAnalysis:
         assert "Bout_Index" in df_hmm.columns
 
         # Compute surveillance probability at Decision nodes by Bout type
-        median_df = compute_surveillance_probabilities(
+        index_df, median_df = compute_surveillance_probabilities(
             df_hmm=df_hmm,
             decision_nodes="decision_reward",
         )
