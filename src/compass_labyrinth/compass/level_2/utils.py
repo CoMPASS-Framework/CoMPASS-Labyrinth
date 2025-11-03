@@ -1,23 +1,32 @@
 import pandas as pd
 import numpy as np
 
+
 # -------------------------------------------------------------------------------------
 # Bout number assignment
 # --------------------------------------------------------------------------------------
-
-
-def assign_bouts_per_session(df, terminal_values=[47], bout_col="Bout_ID"):
+def assign_bouts_per_session(
+    df: pd.DataFrame,
+    terminal_values=[47],
+    bout_col="Bout_ID",
+) -> pd.DataFrame:
     """
     Assigns bout numbers to a DataFrame based on terminal grid node values,
     if the specified bout column does not already exist.
 
     Parameters:
-        df (pd.DataFrame): Input DataFrame with 'Grid Number' column.
-        terminal_values (list): List of grid numbers that signify end-of-bout events.
-        bout_col (str): Name of the output column to store bout numbers.
+    -----------
+    df : pd.DataFrame
+        Input DataFrame with 'Grid Number' column.
+    terminal_values : list
+        List of grid numbers that signify end-of-bout events.
+    bout_col : str
+        Name of the output column to store bout numbers.
 
     Returns:
-        pd.DataFrame: DataFrame with the specified bout column added or preserved.
+    --------
+    pd.DataFrame
+        DataFrame with the specified bout column added or preserved.
     """
     if bout_col in df.columns:
         return df  # Already exists; return unchanged
@@ -56,9 +65,10 @@ def assign_bouts_per_session(df, terminal_values=[47], bout_col="Bout_ID"):
 # ---------------------------------------------------------------------------------------
 # Create Phases from Bout Numbers
 # ---------------------------------------------------------------------------------------
-
-
-def build_phase_map(df, n_phases):
+def build_phase_map(
+    df: pd.DataFrame,
+    n_phases: int,
+) -> dict:
     phase_map = {}
     sessions = df.Session.unique()
     for sess in sessions:

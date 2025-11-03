@@ -7,6 +7,12 @@ from sklearn.utils import shuffle
 from scipy.stats import gaussian_kde
 from scipy.interpolate import griddata
 
+from compass_labyrinth.constants import (
+    CLOSE_REF,
+    X_Y_MAPPING,
+    VALUE_MAP,
+)
+
 
 # ============================================================
 # KDE Computation
@@ -143,7 +149,7 @@ def calculate_deviation(row):
 
 
 # ------------------ Main Processing ------------------ #
-def compute_smoothed_angle_deviation(df, rolling_window):
+def compute_smoothed_angle_deviation(df: pd.DataFrame, rolling_window: int) -> pd.DataFrame:
     li_sess = []
     for sess in df["Session"].unique():
         df_sess = df[df["Session"] == sess].copy().reset_index(drop=True)
@@ -159,8 +165,10 @@ def compute_smoothed_angle_deviation(df, rolling_window):
     return df_result
 
 
-def assign_reference_info(df, close_ref_dict, xy_mapping):
+def assign_reference_info(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
+    close_ref_dict = CLOSE_REF
+    xy_mapping = X_Y_MAPPING
     df["Closest_Node"] = df["Grid Number"].apply(lambda x: map_category(x, close_ref_dict))
     df["x_mean"] = df.groupby("Closest_Node")["x"].transform("mean")
     df["y_mean"] = df.groupby("Closest_Node")["y"].transform("mean")
@@ -202,10 +210,7 @@ def compute_euclidean_distance(df, center_x, center_y, out_col="Targeted_Distanc
     return df
 
 
-def merge_value_map(df, value_map_path):
-    value_map = pd.read_csv(value_map_path)
-    print("Value map columns:", value_map.columns)  # Debug
-
+def merge_value_map(df: pd.DataFrame, value_map: pd.DataFrame) -> pd.DataFrame:
     # Normalize "Value" column name
     colmap = {c: "Value" for c in value_map.columns if c.lower().startswith("value")}
     value_map = value_map.rename(columns=colmap)
@@ -240,7 +245,6 @@ def compute_weighted_and_normalized_distance(
 
 def compute_value_distance(
     df: pd.DataFrame,
-    value_map_path: str,
     center_grids: list = [84, 85],
 ) -> pd.DataFrame:
     """
@@ -252,6 +256,6 @@ def compute_value_distance(
     """
     x_mean, y_mean = compute_center_coordinates(df, center_grids)
     df = compute_euclidean_distance(df, x_mean, y_mean)
-    df = merge_value_map(df, value_map_path)
+    df = merge_value_map(df, VALUE_MAP)
     df = compute_weighted_and_normalized_distance(df)
     return df

@@ -1,13 +1,16 @@
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-import numpy as np
 from sklearn.mixture import BayesianGaussianMixture
 from hmmlearn.hmm import GMMHMM
 import matplotlib.patches as patches
 
-from .utils import *
+from .utils import (
+    assign_bouts_per_session,
+    build_phase_map,
+)
 
 
 # ============================================================
@@ -59,17 +62,55 @@ def initialize_gmmhmm(n_states, n_mix, means, covariances, weights, random_state
 # Run CoMPASS
 # ============================================================
 def run_compass(
-    df,
-    features,
-    phase_options=[5],  # different phase options can be tested out
-    ncomp_options=range(2, 4),
-    k_options=range(2, 4),
-    reg_options=[1e-4, 1e-5, 1e-6],
-    terminal_values=[47],
-    bout_col="Bout_ID",
-    patience=None,  # set to 'tune' if wanted to app;y patience window  # session-wise patience window applied for early stopping
-    patience_candidates=[2, 3, 5, 10],  # (only used if patience == 'tune')
-):
+    config: dict,
+    df: pd.DataFrame,
+    features: list,
+    phase_options: list = [5],
+    ncomp_options: range = range(2, 4),
+    k_options: range = range(2, 4),
+    reg_options: list = [1e-4, 1e-5, 1e-6],
+    terminal_values: list = [47],
+    bout_col: str = "Bout_ID",
+    patience: None | str =None,
+    patience_candidates: list = [2, 3, 5, 10],
+) -> tuple[pd.DataFrame, list]:
+    """
+    Run CoMPASS.
+
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary.
+    df : pd.DataFrame
+        Input dataframe.
+    features : list
+        List of feature column names to use.
+    phase_options : list, optional
+        List of phase options to test (default is [5]).
+    ncomp_options : range, optional
+        Range of number of components to test (default is range(2, 4)).
+    k_options : range, optional
+        Range of k values to test (default is range(2, 4)).
+    reg_options : list, optional
+        List of regularization values to test (default is [1e-4, 1e-5, 1e-6]).
+    terminal_values : list, optional
+        List of terminal grid values (default is [47]).
+    bout_col : str, optional
+        Name of the bout column (default is "Bout_ID").
+    patience : None or str, optional
+        Patience setting for early stopping (default is None).
+        Set to 'tune' if wanted to apply patience window.
+    patience_candidates : list, optional
+        List of patience candidates to test if patience is 'tune' (default is [2, 3, 5, 10]).
+        Only used if patience is set to 'tune'.
+    
+    Returns:
+    --------
+    tuple
+        A tuple containing:
+        - pd.DataFrame: DataFrame with assigned Level 2 states.
+        - list: List of all CV results for visualization.
+    """
     all_results = []
     final_sess_data = []
 
@@ -172,8 +213,15 @@ def run_compass(
 
                 tag = f"Session:{test_sess}_PhaseIndex:{phase_index+1}_NumPhases:{n_phases}_Patience:{best_patience}"
                 all_results.append((tag, log_liks, aics, param_labels))
+    
+    df_hier = pd.concat(final_sess_data)
 
-    return pd.concat(final_sess_data), all_results
+    # Save results
+    save_path = Path(config["project_path_full"]) / "csvs" / "combined" / "hhmm_state_file.csv"
+    df_hier.to_csv(save_path, index=False)
+    print(f"HHMM state file saved at: {save_path}")
+
+    return df_hier, all_results
 
 
 # ============================================================

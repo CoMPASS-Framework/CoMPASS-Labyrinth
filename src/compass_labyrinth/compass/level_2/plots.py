@@ -1,3 +1,4 @@
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -6,11 +7,10 @@ from matplotlib import mlab
 from sklearn.preprocessing import MinMaxScaler
 from scipy.ndimage import gaussian_filter
 
+
 # ----------------------------
 # KDE Plot per Session
 # ----------------------------
-
-
 def plot_kde_per_session(df, best_sigma, kde_col="KDE"):
     for session in df["Session"].unique():
         sess_df = df[df["Session"] == session]
@@ -45,8 +45,6 @@ def plot_kde_per_session(df, best_sigma, kde_col="KDE"):
 # ----------------------------
 # Compute Smoothed Spatial Embedding
 # ----------------------------
-
-
 def compute_spatial_embedding(df: pd.DataFrame, sigma: float = 2) -> pd.DataFrame:
     df = df.copy()
     df["spatial_value_raw"] = 1 - (df["Value"] / df["Value"].max())
@@ -69,8 +67,6 @@ def compute_spatial_embedding(df: pd.DataFrame, sigma: float = 2) -> pd.DataFram
 # ----------------------------
 ## Create Embedding Grid
 # ----------------------------
-
-
 def create_embedding_grid(df: pd.DataFrame, value_column: str = "spatial_embedding") -> np.ndarray:
     x_max = int(df["x"].max()) + 1
     y_max = int(df["y"].max()) + 1
@@ -86,10 +82,15 @@ def create_embedding_grid(df: pd.DataFrame, value_column: str = "spatial_embeddi
 # ----------------------------
 ## Plot Spatial Embedding Heatmap
 # ----------------------------
-
-
-def plot_spatial_embedding(embedding_grid: np.ndarray, title: str = "Spatial Embedding Heatmap"):
-    plt.figure(figsize=(12, 8))
+def plot_spatial_embedding(
+    config: dict,
+    embedding_grid: np.ndarray,
+    title: str = "Spatial Embedding Heatmap",
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
+    fig = plt.figure(figsize=(12, 8))
     sns.heatmap(
         embedding_grid,
         cmap="viridis",
@@ -103,14 +104,25 @@ def plot_spatial_embedding(embedding_grid: np.ndarray, title: str = "Spatial Emb
     plt.ylabel("Y Coordinate")
     plt.gca().invert_yaxis()
     plt.tight_layout()
-    plt.show()
+    
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / "spatial_embedding_heatmap.pdf"
+        plt.savefig(save_path, bbox_inches="tight", dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
+
+    # Return figure
+    if return_fig:
+        return fig
 
 
 #######################################################
 # Data Stream Analysis
 #######################################################
-
-
 def normalize_features(df, feature_cols):
     """
     Normalize specified feature columns to [0, 1] range.
