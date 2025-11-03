@@ -45,9 +45,9 @@ def compute_node_state_medians_over_time(
     bin_size : int
         Number of rows per time bin
     decision_nodes : str
-        List of Grid Number values representing decision nodes
+        Type of decision node to consider for surveillance probability.
     nondecision_nodes : str
-        List of Grid Number values representing non-decision nodes
+        Type of non-decision node to consider for surveillance probability.
 
     Returns:
     --------
@@ -109,8 +109,8 @@ def compute_node_state_medians_over_time(
 def plot_node_state_median_curve(
     config: dict,
     deci_df: pd.DataFrame,
-    figure_ylimit: tuple = (0., 1.1),
-    palette: list = ['grey', 'black'],
+    figure_ylimit: tuple = (0.0, 1.1),
+    palette: list = ["grey", "black"],
     fig_title: str | None = None,
     save_fig: bool = True,
     show_fig: bool = True,
@@ -169,13 +169,11 @@ def plot_node_state_median_curve(
         ax._legend.set_title("")
     plt.title(fig_title, fontsize=15)
     plt.tight_layout()
-    
+
     # Save figure
     fig = plt.gcf()
     if save_fig:
-        save_path = (
-            Path(config["project_path_full"]) / "figures" / "temporal_median_state_probability_curve.pdf"
-        )
+        save_path = Path(config["project_path_full"]) / "figures" / "temporal_median_state_probability_curve.pdf"
         plt.savefig(save_path, bbox_inches="tight", dpi=300)
         print(f"Figure saved at: {save_path}")
 

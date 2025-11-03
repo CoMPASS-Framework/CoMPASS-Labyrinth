@@ -149,3 +149,59 @@ class TestCompasPosthocAnalysis:
             Path(config["project_path_full"]) / "figures" / "temporal_median_state_probability_curve.pdf"
         )
         assert save_path.exists()
+
+    def test_compass_posthoc_surveillance_analysis(self, create_project_fixture):
+        from compass_labyrinth.post_hoc_analysis.level_1 import (
+            assign_bout_indices,
+            compute_surveillance_probabilities,
+            plot_surveillance_by_bout,
+            run_within_genotype_mixedlm_with_fdr,
+            test_across_genotypes_per_bout,
+        )
+
+        config, _ = create_project_fixture
+        project_path = Path(config["project_path_full"])
+        df_hmm = pd.read_csv(project_path / "results" / "compass_level_1" / "data_with_states.csv")
+
+        # Assign Bout Numbers 
+        df_hmm = assign_bout_indices(
+            df=df_hmm,
+            delimiter_node=47,
+        )
+        assert isinstance(df_hmm, pd.DataFrame)
+        assert not df_hmm.empty
+        assert "Bout_Index" in df_hmm.columns
+
+        # Compute surveillance probability at Decision nodes by Bout type
+        median_df = compute_surveillance_probabilities(
+            df_hmm=df_hmm,
+            decision_nodes="decision_reward",
+        )
+        assert isinstance(median_df, pd.DataFrame)
+        assert not median_df.empty
+        for col in ["Genotype", "Session", "Successful_bout", "Probability_1"]:
+            assert col in median_df.columns
+
+        # Barplot to depict the above with ttest-ind pvalue
+        fig = plot_surveillance_by_bout(
+            config=config,
+            median_df=median_df,
+            ylim=0.6,
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+        assert isinstance(fig, plt.Figure)
+        plt.close(fig)
+        save_path = (
+            Path(config["project_path_full"]) / "figures" / "surveillance_probability_by_bout.pdf"
+        )
+        assert save_path.exists()
+
+        # LMM for same genotype comparison across Bout types
+        df_within = run_within_genotype_mixedlm_with_fdr(median_df)
+        assert isinstance(df_within, pd.DataFrame)
+
+        # T-test across genotypes under Unsuccessful Bouts
+        df_across_unsuccess = test_across_genotypes_per_bout(median_df, bout_type='Unsuccessful')
+        assert isinstance(df_across_unsuccess, pd.DataFrame)
