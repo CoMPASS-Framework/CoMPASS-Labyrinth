@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
 
-#-------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 # Bout number assignment
-#--------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
-def assign_bouts_per_session(df, terminal_values=[47], bout_col='Bout_ID'):
+
+def assign_bouts_per_session(df, terminal_values=[47], bout_col="Bout_ID"):
     """
     Assigns bout numbers to a DataFrame based on terminal grid node values,
     if the specified bout column does not already exist.
@@ -27,7 +28,7 @@ def assign_bouts_per_session(df, terminal_values=[47], bout_col='Bout_ID'):
     bout_nums = []
 
     for i in range(len(df)):
-        current = df.iloc[i]['Grid Number']
+        current = df.iloc[i]["Grid Number"]
 
         if current not in terminal_values:
             in_non_terminal_phase = True
@@ -39,10 +40,12 @@ def assign_bouts_per_session(df, terminal_values=[47], bout_col='Bout_ID'):
 
         if current in terminal_values and not in_non_terminal_phase:
             if i > 0:
-                prev_vals = df.iloc[:i]['Grid Number']
+                prev_vals = df.iloc[:i]["Grid Number"]
                 last_terminal_idx = prev_vals[prev_vals.isin(terminal_values)].last_valid_index()
 
-                if last_terminal_idx is not None and any(~df.iloc[last_terminal_idx + 1:i]['Grid Number'].isin(terminal_values)):
+                if last_terminal_idx is not None and any(
+                    ~df.iloc[last_terminal_idx + 1 : i]["Grid Number"].isin(terminal_values)
+                ):
                     if i + 1 < len(df):
                         bout_num += 1
 
@@ -50,20 +53,19 @@ def assign_bouts_per_session(df, terminal_values=[47], bout_col='Bout_ID'):
     return df
 
 
-#---------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------
 # Create Phases from Bout Numbers
-#---------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------
+
 
 def build_phase_map(df, n_phases):
     phase_map = {}
     sessions = df.Session.unique()
     for sess in sessions:
         df_sess = df[df.Session == sess]
-        unique_bouts = df_sess['Bout_ID'].dropna().unique()
+        unique_bouts = df_sess["Bout_ID"].dropna().unique()
         unique_bouts.sort()
         phase_chunks = np.array_split(unique_bouts, n_phases)
         for i, chunk in enumerate(phase_chunks):
             phase_map[(sess, i)] = chunk
     return phase_map
-
-

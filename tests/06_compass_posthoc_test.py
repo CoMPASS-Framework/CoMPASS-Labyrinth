@@ -26,7 +26,7 @@ class TestCompasPosthocAnalysis:
             highlight_grids="decision_reward",
             target_grids="target_zone",
             hmm_state=2,
-            cmap='RdBu',
+            cmap="RdBu",
             save_fig=True,
             show_fig=False,
             return_fig=True,
@@ -43,7 +43,7 @@ class TestCompasPosthocAnalysis:
             hmm_state=2,
             decision_grids="decision_reward",
             target_grids="target_zone",
-            top_percent=.1,
+            top_percent=0.1,
             save_fig=True,
             show_fig=False,
             return_fig=True,
@@ -62,11 +62,15 @@ class TestCompasPosthocAnalysis:
         project_path = Path(config["project_path_full"])
         df_hmm = pd.read_csv(project_path / "results" / "compass_level_1" / "data_with_states.csv")
 
-        column_of_interest = 'NodeType'
+        column_of_interest = "NodeType"
         values_displayed = [
-            '3-way Decision (Reward)', '4-way Decision (Reward)','Non-Decision (Reward)', 
-            'Decision (Non-Reward)', 'Non-Decision (Non-Reward)',
-            'Corner (Reward)', 'Corner (Non-Reward)'
+            "3-way Decision (Reward)",
+            "4-way Decision (Reward)",
+            "Non-Decision (Reward)",
+            "Decision (Non-Reward)",
+            "Non-Decision (Non-Reward)",
+            "Corner (Reward)",
+            "Corner (Non-Reward)",
         ]
         state = 1
 
@@ -91,7 +95,9 @@ class TestCompasPosthocAnalysis:
         assert isinstance(fig, plt.Figure)
         plt.close(fig)
 
-        save_path = Path(config["project_path_full"]) / "figures" / f"state_{state}_probability_by_{column_of_interest}.pdf"
+        save_path = (
+            Path(config["project_path_full"]) / "figures" / f"state_{state}_probability_by_{column_of_interest}.pdf"
+        )
         assert save_path.exists()
 
         ttest_results = run_pairwise_ttests(
@@ -115,18 +121,14 @@ class TestCompasPosthocAnalysis:
 
         lower_limit = 0
         upper_limit = get_max_session_row_bracket(df_hmm)
-        threshold =  get_min_session_row_bracket(df_hmm)  # Only show bins where all sessions are present
+        threshold = get_min_session_row_bracket(df_hmm)  # Only show bins where all sessions are present
         bin_size = 2000
-        palette = ['grey', 'black']
+        palette = ["grey", "black"]
         figure_ylimit = (0.6, 1.1)
 
         # Step 1: Compute median probability of being in State 1 across time bins
         deci_df = compute_node_state_medians_over_time(
-            df_hmm=df_hmm,
-            state_types=[2],
-            lower_lim=lower_limit,
-            upper_lim=upper_limit,
-            bin_size=bin_size
+            df_hmm=df_hmm, state_types=[2], lower_lim=lower_limit, upper_lim=upper_limit, bin_size=bin_size
         )
 
         # Step 2: Optional filter to only plot early session bins
@@ -138,16 +140,14 @@ class TestCompasPosthocAnalysis:
             deci_df=deci_df,
             palette=palette,
             figure_ylimit=figure_ylimit,
-            fig_title = 'Median Probability of Ambulatory State',
+            fig_title="Median Probability of Ambulatory State",
             save_fig=True,
             show_fig=False,
             return_fig=True,
         )
         assert isinstance(fig, plt.Figure)
         plt.close(fig)
-        save_path = (
-            Path(config["project_path_full"]) / "figures" / "temporal_median_state_probability_curve.pdf"
-        )
+        save_path = Path(config["project_path_full"]) / "figures" / "temporal_median_state_probability_curve.pdf"
         assert save_path.exists()
 
     def test_compass_posthoc_surveillance_analysis(self, create_project_fixture):
@@ -163,7 +163,7 @@ class TestCompasPosthocAnalysis:
         project_path = Path(config["project_path_full"])
         df_hmm = pd.read_csv(project_path / "results" / "compass_level_1" / "data_with_states.csv")
 
-        # Assign Bout Numbers 
+        # Assign Bout Numbers
         df_hmm = assign_bout_indices(
             df=df_hmm,
             delimiter_node=47,
@@ -193,9 +193,7 @@ class TestCompasPosthocAnalysis:
         )
         assert isinstance(fig, plt.Figure)
         plt.close(fig)
-        save_path = (
-            Path(config["project_path_full"]) / "figures" / "surveillance_probability_by_bout.pdf"
-        )
+        save_path = Path(config["project_path_full"]) / "figures" / "surveillance_probability_by_bout.pdf"
         assert save_path.exists()
 
         # LMM for same genotype comparison across Bout types
@@ -203,5 +201,5 @@ class TestCompasPosthocAnalysis:
         assert isinstance(df_within, pd.DataFrame)
 
         # T-test across genotypes under Unsuccessful Bouts
-        df_across_unsuccess = test_across_genotypes_per_bout(median_df, bout_type='Unsuccessful')
+        df_across_unsuccess = test_across_genotypes_per_bout(median_df, bout_type="Unsuccessful")
         assert isinstance(df_across_unsuccess, pd.DataFrame)

@@ -47,7 +47,7 @@ class TestCompasLevel1:
             use_abs_angle=(False,),
             stationary_flag="auto",
             use_data_driven_ranges=True,
-            angle_mean_biased=(np.pi/2, 0.0),
+            angle_mean_biased=(np.pi / 2, 0.0),
             session_col="Session",
             seed=123,
             enforce_behavioral_constraints=False,
@@ -55,7 +55,7 @@ class TestCompasLevel1:
         )
         assert hasattr(res, "model")
         assert isinstance(res.model, GammaHMM)
-        
+
         assert hasattr(res, "summary")
         assert isinstance(res.summary, dict)
 
