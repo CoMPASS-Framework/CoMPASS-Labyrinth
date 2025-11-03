@@ -149,21 +149,24 @@ def calculate_deviation(row):
 
 
 # ------------------ Main Processing ------------------ #
-def compute_smoothed_angle_deviation(df: pd.DataFrame, rolling_window: int) -> pd.DataFrame:
+def compute_angle_deviation(df: pd.DataFrame, rolling_window: int) -> pd.DataFrame:
     li_sess = []
     for sess in df["Session"].unique():
         df_sess = df[df["Session"] == sess].copy().reset_index(drop=True)
+        # Unsmoothed angle deviation
         df_sess["dx"] = df_sess["x"].diff()
         df_sess["dy"] = df_sess["y"].diff()
+        df_sess["Targeted_Angle"] = df_sess.apply(calculate_deviation, axis=1)
+        # Smoothed angle deviation
         df_sess["dx_smooth"] = df_sess["dx"].rolling(rolling_window, center=True, min_periods=1).mean()
         df_sess["dy_smooth"] = df_sess["dy"].rolling(rolling_window, center=True, min_periods=1).mean()
         df_sess["Targeted_Angle_smooth"] = df_sess.apply(calculate_deviation, axis=1)
         li_sess.append(df_sess)
 
-    # df_result = pd.concat(li_sess).dropna().reset_index(drop=True)
-    df_result = pd.concat(li_sess).reset_index(drop=True)
-
+    df_result = pd.concat(li_sess)
+    df_result["Targeted_Angle_abs"] = np.abs(df_result["Targeted_Angle"])
     df_result["Targeted_Angle_smooth_abs"] = np.abs(df_result["Targeted_Angle_smooth"])
+    df_result = df_result.dropna(subset=["Targeted_Angle_abs", "Targeted_Angle_smooth_abs"]).reset_index(drop=True)
     return df_result
 
 
@@ -176,22 +179,6 @@ def assign_reference_info(df: pd.DataFrame) -> pd.DataFrame:
     df["y_mean"] = df.groupby("Closest_Node")["y"].transform("mean")
     df["Reference_axis"] = df["Grid Number"].apply(lambda x: map_category(x, xy_mapping))
     return df
-
-
-def compute_unsmoothed_angle_deviation(df: pd.DataFrame) -> pd.DataFrame:
-    li_dev_angle = []
-    for sess in df["Session"].unique():
-        df_sess = df[df["Session"] == sess].copy().reset_index(drop=True)
-        df_sess["dx"] = df_sess["x"].diff()
-        df_sess["dy"] = df_sess["y"].diff()
-        df_sess["Targeted_Angle"] = df_sess.apply(calculate_deviation, axis=1)
-        li_dev_angle.append(df_sess)
-
-    #df_dev = pd.concat(li_dev_angle).dropna().reset_index(drop=True)
-    df_dev = pd.concat(li_dev_angle).reset_index(drop=True)
-    
-    # df_dev['Targeted_Angle_abs'] = np.abs(df_dev['Targeted_Angle'])
-    return df_dev
 
 
 # ============================================================
