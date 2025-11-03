@@ -159,10 +159,10 @@ def compute_smoothed_angle_deviation(df, rolling_window):
 
 def assign_reference_info(df, close_ref_dict, xy_mapping):
     df = df.copy()
-    df['Closest_Node'] = df['Grid.Number'].apply(lambda x: map_category(x, close_ref_dict))
+    df['Closest_Node'] = df['Grid Number'].apply(lambda x: map_category(x, close_ref_dict))
     df['x_mean'] = df.groupby('Closest_Node')['x'].transform('mean')
     df['y_mean'] = df.groupby('Closest_Node')['y'].transform('mean')
-    df['Reference_axis'] = df['Grid.Number'].apply(lambda x: map_category(x, xy_mapping))
+    df['Reference_axis'] = df['Grid Number'].apply(lambda x: map_category(x, xy_mapping))
     return df
 
 def compute_unsmoothed_angle_deviation(df):
@@ -188,8 +188,8 @@ def compute_center_coordinates(df, grid_nodes):
     """
     Compute the mean (x, y) position of specified grid nodes.
     """
-    x_mean = df[df['Grid.Number'].isin(grid_nodes)]['x'].mean()
-    y_mean = df[df['Grid.Number'].isin(grid_nodes)]['y'].mean()
+    x_mean = df[df['Grid Number'].isin(grid_nodes)]['x'].mean()
+    y_mean = df[df['Grid Number'].isin(grid_nodes)]['y'].mean()
     return x_mean, y_mean
 
 
@@ -209,11 +209,11 @@ def merge_value_map(df, value_map_path):
     colmap = {c: "Value" for c in value_map.columns if c.lower().startswith("value")}
     value_map = value_map.rename(columns=colmap)
     
-    # Force Grid.Number to int in both
-    df['Grid.Number'] = df['Grid.Number'].astype(int)
-    value_map['Grid.Number'] = value_map['Grid.Number'].astype(int)
+    # Force Grid Number to int in both
+    df['Grid Number'] = df['Grid Number'].astype(int)
+    value_map['Grid Number'] = value_map['Grid Number'].astype(int)
     
-    df = pd.merge(df, value_map, on="Grid.Number", how="left")
+    df = pd.merge(df, value_map, on="Grid Number", how="left")
     
     if 'Value' not in df.columns:
         raise KeyError(f"'Value' column missing after merge. Columns: {df.columns.tolist()}")

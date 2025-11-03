@@ -166,6 +166,15 @@ def init_project(
     metadata_df = pd.DataFrame(cohort_metadata)
     metadata_df.to_csv(project_path_full / "cohort_metadata.csv", index=False)
 
+    # Copy all shape files (.dbf, .shp, .shx) from source data path to project grid_files folder
+    grid_files_dest = project_path_full / "data" / "grid_files"
+    for file_ext in [".shp", ".dbf", ".shx"]:
+        grid_files = [f.resolve() for f in source_data_path.glob(f"*{file_ext}")]
+        for file in grid_files:
+            dest_file = grid_files_dest / file.name
+            if not dest_file.exists():
+                shutil.copy2(file, dest_file)
+
     # Create config dictionary and save config.yaml in project path
     config = {
         "project_name": project_name,

@@ -188,7 +188,7 @@ class TestPackageDataImports:
             assert VALUE_FUNCTION.shape == (144, 2), f"Expected shape (144, 2), got {VALUE_FUNCTION.shape}"
 
             # Check column names
-            expected_columns = ["Grid.Number", "Value"]
+            expected_columns = ["Grid Number", "Value"]
             assert (
                 list(VALUE_FUNCTION.columns) == expected_columns
             ), f"Expected columns {expected_columns}, got {list(VALUE_FUNCTION.columns)}"
