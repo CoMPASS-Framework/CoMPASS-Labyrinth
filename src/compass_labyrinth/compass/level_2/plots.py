@@ -104,7 +104,7 @@ def plot_spatial_embedding(
     plt.ylabel("Y Coordinate")
     plt.gca().invert_yaxis()
     plt.tight_layout()
-    
+
     # Save figure
     if save_fig:
         save_path = Path(config["project_path_full"]) / "figures" / "spatial_embedding_heatmap.pdf"

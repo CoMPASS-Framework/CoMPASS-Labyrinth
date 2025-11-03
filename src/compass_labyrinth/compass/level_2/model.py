@@ -71,7 +71,7 @@ def run_compass(
     reg_options: list = [1e-4, 1e-5, 1e-6],
     terminal_values: list = [47],
     bout_col: str = "Bout_ID",
-    patience: None | str =None,
+    patience: None | str = None,
     patience_candidates: list = [2, 3, 5, 10],
 ) -> tuple[pd.DataFrame, list]:
     """
@@ -103,7 +103,7 @@ def run_compass(
     patience_candidates : list, optional
         List of patience candidates to test if patience is 'tune' (default is [2, 3, 5, 10]).
         Only used if patience is set to 'tune'.
-    
+
     Returns:
     --------
     tuple
@@ -214,7 +214,7 @@ def run_compass(
 
                 tag = f"Session:{test_sess}_PhaseIndex:{phase_index+1}_NumPhases:{n_phases}_Patience:{best_patience}"
                 all_results.append((tag, log_liks, aics, param_labels))
-    
+
     df_hier = pd.concat(final_sess_data)
 
     # Save results
