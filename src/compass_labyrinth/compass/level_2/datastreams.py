@@ -160,7 +160,9 @@ def compute_smoothed_angle_deviation(df: pd.DataFrame, rolling_window: int) -> p
         df_sess["Targeted_Angle_smooth"] = df_sess.apply(calculate_deviation, axis=1)
         li_sess.append(df_sess)
 
-    df_result = pd.concat(li_sess).dropna().reset_index(drop=True)
+    # df_result = pd.concat(li_sess).dropna().reset_index(drop=True)
+    df_result = pd.concat(li_sess).reset_index(drop=True)
+
     df_result["Targeted_Angle_smooth_abs"] = np.abs(df_result["Targeted_Angle_smooth"])
     return df_result
 
@@ -185,7 +187,9 @@ def compute_unsmoothed_angle_deviation(df: pd.DataFrame) -> pd.DataFrame:
         df_sess["Targeted_Angle"] = df_sess.apply(calculate_deviation, axis=1)
         li_dev_angle.append(df_sess)
 
-    df_dev = pd.concat(li_dev_angle).dropna().reset_index(drop=True)
+    #df_dev = pd.concat(li_dev_angle).dropna().reset_index(drop=True)
+    df_dev = pd.concat(li_dev_angle).reset_index(drop=True)
+    
     # df_dev['Targeted_Angle_abs'] = np.abs(df_dev['Targeted_Angle'])
     return df_dev
 

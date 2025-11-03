@@ -188,7 +188,8 @@ def run_compass(
                                         if test_patience is not None and no_improve >= test_patience:
                                             early_stopped = True
                                             break
-                                    except Exception:
+                                    except Exception as e:
+                                        print(f"Model failed for n={ncomp}, k={k}, reg={reg_val:.0e}: {e}")
                                         continue
                                 if early_stopped:
                                     break
