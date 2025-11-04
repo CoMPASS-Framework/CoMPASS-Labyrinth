@@ -20,6 +20,8 @@ class TestCompassLevel2:
             visualize_cv_results,
             assign_reward_orientation,    
             assign_hhmm_state,
+            plot_state_sequences,
+            plot_hhmm_state_sequence,
         )
 
         config, _ = create_project_fixture
@@ -131,3 +133,35 @@ class TestCompassLevel2:
         assert not df_hier.empty
         assert "Reward_Oriented" in df_hier.columns
         assert "HHMM State" in df_hier.columns
+
+        # Plot state sequences for all sessions
+        all_figs_2 = plot_state_sequences(
+            config=config,
+            df=df_hier,     
+            genotype='WT',
+            state_col='Level_2_States',
+            sessions_to_plot='all',
+            title_prefix='State Sequence',
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+        assert isinstance(all_figs_2, list)
+        for fig in all_figs_2:
+            assert isinstance(fig, plt.Figure)
+            plt.close(fig)
+
+        # Plot HHMM state sequences for all sessions
+        all_figs_3 = plot_hhmm_state_sequence(
+            config=config,
+            df=df_hier,
+            session_col='Session',
+            state_col='HHMM State',
+            save_fig=True,
+            show_fig=False,
+            return_fig=True,
+        )
+        assert isinstance(all_figs_3, list)
+        for fig in all_figs_3:
+            assert isinstance(fig, plt.Figure)
+            plt.close(fig)

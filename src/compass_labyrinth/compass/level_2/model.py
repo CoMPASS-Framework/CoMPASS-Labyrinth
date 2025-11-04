@@ -515,28 +515,51 @@ def assign_hhmm_state(
 # HHMM State sequence
 ################################################################
 def plot_hhmm_state_sequence(
-    df,
-    session_col="Session",
-    state_col="HHMM State",
-    session_id=None,
-    title_prefix="State Sequence",
-    colors=None,
-):
+    config: dict,
+    df: pd.DataFrame,
+    session_col: str = "Session",
+    state_col: str = "HHMM State",
+    session_id:  None | int = None,
+    title_prefix: str = "State Sequence",
+    colors:  None | dict = None,
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
     """
     Plots a rectangular sequence of HHMM states for a given session.
 
     Parameters:
-        df (pd.DataFrame): DataFrame containing session and HHMM state columns.
-        session_col (str): Name of the column indicating session.
-        state_col (str): Name of the column containing HHMM state labels.
-        session_id (optional): Specific session to plot. If None, plots all sessions.
-        title_prefix (str): Custom title prefix for plots.
+    -----------
+    config : dict
+        Configuration dictionary for the project.
+    df : pd.DataFrame
+        DataFrame containing session and HHMM state columns.
+    session_col : str
+        Name of the column indicating session.
+    state_col : str
+        Name of the column containing HHMM state labels.
+    session_id : None | int
+        Specific session to plot. If None, plots all sessions.
+    title_prefix : str
+        Custom title prefix for plots.
+    colors : None | dict
+        Dictionary mapping HHMM states to colors. If None, default colors are used.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
 
     Returns:
-        None (displays plots)
+    --------
+    None or plt.Figure
+        The figure object if return_fig is True, otherwise None.
     """
     sessions_to_plot = [session_id] if session_id is not None else df[session_col].unique()
 
+    all_figs = []
     for sess in sessions_to_plot:
         test = df.loc[df[session_col] == sess, [state_col]].reset_index(drop=True)
         test["color"] = test[state_col].map(colors)
@@ -553,4 +576,19 @@ def plot_hhmm_state_sequence(
         ax.legend(handles=handles, title="States", bbox_to_anchor=(0.5, -0.15), loc="upper center", borderaxespad=0.0)
         plt.tight_layout()
 
-        plt.show()
+        # Save figure
+        if save_fig:
+            save_path = Path(config["project_path_full"]) / "figures" / f"hhmm_state_sequence_session_{sess}.pdf"
+            plt.savefig(save_path, bbox_inches="tight", dpi=300)
+            print(f"Figure saved at: {save_path}")
+
+        # Show figure
+        if show_fig:
+            plt.show()
+
+        # Return figure
+        if return_fig:
+            all_figs.append(fig)
+
+    if return_fig:
+        return all_figs
