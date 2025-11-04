@@ -310,8 +310,11 @@ def generate_state_color_map(unique_states, palette="tab10"):
 
 
 def plot_state_sequence_for_session(
-    df_session, state_col="Level_2_States", color_map=None, title_prefix="State Sequence"
-):
+    df_session: pd.DataFrame,
+    state_col: str = "Level_2_States",
+    color_map: None | dict = None,
+    title_prefix: str = "State Sequence",
+) -> plt.Figure:
     """Plot the state sequence using color bars for one session."""
     df_session = df_session.reset_index(drop=True).copy()
     df_session["color"] = df_session[state_col].map(color_map)
@@ -327,20 +330,28 @@ def plot_state_sequence_for_session(
 
     legend_handles = [patches.Patch(color=color_map[state], label=f"State {state}") for state in color_map]
     ax.legend(
-        handles=legend_handles, title="States", bbox_to_anchor=(0.5, -0.15), loc="upper center", borderaxespad=0.0
+        handles=legend_handles,
+        title="States",
+        bbox_to_anchor=(0.5, -0.15),
+        loc="upper center",
+        borderaxespad=0.0,
     )
 
     plt.tight_layout()
-    plt.show()
+    return fig
 
 
 def plot_state_sequences(
-    df,
-    genotype="WT-WT",
-    state_col="Level_2_States",
-    sessions_to_plot="all",  # Can be 'all', a list of session IDs, or an int (top n)
-    title_prefix="State Sequence",
-):
+    config: dict,
+    df: pd.DataFrame,
+    genotype: str = "WT-WT",
+    state_col: str = "Level_2_States",
+    sessions_to_plot: str | list | int = "all",  # Can be 'all', a list of session IDs, or an int (top n)
+    title_prefix: str = "State Sequence",
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | list[plt.Figure]:
     """Plot state sequences for specified sessions and genotype."""
     df_geno = df[df["Genotype"] == genotype]
     unique_states = get_unique_states(df_geno, state_col=state_col)
@@ -356,9 +367,32 @@ def plot_state_sequences(
         selected_sessions = all_sessions
 
     # Plot each selected session
+    all_figs = []
     for sess_id in selected_sessions:
         df_sess = df_geno[df_geno["Session"] == sess_id][[state_col, "Session"]]
-        plot_state_sequence_for_session(df_sess, state_col=state_col, color_map=color_map, title_prefix=title_prefix)
+        fig = plot_state_sequence_for_session(
+            df_sess,
+            state_col=state_col,
+            color_map=color_map,
+            title_prefix=title_prefix,
+        )
+
+        # Save figure
+        if save_fig:
+            save_path = Path(config["project_path_full"]) / "figures" / f"state_sequence_session_{sess_id}.pdf"
+            fig.savefig(save_path, bbox_inches="tight", dpi=300)
+            print(f"Figure saved at: {save_path}")
+
+        # Show figure
+        if show_fig:
+            plt.show()
+
+        # Return figure
+        if return_fig:
+            all_figs.append(fig)
+
+    if return_fig:
+        return all_figs
 
 
 ################################################################
@@ -433,23 +467,28 @@ def assign_reward_orientation(
 
 
 def assign_hhmm_state(
-    df,
-    level_1_state_col,
-    level_2_state_col,
-):
+    df: pd.DataFrame,
+    level_1_state_col: str,
+    level_2_state_col: str,
+) -> pd.DataFrame:
     """
     Assigns a final HHMM (Hierarchical Hidden Markov Model) state to the dataframe.
     The final HHMM state is based on the combination of level 1 and level 2 states.
 
-    Args:
-    - df: DataFrame containing the level_1_state_col and level_2_state_col columns.
-    - level_1_state_col: The name of the column representing the first-level HMM state.
-    - level_2_state_col: The name of the column representing the second-level state (reward-oriented or not).
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        Dataframe containing the level_1_state_col and level_2_state_col columns.
+    level_1_state_col : str
+        The name of the column representing the first-level HMM state.
+    level_2_state_col : str
+        The name of the column representing the second-level state (reward-oriented or not).
 
     Returns:
-    - df: DataFrame with an additional 'HHMM State' column indicating the final HHMM state.
+    --------
+    df : pd.DataFrame
+        DataFrame with an additional 'HHMM State' column indicating the final HHMM state.
     """
-
     # Define the conditions for assigning the HHMM states
     conds = [
         (df[level_1_state_col] == 1) & (df[level_2_state_col] == "Non-Reward Oriented"),

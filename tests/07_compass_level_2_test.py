@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 
 class TestCompassLevel2:
 
-    def test_compass_level_2(self, create_project_fixture):
+    def test_compass_level_2_0(self, create_project_fixture):
         from compass_labyrinth.compass.level_2 import (
             loso_kde_cv,
             compute_kde_scaled,
@@ -94,6 +94,8 @@ class TestCompassLevel2:
         assert not df_hier.empty
         assert isinstance(cv_results, list)
         assert len(cv_results) > 0
+        save_path = project_path / "results" / "csvs" / "combined" / "hhmm_state_file.csv"
+        assert save_path.exists()
 
         # Visualize CV Results
         all_figs = visualize_cv_results(
@@ -108,3 +110,33 @@ class TestCompassLevel2:
         for fig in all_figs:
             assert isinstance(fig, plt.Figure)
             plt.close(fig)
+
+    def test_compass_level_2_1(self, create_project_fixture):
+        from compass_labyrinth.compass.level_2 import (
+            assign_reward_orientation,    
+            assign_hhmm_state,
+        )
+
+        config, _ = create_project_fixture
+        project_path = Path(config["project_path_full"])
+        df_hier = pd.read_csv(project_path / "results" / "csvs" / "combined" / "hhmm_state_file.csv")
+
+        # Assign reward orientation based on session-specific angle medians
+        df_hier = assign_reward_orientation(
+            df_hier,
+            angle_col='Targeted_Angle_smooth_abs',
+            level_2_state_col='Level_2_States',
+            session_col='Session',
+        )
+
+        # Then assign the final HHMM state
+        df_hier = assign_hhmm_state(
+            df_hier,
+            level_1_state_col='HMM_State',
+            level_2_state_col='Reward_Oriented',
+        )
+
+        assert isinstance(df_hier, pd.DataFrame)
+        assert not df_hier.empty
+        assert "Reward_Oriented" in df_hier.columns
+        assert "HHMM State" in df_hier.columns

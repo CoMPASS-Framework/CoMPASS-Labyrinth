@@ -107,7 +107,7 @@ def plot_spatial_embedding(
         Whether to display the figure.
     return_fig : bool
         Whether to return the figure object.
-    
+
     Returns:
     --------
     plt.Figure or None
