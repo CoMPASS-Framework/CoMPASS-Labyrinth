@@ -391,6 +391,6 @@ def compass_level_1_fixture(create_project_fixture, task_performance):
         centers=None,
         centroids=None,
         angleCovs=None,
-        altCoordNames=None
+        altCoordNames=None,
     )
     return final_df
