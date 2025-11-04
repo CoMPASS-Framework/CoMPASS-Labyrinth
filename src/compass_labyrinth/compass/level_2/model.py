@@ -73,6 +73,7 @@ def run_compass(
     bout_col: str = "Bout_ID",
     patience: None | str = None,
     patience_candidates: list = [2, 3, 5, 10],
+    verbose: bool = False,
 ) -> tuple[pd.DataFrame, list]:
     """
     Run CoMPASS.
@@ -103,6 +104,8 @@ def run_compass(
     patience_candidates : list, optional
         List of patience candidates to test if patience is 'tune' (default is [2, 3, 5, 10]).
         Only used if patience is set to 'tune'.
+    verbose : bool, optional
+        Whether to print detailed logs during model training (default is False).
 
     Returns:
     --------
@@ -189,7 +192,8 @@ def run_compass(
                                             early_stopped = True
                                             break
                                     except Exception as e:
-                                        print(f"Model failed for n={ncomp}, k={k}, reg={reg_val:.0e}: {e}")
+                                        if verbose:
+                                            print(f"Model failed for n={ncomp}, k={k}, reg={reg_val:.0e}: {e}")
                                         continue
                                 if early_stopped:
                                     break
@@ -559,6 +563,10 @@ def plot_hhmm_state_sequence(
     """
     sessions_to_plot = [session_id] if session_id is not None else df[session_col].unique()
 
+    if colors is None:
+        # Get unique states from all sessions to be plotted and generate color map
+        unique_states = sorted(df[df[session_col].isin(sessions_to_plot)][state_col].dropna().unique())
+        colors = generate_state_color_map(unique_states)
     all_figs = []
     for sess in sessions_to_plot:
         test = df.loc[df[session_col] == sess, [state_col]].reset_index(drop=True)

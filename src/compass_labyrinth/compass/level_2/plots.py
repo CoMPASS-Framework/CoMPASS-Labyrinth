@@ -160,13 +160,13 @@ def normalize_features(df, feature_cols):
 
 
 def compute_detailed_bout_summary(
-    df,
-    feature_cols,
-    node_filter="Decision (Reward)",
-    state_col="HMM State",
-    target_zone="Target Zone",
-    valid_bout_threshold=10,
-    bout_col="Bout_ID",
+    df: pd.DataFrame,
+    feature_cols: list[str],
+    node_filter: str = "Decision (Reward)",
+    state_col: str = "HMM State",
+    target_zone: str = "Target Zone",
+    valid_bout_threshold: int = 10,
+    bout_col: str = "Bout_ID",
 ):
     """
     Compute per-bout median values of features and success/validity flags.
