@@ -66,8 +66,8 @@ def run_compass(
     df: pd.DataFrame,
     features: list,
     phase_options: list = [5],
-    ncomp_options: range = range(2, 4),
-    k_options: range = range(2, 4),
+    ncomp_options: list[int] = [2, 3],
+    k_options: list[int] = [2, 3],
     reg_options: list = [1e-4, 1e-5, 1e-6],
     terminal_values: list = [47],
     bout_col: str = "Bout_ID",
@@ -87,10 +87,10 @@ def run_compass(
         List of feature column names to use.
     phase_options : list, optional
         List of phase options to test (default is [5]).
-    ncomp_options : range, optional
-        Range of number of components to test (default is range(2, 4)).
-    k_options : range, optional
-        Range of k values to test (default is range(2, 4)).
+    ncomp_options : list, optional
+        Range of number of components to test (default is [2, 3]).
+    k_options : list, optional
+        Range of k values to test (default is [2, 3]).
     reg_options : list, optional
         List of regularization values to test (default is [1e-4, 1e-5, 1e-6]).
     terminal_values : list, optional
@@ -228,9 +228,37 @@ def run_compass(
 # ============================================================
 # CV Performance Visualization
 # ============================================================
-def visualize_cv_results(all_results):
+def visualize_cv_results(
+    config: dict,
+    all_results: list,
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | list[plt.Figure]:
+    """
+    Visualize cross-validation results.
+
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary.
+    all_results : list
+        List of tuples containing CV results.
+    save_fig : bool, optional
+        Whether to save the figures (default is True).
+    show_fig : bool, optional
+        Whether to show the figures (default is True).
+    return_fig : bool, optional
+        Whether to return the figures (default is False).
+
+    Returns:
+    --------
+    None or list of plt.Figure
+        List of figures if return_fig is True, otherwise None.
+    """
+    all_figs = list()
     for tag, log_liks, aics, param_labels in all_results:
-        plt.figure(figsize=(14, 5))
+        fig = plt.figure(figsize=(14, 5))
 
         plt.subplot(1, 2, 1)
         sns.lineplot(x=np.arange(len(log_liks)), y=log_liks, marker="o")
@@ -247,7 +275,24 @@ def visualize_cv_results(all_results):
         plt.ylabel("AIC")
 
         plt.tight_layout()
-        plt.show()
+
+        # Save figure
+        if save_fig:
+            prefix = tag.replace(":", "-").replace(",", "_").replace(" ", "_")
+            save_path = Path(config["project_path_full"]) / "figures" / f"level_2_cv_performance_{prefix}.pdf"
+            plt.savefig(save_path, bbox_inches="tight", dpi=300)
+            print(f"Figure saved at: {save_path}")
+
+        # Show figure
+        if show_fig:
+            plt.show()
+
+        # Return figure
+        if return_fig:
+            all_figs.append(fig)
+
+    if return_fig:
+        return all_figs
 
 
 ################################################################
@@ -320,23 +365,30 @@ def plot_state_sequences(
 # Create 4 level HHMM States
 ################################################################
 def assign_reward_orientation(
-    df,
-    angle_col="Targeted_Angle_smooth_abs",
-    level_2_state_col="Level_2_States",
-    session_col="Session",
-):
+    df: pd.DataFrame,
+    angle_col: str = "Targeted_Angle_smooth_abs",
+    level_2_state_col: str = "Level_2_States",
+    session_col: str = "Session",
+) -> pd.DataFrame:
     """
     Assigns reward orientation labels ('Reward Oriented' or 'Non-Reward Oriented') to Level 2 states per session,
     based on the median Targeted_Angle_smooth within each state and relative to session median.
 
     Parameters:
-        df (pd.DataFrame): Input dataframe with columns for session, level 2 state, and angle.
-        angle_col (str): Column name representing the smoothed targeted angle.
-        level_2_state_col (str): Column name for level 2 HMM states.
-        session_col (str): Column name for session identifier.
+    -----------
+    df : pd.DataFrame
+        Input dataframe with columns for session, level 2 state, and angle.
+    angle_col : str
+        Column name representing the smoothed targeted angle.
+    level_2_state_col : str
+        Column name for level 2 HMM states.
+    session_col : str
+        Column name for session identifier.
 
     Returns:
-        pd.DataFrame: Updated dataframe with 'Reward_Oriented' column.
+    --------
+    pd.DataFrame
+        Updated dataframe with 'Reward_Oriented' column.
     """
     df = df.copy()
     df["Reward_Oriented"] = np.nan

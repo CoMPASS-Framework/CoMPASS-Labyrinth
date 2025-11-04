@@ -90,6 +90,29 @@ def plot_spatial_embedding(
     show_fig: bool = True,
     return_fig: bool = False,
 ) -> None | plt.Figure:
+    """
+    Plot a heatmap of the spatial embedding grid.
+
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary for this project.
+    embedding_grid : np.ndarray
+        2D array representing the spatial embedding values.
+    title : str
+        Title of the heatmap.
+    save_fig : bool
+        Whether to save the figure to disk.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+    
+    Returns:
+    --------
+    plt.Figure or None
+        The matplotlib Figure object if return_fig is True, else None.
+    """
     fig = plt.figure(figsize=(12, 8))
     sns.heatmap(
         embedding_grid,
