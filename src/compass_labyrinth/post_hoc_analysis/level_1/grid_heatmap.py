@@ -66,7 +66,11 @@ def compute_state_proportion(
 def create_grid_geodata(config: dict, grid_filename: str) -> gpd.GeoDataFrame:
     """Load the shapefile grid as GeoDataFrame."""
     gridfile = Path(config["project_path_full"]) / "data" / "grid_files" / grid_filename
-    return gpd.read_file(gridfile)
+    grid = gpd.read_file(gridfile)
+    # Add FID column if it doesn't exist (using the index)
+    if 'FID' not in grid.columns:
+        grid['FID'] = grid.index
+    return grid
 
 
 def map_points_to_grid(df_points: pd.DataFrame, grid: gpd.GeoDataFrame) -> gpd.GeoDataFrame:

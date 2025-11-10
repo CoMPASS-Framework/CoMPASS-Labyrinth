@@ -99,8 +99,8 @@ def compile_mouse_sessions(
 
     li_group = []
     for sess in cohort_metadata["Session #"].unique():
-        session_name = f"Session-{int(sess)}"
-        filename = os.path.join(pose_est_csv_filepath, f"{session_name}withGrids.csv")
+        session_name = f"Session{int(sess):04d}" # Use 'Session0001" notation
+        filename = os.path.join(pose_est_csv_filepath, f"{session_name}_withGrids.csv")
         df = load_and_preprocess_session_data(filename, bp, dlc_scorer, region_mapping)
         df["Session"] = sess
         li_group.append(df)

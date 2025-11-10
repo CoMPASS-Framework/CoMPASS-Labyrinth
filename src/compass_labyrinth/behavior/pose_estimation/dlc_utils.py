@@ -20,11 +20,11 @@ from matplotlib.widgets import Cursor
 from shapely.geometry import Polygon, Point
 import geopandas as gpd
 from matplotlib.collections import LineCollection
-
+from typing import Union, Optional
 
 def import_cohort_metadata(
-    metadata_path: str | Path,
-    trial_sheet_name: str | None = None,
+    metadata_path: Union[str, Path],
+    trial_sheet_name: Optional[str]=None,
 ) -> pd.DataFrame:
     """
     Import and process trial metadata from Excel file.
@@ -167,8 +167,8 @@ def display_metadata_summary(df: pd.DataFrame) -> None:
 
 
 def save_first_frame(
-    video_path: str | Path,
-    frames_dir: str | Path,
+    video_path: Union[str, Path],
+    frames_dir: Union[str, Path],
 ) -> None:
     """
     Saves the first frame of a video to the specified destination path.
@@ -869,11 +869,11 @@ def analyze_videos_with_DLC(mouseinfo_df, config_path, video_directory, cropping
     dict
         Summary of analysis operations
     """
-    # try:
-    #     import deeplabcut
-    # except ImportError:
-    #     print("Error: DeepLabCut not available")
-    #     return None
+    try:
+        import deeplabcut
+    except ImportError:
+        print("Error: DeepLabCut not available")
+        return None
 
     start_time = datetime.now()
     print(f"DeepLabCut analysis started: {start_time}")
@@ -1070,14 +1070,11 @@ def get_grid_coordinates(posList, num_squares, grid_files_directory, session, cr
 
     # Save the square grid
     grid_shp_path = grid_files_path / f"{session}_grid.shp"
-    grid_xlsx_path = grid_files_path / f"{session}_grid.xlsx"
 
     grid.to_file(str(grid_shp_path))
-    grid.to_excel(str(grid_xlsx_path))
 
     print(f"Saved Grid for {session}")
     print(f"  - Shapefile: {grid_shp_path}")
-    print(f"  - Excel: {grid_xlsx_path}")
     print(f"  - Grid size: {num_squares}x{num_squares} ({len(polygons)} total squares)")
     if cropping_coords:
         print(f"  - Grid coordinates adjusted to cropped frame")

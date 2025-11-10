@@ -6,21 +6,21 @@ import os
 
 ##### CHANGE THE PATHS AS PER USER LOCAL DRIVE
 
-BASE_PATH = Path(os.getcwd()).parent.parent/ 'TEST_COMPASS'  # TODO: CHANGE THIS TO YOUR BASE PATH LOCATION
+BASE_PATH = r'D:\Gladstone Dropbox\Palop Lab\Patrick\DeepLabCut Projects\AppSAA_DSI_CoMPASS_Test'  # TODO: CHANGE THIS TO YOUR BASE PATH LOCATION
 
 # Location of original raw video locations from 2 computers (Copy original videos to central VIDEOFILE_PATH location)
 # Specific to Palop Lab, IGNORE FOR MOST CASES
-VIDEO_PATH_1 = ''
-VIDEO_PATH_2 = ''
+VIDEO_PATH_1 = r'D:\Gladstone Dropbox\Palop Lab\Patrick\Machine Learning Behavioral Analysis\Labyrinth\Noldus\20251019_AppSAA_DSI_Labyrinth\Media Files'
+# VIDEO_PATH_2 = ''
 print(f"Location of Computer 1 Videos: {VIDEO_PATH_1}")
-print(f"Location of Computer 2 Videos: {VIDEO_PATH_2}")
+# print(f"Location of Computer 2 Videos: {VIDEO_PATH_2}")
 
 # Central video location (where all videos are copied for processing)
 VIDEOFILE_PATH = os.path.join(BASE_PATH, 'videos', 'original_videos')
 print(f"Central Video Location: {VIDEOFILE_PATH}")
 
 # DeepLabCut CONFIG PATH, if running DLC from Palop labyrinth 'supernetwork'
-DLC_CONFIG_PATH = '' # Specific to Palop Lab, IGNORE FOR MOST CASES
+DLC_CONFIG_PATH = Path(r'D:\Gladstone Dropbox\Palop Lab\Patrick\Machine Learning Behavioral Analysis\Labyrinth\DeepLabCut Projects\Labyrinth-Nick-2023-03-13\config.yaml') # Specific to Palop Lab, IGNORE FOR MOST CASES
 
 # Pose estimation CSV outputs filepath
 POSE_EST_CSV_PATH = os.path.join(BASE_PATH, 'data', 'dlc_results') #Don' edit
@@ -30,7 +30,7 @@ GRID_PATH = os.path.join(BASE_PATH, 'data', 'grid_files') # Don't edit
 
 # Metadata file paths
 METADATA_PATH = os.path.join(BASE_PATH, 'data', 'metadata') # Don't edit
-METADATA_FILE = os.path.join(METADATA_PATH,'20241028_WT_DSI_Labyrinth_DLC_InfoSheet_v1.xlsx') # TODO: EDIT
+METADATA_FILE = os.path.join(METADATA_PATH,'20250725_LG124KI3_Cohort4_DLC_InfoSheet_v1.xlsx') # TODO: EDIT
 
 # Trial configuration
 TRIAL_TYPE = 'Labyrinth_DSI' # TODO: EDIT
@@ -44,7 +44,7 @@ BODYPARTS = ['nose', 'belly', 'sternum', 'leftflank', 'rightflank', 'tailbase']
 print(f"Tracking bodyparts: {', '.join(BODYPARTS)}")
 
 # Experimental groups
-GROUPS = ['A', 'B', 'C', 'D'] # TODO: EDIT THIS - Define your experimental groups
+GROUPS = ['WT', 'AppSAA'] # TODO: EDIT THIS - Define your experimental groups
 print(f"Experimental groups: {GROUPS}")
 
 # Specify color of plot in graph

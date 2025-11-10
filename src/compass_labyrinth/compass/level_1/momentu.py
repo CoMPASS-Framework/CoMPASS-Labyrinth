@@ -587,8 +587,8 @@ def fit_best_hmm(
                     if pbar:
                         pbar.update(1)
 
-    if pbar:
-        pbar.close()
+    # if pbar:
+    #     pbar.close() # Keep open to track timing
     if len(candidates) == 0:
         raise RuntimeError("No valid models met the behavioral objective across configurations.")
 
