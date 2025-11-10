@@ -846,6 +846,79 @@ def check_boundary_and_cropping_status(mouseinfo_df, cropping_directory, boundar
 
     return status_dict
 
+def prepare_dlc_analysis(mouseinfo_df, video_directory, cropping_directory, results_directory):
+    """
+    Prepare videos for DeepLabCut analysis by checking files and loading cropping bounds.
+    
+    Returns:
+    --------
+    list of dict
+        List of sessions ready for analysis with all necessary paths and parameters
+    """
+    from pathlib import Path
+    import numpy as np
+    
+    # Ensure directories exist
+    results_path = Path(results_directory)
+    results_path.mkdir(parents=True, exist_ok=True)
+    
+    sessions_to_analyze = []
+    summary = {
+        "total_sessions": len(mouseinfo_df),
+        "ready_for_analysis": 0,
+        "skipped_existing": 0,
+        "missing_video": 0,
+        "missing_coordinates": 0,
+        "failed_sessions": []
+    }
+    
+    for index, row in mouseinfo_df.iterrows():
+        session_num = int(row["Session #"])
+        session_name = f"Session{session_num:04d}"
+        video_name = f"{session_name}.mp4"
+        video_path = Path(video_directory) / video_name
+        
+        # Check if video exists
+        if not video_path.exists():
+            print(f"Error: Video not found: {video_path}")
+            summary["missing_video"] += 1
+            summary["failed_sessions"].append(session_name)
+            continue
+            
+        # Check if analysis already exists
+        existing_csv = list(results_path.glob(f"{session_name}DLC_*.csv"))
+        if existing_csv:
+            print(f"Analysis already exists for {session_name}, skipping...")
+            summary["skipped_existing"] += 1
+            continue
+            
+        # Load cropping bounds
+        coord_file = Path(cropping_directory) / f"{session_name}_DLC_Cropping_Bounds.npy"
+        if not coord_file.exists():
+            print(f"Error: No saved cropping coordinates for {session_name}")
+            summary["missing_coordinates"] += 1
+            summary["failed_sessions"].append(session_name)
+            continue
+            
+        try:
+            coord_data = np.load(coord_file, allow_pickle=True).item()
+            cropping_coords = (coord_data["X1"], coord_data["X2"], 
+                             coord_data["Y1"], coord_data["Y2"])
+            
+            sessions_to_analyze.append({
+                "session_name": session_name,
+                "video_path": str(video_path),
+                "cropping_coords": cropping_coords,
+                "results_path": str(results_path)
+            })
+            summary["ready_for_analysis"] += 1
+            print(f"{session_name}: Ready for analysis with bounds {cropping_coords}")
+            
+        except Exception as e:
+            print(f"Error loading coordinates for {session_name}: {e}")
+            summary["failed_sessions"].append(session_name)
+            
+    return sessions_to_analyze, summary
 
 def analyze_videos_with_DLC(mouseinfo_df, config_path, video_directory, cropping_directory, results_directory):
     """
