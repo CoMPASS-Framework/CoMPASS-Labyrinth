@@ -78,7 +78,7 @@ Models failing this constraint are automatically rejected.
 
 ---
 
-## 📊 Inference and Outputs
+## Inference and Outputs
 
 - **Viterbi decoding:** most probable hidden-state sequence per frame  
 - **Posterior probabilities:** soft assignments for each time point  
