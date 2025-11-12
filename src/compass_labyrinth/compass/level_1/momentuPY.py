@@ -635,24 +635,25 @@ def save_compass_level_1_results(
     summary_path = dest_dir / "model_summary.json"
     with open(summary_path, "w") as f:
         json.dump(results.summary, f, indent=2)
-    print(f"  ✓ Saved model summary: {summary_path.name}")
+    print(f"Saved model summary: {summary_path.name}")
 
     # 2. Save data with state assignments
     data_path = dest_dir / "data_with_states.csv"
     results.data.to_csv(data_path, index=False)
-    print(f"  ✓ Saved data with states: {data_path.name}")
+    print(f"Saved data with states: {data_path.name}")
 
     # 3. Save model selection records
     records_path = dest_dir / "model_selection_records.csv"
     results.records.to_csv(records_path, index=False)
-    print(f"  ✓ Saved model selection records: {records_path.name}")
+    print(f"Saved model selection records: {records_path.name}")
 
     # 4. Save fitted model object (if joblib available)
     if joblib is not None:
         model_path = dest_dir / "fitted_model.joblib"
         joblib.dump(results.model, model_path)
-        print(f"  ✓ Saved fitted model: {model_path.name}")
+        print(f"Saved fitted model: {model_path.name}")
     else:
-        print(f"  ⚠ Skipped model serialization (joblib not installed)")
+        print(f"Skipped model serialization (joblib not installed)")
 
-    print(f"\n📁 All CoMPASS Level 1 results saved to: {dest_dir}")
+    print(f"\n All CoMPASS Level 1 results saved to: {dest_dir}")
+
