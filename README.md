@@ -107,5 +107,9 @@ CoMPASS-Labyrinth is a unified computational and behavioral framework for analyz
 - **05_compass_level_1_post_analysis** : CoMPASS Level 1 post analysis
 - **06_compass_level_2** : CoMPASS Level 2 model
 
+<p align="center">
+  <img src="media/compass_workflow.png" alt="Workflow" width="900"/>
+</p>
+
 ## Citation
 If you use this framework, please cite the below manuscript:
