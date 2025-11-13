@@ -42,9 +42,6 @@ def import_cohort_metadata(
         Cleaned metadata dataframe
     """
     try:
-        print(f"Loading metadata from: {metadata_path}")
-        print(f"Sheet name: {trial_sheet_name}")
-
         # Load the Excel sheet
         metadata_path = Path(metadata_path)
         if metadata_path.suffix in [".xlsx", ".xls"]:
@@ -127,7 +124,6 @@ def validate_metadata(df: pd.DataFrame) -> bool:
         print("Duplicate sessions:")
         print(df[duplicates][["Session #"]])
 
-    print("Metadata validation completed")
     return True
 
 
@@ -427,16 +423,10 @@ def batch_save_first_frames(mouseinfo_df, video_directory, frames_directory):
         "saved_sessions": [],
     }
 
-    print(f"Saving first frames for {len(mouseinfo_df)} sessions...")
-    print(f"Video directory: {video_directory}")
-    print(f"Frames directory: {frames_directory}")
-
     # Process each session
     for index, row in mouseinfo_df.iterrows():
         session_num = int(row["Session #"])
         session_name = f"Session{int(row['Session #']):04d}"
-
-        print(f"\nProcessing {session_name}...")
 
         # Check if video exists
         video_path = video_directory / f"{session_name}.mp4"
@@ -449,7 +439,6 @@ def batch_save_first_frames(mouseinfo_df, video_directory, frames_directory):
         # Check if frame already exists
         frame_image_path = frames_directory / f"{session_name}Frame1.jpg"
         if frame_image_path.exists():
-            print(f"  Frame already exists: {session_name}Frame1.jpg")
             frame_summary["already_exists"] += 1
             continue
 
@@ -460,7 +449,6 @@ def batch_save_first_frames(mouseinfo_df, video_directory, frames_directory):
         if ret:
             # Save the frame as JPEG
             cv2.imwrite(str(frame_image_path), frame)
-            print(f"  Saved: {session_name}Frame1.jpg")
 
             frame_summary["frames_saved"] += 1
             frame_summary["saved_sessions"].append(session_name)
@@ -676,10 +664,6 @@ def get_labyrinth_boundary_and_cropping(
         coord_file = cropping_path / f"{session}_DLC_Cropping_Bounds.npy"
         np.save(str(coord_file), coord_data)
 
-        print(f"\nResults for {session}:")
-        print(f"Boundary corners:")
-        for i, (x, y) in enumerate(boundary_points):
-            print(f"  {corner_names[i]}: ({x}, {y})")
         print(f"Derived cropping bounds: X1={X1}, X2={X2}, Y1={Y1}, Y2={Y2}")
         print(f"Cropping size: {X2-X1} x {Y2-Y1} pixels")
         print(f"Boundary points saved to: {boundary_file}")
@@ -691,9 +675,10 @@ def get_labyrinth_boundary_and_cropping(
         return None, None
 
 
-def batch_get_boundary_and_cropping(mouseinfo_df, frames_directory, cropping_directory, boundaries_directory):
+def batch_get_boundary_and_cropping(mouseinfo_df, frames_directory, cropping_directory, boundaries_directory, reprocess_existing=False):
     """
     Get boundary points and cropping coordinates for multiple sessions.
+    Automatically skips sessions that already have both files unless reprocess_existing=True.
 
     Parameters:
     -----------
@@ -705,21 +690,47 @@ def batch_get_boundary_and_cropping(mouseinfo_df, frames_directory, cropping_dir
         Directory to save cropping coordinates
     boundaries_directory : str or Path
         Directory to save boundary points
+    reprocess_existing : bool, optional
+        If True, reprocess sessions even if they already have boundary/cropping files.
+        If False (default), skip sessions that already have both files.
 
     Returns:
     --------
     dict
         Dictionary with results for each session
     """
-    results_dict = {"boundary_points": {}, "cropping_coords": {}, "successful_sessions": [], "failed_sessions": []}
+    from pathlib import Path
+    
+    cropping_path = Path(cropping_directory)
+    boundaries_path = Path(boundaries_directory)
+    
+    results_dict = {
+        "boundary_points": {}, 
+        "cropping_coords": {}, 
+        "successful_sessions": [], 
+        "failed_sessions": [],
+        "skipped_sessions": []  # Sessions that already had both files
+    }
 
     print(f"Getting boundary points and cropping coordinates for {len(mouseinfo_df)} sessions...")
-    print("This replaces both DLC cropping selection and boundary selection!")
     print("Press 'c' to skip a session, or ESC to stop completely.")
-
+    
     for index, row in mouseinfo_df.iterrows():
         session_num = int(row["Session #"])
         session_name = f"Session{session_num:04d}"
+
+        # Check if files already exist
+        boundary_file = boundaries_path / f"{session_name}_Boundary_Points.npy"
+        cropping_file = cropping_path / f"{session_name}_DLC_Cropping_Bounds.npy"
+        
+        boundary_exists = boundary_file.exists()
+        cropping_exists = cropping_file.exists()
+
+        # Skip if both exist and not reprocessing
+        if boundary_exists and cropping_exists and not reprocess_existing:
+            print(f"✓ {session_name} already has boundary and cropping data - skipping")
+            results_dict["skipped_sessions"].append(session_name)
+            continue
 
         print(f"\n{'='*60}")
         print(f"Processing {session_name} ({index+1}/{len(mouseinfo_df)})")
@@ -729,6 +740,16 @@ def batch_get_boundary_and_cropping(mouseinfo_df, frames_directory, cropping_dir
         if "Noldus Chamber" in row and pd.notna(row["Noldus Chamber"]):
             chamber_info = row["Noldus Chamber"]
             print(f"Chamber: {chamber_info}")
+
+        # Show what's missing or if reprocessing
+        if reprocess_existing and boundary_exists and cropping_exists:
+            print("Status: Reprocessing existing data")
+        elif not boundary_exists and not cropping_exists:
+            print("Status: Missing both boundary and cropping")
+        elif not boundary_exists:
+            print("Status: Missing boundary points")
+        elif not cropping_exists:
+            print("Status: Missing cropping coordinates")
 
         print(f"{'='*60}")
 
@@ -760,91 +781,130 @@ def batch_get_boundary_and_cropping(mouseinfo_df, frames_directory, cropping_dir
     print("BOUNDARY AND CROPPING SELECTION SUMMARY")
     print(f"{'='*60}")
     print(f"Total sessions: {len(mouseinfo_df)}")
-    print(f"Successfully processed: {len(results_dict['successful_sessions'])}")
+    print(f"Already complete (skipped): {len(results_dict['skipped_sessions'])}")
+    print(f"Newly processed: {len(results_dict['successful_sessions'])}")
     print(f"Failed/skipped: {len(results_dict['failed_sessions'])}")
 
+    if results_dict["skipped_sessions"]:
+        print(f"\nAlready had data: {results_dict['skipped_sessions']}")
+
     if results_dict["successful_sessions"]:
-        print(f"Successful sessions: {results_dict['successful_sessions']}")
+        print(f"\nNewly processed: {results_dict['successful_sessions']}")
 
     if results_dict["failed_sessions"]:
-        print(f"Failed sessions: {results_dict['failed_sessions']}")
+        print(f"\nFailed sessions: {results_dict['failed_sessions']}")
 
     return results_dict
 
-
-def check_boundary_and_cropping_status(mouseinfo_df, cropping_directory, boundaries_directory):
+def check_input_file_status(source_data_path, video_type=".mp4"):
     """
-    Check which sessions have both boundary points and cropping coordinates.
-
+    Check if required pose estimation and grid outputs exist for all video files in the directory.
+    
+    This validates that spatial grid files, boundary points, and cropping coordinates
+    have been created for each video session.
+    
     Parameters:
     -----------
-    mouseinfo_df : pd.DataFrame
-        DataFrame containing session information
-    cropping_directory : str or Path
-        Directory containing cropping coordinate files
-    boundaries_directory : str or Path
-        Directory containing boundary point files
-
-    Returns:
-    --------
-    dict
-        Status for each session
+    source_data_path : str or Path
+        Directory that should contain videos and preprocessing outputs
+    video_type : str
+        Video file extension (default: ".mp4")
+        
+    Raises:
+    -------
+    FileNotFoundError
+        If any required grid preprocessing files are missing for sessions with videos
     """
     from pathlib import Path
-
-    cropping_path = Path(cropping_directory)
-    boundaries_path = Path(boundaries_directory)
-
-    status_dict = {}
-    complete_sessions = []
-    missing_sessions = []
-
-    print("Checking boundary and cropping coordinate status...")
-    print("-" * 60)
-
-    for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
-        session_name = f"Session{session_num:04d}"
-
-        # Check for files
-        boundary_file = boundaries_path / f"{session_name}_Boundary_Points.npy"
-        cropping_file = cropping_path / f"{session_name}_DLC_Cropping_Bounds.npy"
-
-        boundary_exists = boundary_file.exists()
-        cropping_exists = cropping_file.exists()
-
-        status_dict[session_name] = {
-            "boundary_exists": boundary_exists,
-            "cropping_exists": cropping_exists,
-            "complete": boundary_exists and cropping_exists,
-        }
-
-        status_msg = f"{session_name}: "
-        if boundary_exists and cropping_exists:
-            status_msg += "✓ Complete (boundary + cropping)"
-            complete_sessions.append(session_name)
-        elif boundary_exists:
-            status_msg += "⚠ Boundary only"
-            missing_sessions.append(session_name)
-        elif cropping_exists:
-            status_msg += "⚠ Cropping only"
-            missing_sessions.append(session_name)
-        else:
-            status_msg += "✗ Missing both"
-            missing_sessions.append(session_name)
-
-        print(status_msg)
-
-    # Summary
-    print("-" * 60)
-    print(f"Summary: {len(complete_sessions)}/{len(mouseinfo_df)} sessions complete")
-
-    if missing_sessions:
-        print(f"Sessions needing processing: {missing_sessions}")
-    else:
-        print("✓ All sessions have boundary and cropping data!")
-
-    return status_dict
+    
+    source_data_path = Path(source_data_path)
+    
+    print("\nValidating grid preprocessing outputs...")
+    
+    # Find all video files to determine which sessions exist
+    video_files = list(source_data_path.glob(f"*{video_type}"))
+    
+    if len(video_files) == 0:
+        error_msg = (
+            f"\n{'='*70}\n"
+            f"ERROR: No video files found in:\n"
+            f"  {source_data_path}\n"
+            f"{'='*70}\n"
+            f"Looking for files matching pattern: *{video_type}\n\n"
+            f"Make sure your video files are in the source_data_path.\n"
+            f"{'='*70}\n"
+        )
+        raise FileNotFoundError(error_msg)
+    
+    # Extract session names from video files
+    session_names = []
+    for video_file in video_files:
+        # Remove the video extension to get session name
+        session_name = video_file.stem
+        session_names.append(session_name)
+    
+    print(f"Found {len(session_names)} video files")
+    
+    # Track missing files per session
+    missing_sessions = {
+        "grid": [],
+        "boundary": [],
+        "cropping": []
+    }
+    
+    # Check each session for required preprocessing files
+    for session_name in session_names:
+        grid_file = source_data_path / f"{session_name}_withGrids.csv"
+        boundary_file = source_data_path / f"{session_name}_Boundary_Points.npy"
+        cropping_file = source_data_path / f"{session_name}_DLC_Cropping_Bounds.npy"
+        
+        if not grid_file.exists():
+            missing_sessions["grid"].append(session_name)
+        if not boundary_file.exists():
+            missing_sessions["boundary"].append(session_name)
+        if not cropping_file.exists():
+            missing_sessions["cropping"].append(session_name)
+    
+    # Build error message if any files are missing
+    missing_outputs = []
+    if missing_sessions["grid"]:
+        missing_outputs.append(f"- Grid files missing for: {', '.join(missing_sessions['grid'])}")
+    if missing_sessions["boundary"]:
+        missing_outputs.append(f"- Boundary files missing for: {', '.join(missing_sessions['boundary'])}")
+    if missing_sessions["cropping"]:
+        missing_outputs.append(f"- Cropping files missing for: {', '.join(missing_sessions['cropping'])}")
+    
+    if missing_outputs:
+        all_missing = set(missing_sessions['grid'] + missing_sessions['boundary'] + missing_sessions['cropping'])
+        error_msg = (
+            f"\n{'='*70}\n"
+            f"ERROR: Missing required grid preprocessing outputs in:\n"
+            f"  {source_data_path}\n"
+            f"{'='*70}\n"
+            f"Missing files for {len(all_missing)} session(s):\n"
+            + "\n".join(missing_outputs) + "\n\n"
+            f"SOLUTION: Run the grid preprocessing pipeline:\n\n"
+            f"  from compass_labyrinth import run_grid_preprocessing\n\n"
+            f"  run_grid_preprocessing(\n"
+            f"      source_data_path=r'{source_data_path}',\n"
+            f"      user_metadata_file_path='path/to/metadata.xlsx',\n"
+            f"      trial_type='Labyrinth_DSI'\n"
+            f"  )\n\n"
+            f"This will create:\n"
+            f"  - First frame images for each video\n"
+            f"  - Boundary points for the maze (interactive)\n"
+            f"  - Cropping coordinates\n"
+            f"  - Grid files with spatial information\n\n"
+            f"Then re-run init_project()\n"
+            f"{'='*70}\n"
+        )
+        raise FileNotFoundError(error_msg)
+    
+    # If we get here, all files exist for all sessions
+    print(f"✓ Found grid files for all {len(session_names)} sessions")
+    print(f"✓ Found boundary files for all {len(session_names)} sessions")
+    print(f"✓ Found cropping files for all {len(session_names)} sessions")
+    print("✓ All required pose estimation and grid outputs found!")
 
 def prepare_dlc_analysis(mouseinfo_df, video_directory, cropping_directory, results_directory):
     """
@@ -1092,20 +1152,11 @@ def get_grid_coordinates(posList, num_squares, grid_files_directory, session, cr
     # Adjust boundary points to cropped coordinate system if cropping coords provided
     if cropping_coords is not None:
         X1, X2, Y1, Y2 = cropping_coords
-        print(f"  Adjusting grid coordinates to cropped frame: crop=({X1}, {X2}, {Y1}, {Y2})")
 
         # Subtract the crop offset from boundary points
         adjusted_border = border.copy()
         adjusted_border[:, 0] = border[:, 0] - X1  # Adjust X coordinates
         adjusted_border[:, 1] = border[:, 1] - Y1  # Adjust Y coordinates
-
-        print(
-            f"  Original boundary bounds: X({border[:, 0].min():.0f}-{border[:, 0].max():.0f}), Y({border[:, 1].min():.0f}-{border[:, 1].max():.0f})"
-        )
-        print(
-            f"  Adjusted boundary bounds: X({adjusted_border[:, 0].min():.0f}-{adjusted_border[:, 0].max():.0f}), Y({adjusted_border[:, 1].min():.0f}-{adjusted_border[:, 1].max():.0f})"
-        )
-
         border = adjusted_border
 
     # Create a polygon using these 4 coordinates
@@ -1145,12 +1196,6 @@ def get_grid_coordinates(posList, num_squares, grid_files_directory, session, cr
     grid_shp_path = grid_files_path / f"{session}_grid.shp"
 
     grid.to_file(str(grid_shp_path))
-
-    print(f"Saved Grid for {session}")
-    print(f"  - Shapefile: {grid_shp_path}")
-    print(f"  - Grid size: {num_squares}x{num_squares} ({len(polygons)} total squares)")
-    if cropping_coords:
-        print(f"  - Grid coordinates adjusted to cropped frame")
 
     return grid
 
@@ -1211,22 +1256,16 @@ def batch_create_grids(mouseinfo_df, boundaries_directory, grid_files_directory,
 
     # Process each session
     for index, row in mouseinfo_df.iterrows():
-        print("-----------------------------")
-
         session_num = int(row["Session #"])
         session_name = f"Session{session_num:04d}"
-
-        print(f"Processing {session_name} ({index+1}/{len(mouseinfo_df)})...")
 
         # Get chamber info if available
         if "Noldus Chamber" in row and pd.notna(row["Noldus Chamber"]):
             chamber_info = row["Noldus Chamber"]
-            print(f"Chamber: {chamber_info}")
 
         # Check if grid already exists
         grid_file = grid_files_path / f"{session_name}_grid.shp"
         if grid_file.exists():
-            print(f"{session_name} grid already exists!")
             grid_summary["already_exists"] += 1
             continue
 
@@ -1253,12 +1292,10 @@ def batch_create_grids(mouseinfo_df, boundaries_directory, grid_files_directory,
         try:
             # Load boundary points
             boundary_points = np.load(str(boundary_file))
-            print(f"Loaded boundary points: {len(boundary_points)} corners")
 
             # Load cropping coordinates
             cropping_data = np.load(str(cropping_file), allow_pickle=True).item()
             cropping_coords = (cropping_data["X1"], cropping_data["X2"], cropping_data["Y1"], cropping_data["Y2"])
-            print(f"Loaded cropping coordinates: {cropping_coords}")
 
             # Create grid with coordinate adjustment
             grid = get_grid_coordinates(
@@ -1363,7 +1400,6 @@ def create_grid_scatter_plot(
     dlc_results_path = Path(dlc_results_directory)
     grid_files_path = Path(grid_files_directory)
 
-    print(f"Creating grid scatter plot for {session}...")
 
     # Read the Grid File
     grid_file = grid_files_path / f"{session}_grid.shp"
@@ -1373,7 +1409,6 @@ def create_grid_scatter_plot(
 
     try:
         grid = gpd.read_file(str(grid_file))
-        print(f"  Loaded grid: {len(grid)} grid squares")
     except Exception as e:
         print(f"Error reading grid file: {e}")
         return None
@@ -1438,8 +1473,6 @@ def create_grid_scatter_plot(
         fontsize=8,
         bbox=dict(boxstyle="round", facecolor="white", alpha=0.8),
     )
-
-    print(f"  Plotted {valid_points}/{total_points} points above likelihood threshold")
 
     # Save the figure if requested
     if save_plot and figures_directory:
@@ -2012,16 +2045,14 @@ def batch_append_grid_numbers(
         "failed_sessions": [],
     }
 
-    print(f"Annotating {len(mouseinfo_df)} sessions with grid numbers...")
-
     # Process each session
     for index, row in mouseinfo_df.iterrows():
         session_num = int(row["Session #"])
         session_name = f"Session{session_num:04d}"
-
-        print("-----------------------------")
-        print(f"Processing {session_name} ({index+1}/{len(mouseinfo_df)})...")
-
+        grid_numbers_file = save_directory / f"{session_name}_withGrids.csv"
+        
+        if grid_numbers_file.exists():
+            continue
         try:
             # Append grid numbers for this session
             annotated_df = append_grid_numbers_to_csv(
@@ -2055,9 +2086,7 @@ def batch_append_grid_numbers(
     print("GRID ANNOTATION SUMMARY")
     print("=" * 60)
     print(f'Total sessions processed: {annotation_summary["total_sessions"]}')
-    print(f'Successfully annotated: {annotation_summary["successfully_annotated"]}')
     print(f'Failed annotation: {annotation_summary["failed_annotation"]}')
-    print(f"Duration: {duration}")
 
     if annotation_summary["failed_sessions"]:
         print(f'\nFailed sessions: {annotation_summary["failed_sessions"]}')
