@@ -2,9 +2,9 @@ from pathlib import Path
 import yaml
 import os
 import pandas as pd
-from typing import Union  # Add this import
 
-def load_project(project_path: Union[Path, str]) -> tuple[dict, pd.DataFrame]:
+
+def load_project(project_path: Path | str) -> tuple[dict, pd.DataFrame]:
     """
     Loads configuration parameters and metadata from an existing project.
 

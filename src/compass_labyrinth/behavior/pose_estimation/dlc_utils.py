@@ -20,10 +20,10 @@ from matplotlib.widgets import Cursor
 from shapely.geometry import Polygon, Point
 import geopandas as gpd
 from matplotlib.collections import LineCollection
-from typing import Union, Optional
+from typing import Optional
 
 def import_cohort_metadata(
-    metadata_path: Union[str, Path],
+    metadata_path: Path | str,
     trial_sheet_name: Optional[str]=None,
 ) -> pd.DataFrame:
     """
@@ -163,8 +163,8 @@ def display_metadata_summary(df: pd.DataFrame) -> None:
 
 
 def save_first_frame(
-    video_path: Union[str, Path],
-    frames_dir: Union[str, Path],
+    video_path: Path | str,
+    frames_dir: Path | str,
 ) -> None:
     """
     Saves the first frame of a video to the specified destination path.
@@ -2189,8 +2189,8 @@ def batch_append_grid_numbers(
     return annotation_summary
 
 def run_grid_preprocessing(
-    source_data_path: Union[str, Path],
-    user_metadata_file_path: Union[str, Path],
+    source_data_path: Path | str,
+    user_metadata_file_path: Path | str,
     trial_type: str = "Labyrinth_DSI",
     video_type: str = ".mp4",
     dlc_scorer: str = "DLC_resnet50_LabyrinthMar13shuffle1_1000000",
