@@ -10,6 +10,7 @@ from .behavior.pose_estimation.dlc_utils import (
     import_cohort_metadata,
     validate_metadata,
     save_first_frame,
+    check_preprocessing_status
 )
 
 
@@ -57,6 +58,8 @@ def init_project(
     source_data_path = Path(source_data_path).resolve()
     if not source_data_path.exists():
         raise ValueError(f"Source data path {source_data_path} does not exist.")
+
+    check_preprocessing_status(source_data_path)
 
     # Set up project's base path
     project_path = Path(project_path).resolve()
