@@ -4,10 +4,13 @@ This directory contains the test suite for the CoMPASS-Labyrinth project.
 
 ## Test Organization
 
-- `00_imports_test.py` - Tests for module imports
-- `01_dlc_utils_test.py` - Tests for DLC utility functions
-- `02_r_packages_test.py` - Tests for R package availability
-- `03_init_project_test.py` - Tests for project initialization and the `test_project` fixture
+- `00_init_project_test.py` - Tests for project initialization and the `test_project` fixture
+- `01_data_preprocessing_test.py` - Tests for data preprocessing
+- `03_performance_metrics_test.py` - Tests for assessing performance metrics
+- `04_simulate_agent_test.py` - Tests simulation agents assessment
+- `05_compass_level_1_test.py` - Tests for compass level-1 model
+- `06_compass_posthoc_test.py` - Tests for compass level-1 post analysis
+- `07_compass_level_2_test.py` - Tests for compass level-2 model
 - `conftest.py` - Shared pytest fixtures
 
 ## Test Fixtures
