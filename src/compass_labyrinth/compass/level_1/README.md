@@ -98,7 +98,7 @@ Models failing this constraint are automatically rejected.
 | `n_repetitions` | Repetitions per optimizer for robustness (default = 20) |
 | `opt_methods` | Optimizers to test (`BFGS`, `L-BFGS-B`, `Nelder-Mead`, `Powell`) |
 | `max_iter` | Maximum EM iterations (default = 200) |
-| `use_abs_angle` | `(True, False)` → Gamma(|angle|) or von Mises(angle) |
+| `use_abs_angle` | `(True, False)` → Gamma(abs(angle)) or von Mises(angle) |
 | `stationary_flag` | `"auto"` for automatic detection or manual `True/False` |
 | `angle_mean_biased` | Initial directional bias for VM branch (default = (π/2, 0.0)) |
 | `use_data_driven_ranges` | Compute parameter ranges via IQR/MAD (default = True) |
