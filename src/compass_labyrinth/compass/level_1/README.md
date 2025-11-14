@@ -4,6 +4,18 @@ The **CoMPASS Level-1 module** implements a fully custom **Hidden Markov Model (
 
 ---
 
+## Key Features
+
+- **Data-Stream Initialization** (`prep_data.py`):
+  - Step length
+  - Turn Angle
+- **Data-Stream Distributions** (`visualization.py`):
+  - Plot data stream distributions and assess them prior to running the model
+- **Level-1 Model** (`momentuPY.py`):
+  - Custom HMM for Locomotor behavioral state modeling
+
+---
+
 ## Objective
 
 Identify fundamental locomotor motifs that form the building blocks of navigation:
@@ -85,7 +97,7 @@ Models failing this constraint are automatically rejected.
 
 **Output columns include:**
 - `HMM_State` (1 or 2)  
-- `Post_Prob_1`, `Post_Prob_2`  
+- `Post_Prob_1`, `Post_Prob_2` (Optional)
 - Model diagnostics (AIC, log-likelihood, start probabilities, transition matrix)
 
 ---
@@ -98,7 +110,7 @@ Models failing this constraint are automatically rejected.
 | `n_repetitions` | Repetitions per optimizer for robustness (default = 20) |
 | `opt_methods` | Optimizers to test (`BFGS`, `L-BFGS-B`, `Nelder-Mead`, `Powell`) |
 | `max_iter` | Maximum EM iterations (default = 200) |
-| `use_abs_angle` | `(True, False)` → Gamma(|angle|) or von Mises(angle) |
+| `use_abs_angle` | `(True, False)` → Gamma(abs(angle)) or von Mises(angle) |
 | `stationary_flag` | `"auto"` for automatic detection or manual `True/False` |
 | `angle_mean_biased` | Initial directional bias for VM branch (default = (π/2, 0.0)) |
 | `use_data_driven_ranges` | Compute parameter ranges via IQR/MAD (default = True) |
