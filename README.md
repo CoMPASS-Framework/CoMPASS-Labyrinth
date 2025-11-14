@@ -94,13 +94,25 @@ CoMPASS-Labyrinth is a unified computational and behavioral framework for analyz
 
 ## Usage
 
-1. See individual README.md files within **CoMPASS-Labyrinth\src** for detailed instructions for descriptions of individual modules and code elements.
+1. See individual README.md files within **src\compass-labyrinth** for detailed instructions for descriptions of individual modules and code elements.
 
-2. See **CoMPASS-Labyrinth\notebooks** for examples of running the code and instructions for usage. See `data` for example data, dataset information, and metadata. Example datasets are already preprocessed, so avoid notebooks 01, 02, 08
+2. See **tutorials** for examples of running the code and instructions for usage. The tutorials have been numbered in order of usage and contain a description on the code and how to run it.
 
-3. Set paths within the **CoMPASS-Labyrinth\notebooks\init_config.py** and **CoMPASS-Labyrinth\src\compass\level_2\compass_config.py**
+3. Tutorials included:
+- **00_dlc_processing_template** : Custom processing using DLC (outside of the compass-labyrinth env)
+- **01_create_project** : Initialization of project and concatenating post-DLC results 
+- **02_task_performance** : Task performance metrics
+- **03_simulated_agent_modeling** : Simulated Agent modeling
+- **04_compass_level_1** : CoMPASS Level 1 model
+- **05_compass_level_1_post_analysis** : CoMPASS Level 1 post analysis
+- **06_compass_level_2** : CoMPASS Level 2 model
 
-4. Run **CoMPASS-Labyrinth\notebooks**. Jupyter is highly recommended for interactive features.
+<p align="center">
+  <img src="media/compass_workflow.png" alt="Workflow" width="900"/>
+</p>
+
+4. Test datasets present in **tests/assests** 
+
 
 ## Citation
 If you use this framework, please cite the below manuscript:
