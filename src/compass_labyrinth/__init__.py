@@ -4,6 +4,7 @@ import datetime
 import yaml
 import shutil
 import os
+from typing import Union  # Add this import
 
 from .utils import load_project, load_cohort_metadata
 from .behavior.pose_estimation.dlc_utils import (
@@ -16,9 +17,9 @@ from .behavior.pose_estimation.dlc_utils import (
 
 def init_project(
     project_name: str,
-    project_path: Path | str,
-    source_data_path: Path | str,
-    user_metadata_file_path: Path | str,
+    project_path: Union[Path, str],
+    source_data_path: Union[Path, str],
+    user_metadata_file_path: Union[Path, str],
     trial_type: str = "Labyrinth_DSI",
     file_ext: str = ".csv",
     video_type: str = ".mp4",

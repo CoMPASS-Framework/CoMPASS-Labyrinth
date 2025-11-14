@@ -807,7 +807,7 @@ def check_preprocessing_status(source_data_path, video_type=".mp4"):
     ----------
     1. Videos + Grids → Ready for init_project() (DLC data already in grids)
     2. Videos + DLC + Grids → Ready for init_project()
-    3. DLC + Grids (no videos) → Ready for init_project()
+    3. Grids only (withGrids.csv files) → Ready for init_project()
     4. Videos only → Switch to DLC env, run 00_dlc_grid_processing.ipynb (full pipeline)
     5. Videos + DLC (no grids) → Run run_grid_preprocessing() in 01_create_project.ipynb
     6. DLC only (no videos/grids) → Get videos, then run run_grid_preprocessing() in 01_create_project.ipynb
@@ -846,35 +846,45 @@ def check_preprocessing_status(source_data_path, video_type=".mp4"):
     dlc_csv_files = list(source_data_path.glob("*DLC*.csv"))
     has_dlc = len(dlc_h5_files) > 0 or len(dlc_csv_files) > 0
     
-    # Check for grid files
+    # Check for grid files - support multiple naming conventions
     grid_files = list(source_data_path.glob("*_withGrids.csv"))
-    has_grids = len(grid_files) > 0
+    grid_files_alt = list(source_data_path.glob("*withGrids.csv"))
+    # Combine and deduplicate
+    all_grid_files = list(set(grid_files + grid_files_alt))
+    has_grids = len(all_grid_files) > 0
     
     # Print what was found
     print(f"\nFound in {source_data_path}:")
     print(f"  Videos ({video_type}): {len(video_files)} files")
     print(f"  DLC outputs (.h5/.csv): {len(dlc_h5_files) + len(dlc_csv_files)} files")
-    print(f"  Grid files (*_withGrids.csv): {len(grid_files)} files")
+    print(f"  Grid files (*withGrids.csv): {len(all_grid_files)} files")
     print()
     
     # Determine which case we're in and provide guidance
     
-    # CASE 1, 2, 3: Ready for init_project if we have grid files and videos
-    if has_grids and has_videos:
-        # Validate that all required files exist for each session
-        # Note: DLC .h5/.csv outputs are optional (pose data is in grids)
-        _validate_complete_preprocessing(source_data_path, grid_files, require_dlc=False)
+    # CASE 1, 2, 3: Ready for init_project if we have grid files
+    if has_grids:
+        # Note: We don't validate other files if only grid files exist
+        # because the grid files contain all necessary pose data
+        if has_videos or has_dlc:
+            # Validate that all required files exist for each session
+            _validate_complete_preprocessing(source_data_path, all_grid_files, require_dlc=False)
         
         print("="*70)
         print("✓ STATUS: READY FOR INIT_PROJECT")
         print("="*70)
         
         # Provide appropriate status message
-        if has_dlc:
+        if has_videos and has_dlc:
             print("Found: Videos + DLC outputs + Grid preprocessing")
-        else:
+        elif has_videos:
             print("Found: Videos + Grid preprocessing")
             print("Note: DLC .h5/.csv files not found, but pose data is in grid files")
+        elif has_dlc:
+            print("Found: DLC outputs + Grid preprocessing (videos not required)")
+        else:
+            print("Found: Grid preprocessing files (*withGrids.csv)")
+            print("Note: Videos and DLC files not found, but pose data is in grid files")
         
         print("\nNEXT STEP: Initialize your project")
         print("\n  from compass_labyrinth import init_project")
@@ -892,39 +902,7 @@ def check_preprocessing_status(source_data_path, video_type=".mp4"):
                 'has_videos': has_videos,
                 'has_dlc': has_dlc,
                 'has_grids': has_grids,
-                'num_sessions': len(grid_files)
-            }
-        }
-    
-    # Special case: Grids exist but no videos
-    elif has_grids and not has_videos:
-        # Validate that all required files exist
-        _validate_complete_preprocessing(source_data_path, grid_files, require_dlc=False)
-        
-        print("="*70)
-        print("✓ STATUS: READY FOR INIT_PROJECT")
-        print("="*70)
-        print("Found: Grid preprocessing (videos not required for init_project)")
-        if has_dlc:
-            print("       DLC outputs also found")
-        
-        print("\nNEXT STEP: Initialize your project")
-        print("\n  from compass_labyrinth import init_project")
-        print(f"\n  init_project(")
-        print(f"      source_data_path=r'{source_data_path}',")
-        print(f"      user_metadata_file_path='path/to/metadata.xlsx',")
-        print(f"      trial_type='Labyrinth_DSI'")
-        print(f"  )")
-        print("="*70)
-        
-        return {
-            'ready': True,
-            'next_step': 'init_project',
-            'details': {
-                'has_videos': has_videos,
-                'has_dlc': has_dlc,
-                'has_grids': has_grids,
-                'num_sessions': len(grid_files)
+                'num_sessions': len(all_grid_files)
             }
         }
     
@@ -971,7 +949,7 @@ def check_preprocessing_status(source_data_path, video_type=".mp4"):
         print("\n  from compass_labyrinth.behavior.pose_estimation.dlc_utils import run_grid_preprocessing")
         print(f"\n  run_grid_preprocessing(")
         print(f"      source_data_path=source_data_path,")
-        print(f"      user_metadata_file_path=source_data_path,")
+        print(f"      user_metadata_file_path=user_metadata_file_path,")
         print(f"      trial_type=trial_type,")
         print(f"      video_type='{video_type}',")
         print(f"      reprocess_existing=False")
@@ -1065,7 +1043,7 @@ def _validate_complete_preprocessing(source_data_path, grid_files, require_dlc=T
     source_data_path : Path
         Directory containing preprocessing outputs
     grid_files : list
-        List of Path objects for *_withGrids.csv files
+        List of Path objects for *withGrids.csv files
     require_dlc : bool
         Whether to require DLC .h5/.csv files (default: True)
         Set to False if pose data is already in grid files
@@ -1082,7 +1060,8 @@ def _validate_complete_preprocessing(source_data_path, grid_files, require_dlc=T
     # Extract session names from grid files
     session_names = []
     for grid_file in grid_files:
-        session_name = grid_file.stem.replace("_withGrids", "")
+        # Handle both "SessionXXXX_withGrids.csv" and "Session-XXXXwithGrids.csv" formats
+        session_name = grid_file.stem.replace("_withGrids", "").replace("withGrids", "")
         session_names.append(session_name)
     
     # Track missing files per session
@@ -1094,12 +1073,19 @@ def _validate_complete_preprocessing(source_data_path, grid_files, require_dlc=T
     
     # Check each session for required files
     for session_name in session_names:
-        boundary_file = source_data_path / f"{session_name}_Boundary_Points.npy"
-        cropping_file = source_data_path / f"{session_name}_DLC_Cropping_Bounds.npy"
+        # Try different naming conventions for boundary and cropping files
+        boundary_file_1 = source_data_path / f"{session_name}_Boundary_Points.npy"
+        boundary_file_2 = source_data_path / f"{session_name} Boundary_Points.npy"
         
-        if not boundary_file.exists():
+        cropping_file_1 = source_data_path / f"{session_name}_DLC_Cropping_Bounds.npy"
+        cropping_file_2 = source_data_path / f"{session_name} DLC_Cropping_Bounds.npy"
+        
+        has_boundary = boundary_file_1.exists() or boundary_file_2.exists()
+        has_cropping = cropping_file_1.exists() or cropping_file_2.exists()
+        
+        if not has_boundary:
             missing_sessions["boundary"].append(session_name)
-        if not cropping_file.exists():
+        if not has_cropping:
             missing_sessions["cropping"].append(session_name)
         
         # Only check for DLC files if required
@@ -1147,7 +1133,7 @@ def _validate_complete_preprocessing(source_data_path, grid_files, require_dlc=T
         raise FileNotFoundError(error_msg)
     
     print(f"✓ Validated all required files for {len(session_names)} sessions")
-
+    
 def prepare_dlc_analysis(mouseinfo_df, video_directory, cropping_directory, results_directory):
     """
     Prepare videos for DeepLabCut analysis by checking files and loading cropping bounds.
