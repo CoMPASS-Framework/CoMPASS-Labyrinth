@@ -4,6 +4,18 @@ The **CoMPASS Level-1 module** implements a fully custom **Hidden Markov Model (
 
 ---
 
+## Key Features
+
+- **Data-Stream Initialization** (`prep_data.py`):
+  - Step length
+  - Turn Angle
+- **Data-Stream Distributions** (`visualization.py`):
+  - Plot data stream distributions and assess them prior to running the model
+- **Level-1 Model** (`momentuPY.py`):
+  - Custom HMM for Locomotor behavioral state modeling
+
+---
+
 ## Objective
 
 Identify fundamental locomotor motifs that form the building blocks of navigation:
