@@ -111,5 +111,8 @@ CoMPASS-Labyrinth is a unified computational and behavioral framework for analyz
   <img src="media/compass_workflow.png" alt="Workflow" width="900"/>
 </p>
 
+4. Test datasets present in **tests/assests** 
+
+
 ## Citation
 If you use this framework, please cite the below manuscript:
