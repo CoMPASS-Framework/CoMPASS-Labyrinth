@@ -97,7 +97,7 @@ Models failing this constraint are automatically rejected.
 
 **Output columns include:**
 - `HMM_State` (1 or 2)  
-- `Post_Prob_1`, `Post_Prob_2`  
+- `Post_Prob_1`, `Post_Prob_2` (Optional)
 - Model diagnostics (AIC, log-likelihood, start probabilities, transition matrix)
 
 ---
