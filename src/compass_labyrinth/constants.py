@@ -1,0 +1,376 @@
+# =============================================================================
+# PRE-FIXED VALUES (DO NOT EDIT)
+# =============================================================================
+
+import pandas as pd
+from importlib.resources import files
+
+
+# -------------------- REGION---------------------------#
+# Map Grid Nodes to Regions
+TARGET_ZONE = [84, 85, 86]
+ENTRY_ZONE = [47, 46]
+LOOPS = [
+    33,
+    45,
+    57,
+    58,
+    59,
+    71,
+    83,
+    95,
+    70,
+    69,
+    68,
+    56,
+    44,
+    78,
+    79,
+    80,
+    81,
+    82,
+    94,
+    106,
+    118,
+    105,
+    93,
+    92,
+    104,
+    116,
+    117,
+    91,
+    90,
+    52,
+    53,
+    41,
+    42,
+    43,
+    55,
+    67,
+    54,
+    66,
+    65,
+    64,
+    38,
+    37,
+    36,
+    25,
+    24,
+    13,
+    12,
+    0,
+    1,
+]
+NEUTRAL_ZONE = [107, 119, 131, 143]
+
+# P1, P2, P3 are the 3 sections of the Reward Path
+P1 = [22, 21, 34, 20, 32, 31, 30, 29, 17, 5, 4, 3, 2, 14, 26]
+P2 = [27, 39, 51, 63, 62, 61, 60, 72, 73, 74, 75, 76, 77, 89, 101]
+P3 = [102, 103, 115, 114, 113, 125, 137, 136, 135, 123, 111, 110, 109, 108, 96, 97, 98]
+REWARD_PATH = P1 + P2 + P3
+
+LEFT_DEAD_ENDS = [10, 11, 23, 35, 9, 8, 6, 7, 19, 18, 15, 16, 28, 40, 50, 49, 48]  # Left Dead Ends
+RIGHT_DEAD_ENDS = [
+    128,
+    129,
+    130,
+    142,
+    141,
+    140,
+    139,
+    127,
+    126,
+    138,
+    87,
+    88,
+    100,
+    112,
+    124,
+    99,
+    122,
+    134,
+    121,
+    133,
+    132,
+    120,
+]  # Right Dead Ends
+DEAD_ENDS = LEFT_DEAD_ENDS + RIGHT_DEAD_ENDS
+# ------------------------------------------------------#
+
+REGION_NAMES = {
+    "target_zone": "Target Zone",
+    "entry_zone": "Entry Zone",
+    "reward_path": "Reward Path",
+    "dead_ends": "Dead Ends",
+    "neutral_zone": "Neutral Zone",
+    "loops": "Loops",
+}
+
+# -------CHOOSE REGION NAMES (KEY), MAPPED TO LIST OF GRID NODES IN THAT REGION (VALUE)--------#
+REGION_MAPPING = {
+    "target_zone": TARGET_ZONE,
+    "entry_zone": ENTRY_ZONE,
+    "reward_path": REWARD_PATH,
+    "dead_ends": DEAD_ENDS,
+    "neutral_zone": NEUTRAL_ZONE,
+    "loops": LOOPS,
+}
+
+# -------CHOOSE REGION NAMES (KEY), MAPPED TO LENGTH OF GRID NODES IN THAT REGION (VALUE)--------#
+REGION_LENGTHS = {
+    "entry_zone": len(ENTRY_ZONE),
+    "loops": len(LOOPS),
+    "dead_ends": len(DEAD_ENDS),
+    "neutral_zone": len(NEUTRAL_ZONE),
+    "reward_path": len(REWARD_PATH),
+    "target_zone": len(TARGET_ZONE),
+}
+
+# ----------------NODE-TYPES-------------------------#
+NODE_NAMES = {
+    "decision_reward": "Decision (Reward)",
+    "nondecision_reward": "Non-Decision (Reward)",
+    "corner_reward": "Corner (Reward)",
+    "decision_nonreward": "Decision (Non-Reward)",
+    "nondecision_nonreward": "Non-Decision (Non-Reward)",
+    "corner_nonreward": "Corner (Non-Reward)",
+    "entry_zone": "Entry Zone",
+    "target_zone": "Target Zone",
+    "decision_3way": "3-Way Decision",
+    "decision_4way": "4-Way Decision",
+}
+
+DECISION_REWARD = [20, 32, 17, 14, 39, 51, 63, 60, 77, 89, 115, 114, 110, 109, 98]
+NONDECISION_REWARD = [34, 21, 31, 30, 4, 3, 62, 61, 73, 74, 75, 76, 102, 125, 136, 123, 97]
+CORNER_REWARD = [22, 29, 5, 2, 26, 27, 72, 101, 103, 113, 137, 135, 111, 108, 96]
+DECISION_NONREWARD = [100, 71, 12, 24, 42, 106, 92, 119]
+NONDECISION_NONREWARD = [
+    35,
+    23,
+    18,
+    15,
+    28,
+    49,
+    127,
+    140,
+    141,
+    129,
+    126,
+    122,
+    121,
+    99,
+    112,
+    45,
+    58,
+    70,
+    69,
+    83,
+    56,
+    44,
+    13,
+    38,
+    52,
+    64,
+    65,
+    54,
+    55,
+    78,
+    79,
+    80,
+    81,
+    94,
+    91,
+    90,
+    104,
+    131,
+]
+CORNER_NONREWARD = [
+    11,
+    10,
+    9,
+    8,
+    6,
+    7,
+    19,
+    16,
+    40,
+    48,
+    50,
+    139,
+    142,
+    130,
+    128,
+    138,
+    134,
+    133,
+    132,
+    120,
+    88,
+    87,
+    124,
+    33,
+    57,
+    59,
+    95,
+    68,
+    0,
+    1,
+    36,
+    25,
+    37,
+    66,
+    53,
+    41,
+    43,
+    67,
+    82,
+    105,
+    93,
+    116,
+    117,
+    118,
+    107,
+    143,
+]
+ENTRY_ZONE_NODES = [47, 46]
+TARGET_ZONE_NODES = [84, 85, 86]
+DECISION_3WAY = [20, 17, 39, 51, 63, 60, 77, 89, 115, 114, 110, 109, 98]
+DECISION_4WAY = [32, 14]
+
+NODE_TYPE_MAPPING = {
+    "decision_reward": DECISION_REWARD,
+    "nondecision_reward": NONDECISION_REWARD,
+    "corner_reward": CORNER_REWARD,
+    "decision_nonreward": DECISION_NONREWARD,
+    "nondecision_nonreward": NONDECISION_NONREWARD,
+    "corner_nonreward": CORNER_NONREWARD,
+    "entry_zone": ENTRY_ZONE_NODES,
+    "target_zone": TARGET_ZONE_NODES,
+    "decision_3way": DECISION_3WAY,
+    "decision_4way": DECISION_4WAY,
+}
+
+# ----------------PACKAGE DATA-------------------------#
+# Load adjacency matrix from package data
+ADJACENCY_MATRIX = pd.read_csv(
+    files("compass_labyrinth.data").joinpath("4step_adjacency_matrix.csv"),
+)
+
+# Load value function from package data
+VALUE_MAP = pd.read_csv(files("compass_labyrinth.data").joinpath("value_function_per_grid_cell.csv"))
+
+# ----------------CoMPASS-------------------------#
+# Dictionary of each reference grid node mapped to a list of nodes
+CLOSE_REF = {
+    11: 10,
+    47: [11, 23, 35],
+    46: 47,
+    22: [34, 46],
+    20: [22, 21, 8, 32, 44, 56, 68],
+    32: [20, 33, 71, 44, 56, 68],
+    8: 9,
+    33: [45, 57],
+    57: [58, 59],
+    59: [83, 95],
+    68: [69, 70],
+    29: [30, 31, 32],
+    5: [17, 29],
+    7: 6,
+    19: 7,
+    17: [18, 19],
+    2: [3, 4, 5],
+    26: [2, 14],
+    16: [28, 40],
+    14: [15, 16, 12, 13, 24],
+    0: 1,
+    12: [36, 0],
+    39: [27, 37, 38, 25],
+    27: 26,
+    51: [27, 39, 52, 53, 42],
+    63: [51, 64, 65, 66, 54],
+    53: 41,
+    41: 43,
+    43: [55, 67],
+    60: [61, 62, 63],
+    72: [48, 60],
+    48: [49, 50],
+    77: [72, 73, 74, 75, 76, 78, 79, 80, 81, 82],
+    101: [77, 89],
+    89: [90, 91, 92, 93, 94, 106],
+    92: [104, 116],
+    116: 117,
+    93: 105,
+    106: 118,
+    118: 119,
+    119: [107, 131, 143],
+    103: [101, 102],
+    115: [103, 127, 139],
+    139: [140, 141, 142],
+    142: 130,
+    130: [128, 129],
+    113: [114, 115],
+    114: [126, 138],
+    137: [113, 125],
+    135: [136, 137],
+    111: [123, 135],
+    108: [111, 110, 109],
+    110: [122, 134],
+    132: 120,
+    133: 132,
+    109: [121, 133],
+    96: 108,
+    98: [96, 97, 99, 100],
+    88: 87,
+    100: [88, 112, 124],
+    86: 98,
+    84: [85, 86, 84],
+}
+NODES = range(0, 144)
+POS_X = [11, 23, 35, 107, 130, 8, 20, 7, 103, 41, 77, 89, 113, 125, 88, 27, 39, 51, 2, 14, 25, 0, 48, 60, 120]
+POS_Y = [10, 6, 101, 76, 75, 87, 26, 38, 74, 13, 25, 37, 73, 12, 24, 72, 132]
+NEG_X = [
+    83,
+    95,
+    131,
+    143,
+    46,
+    34,
+    118,
+    57,
+    45,
+    105,
+    44,
+    56,
+    68,
+    104,
+    116,
+    55,
+    67,
+    127,
+    139,
+    126,
+    138,
+    17,
+    29,
+    28,
+    40,
+    112,
+    124,
+    123,
+    135,
+    98,
+    122,
+    134,
+    121,
+    133,
+    108,
+    36,
+]
+NEG_Y = [x for x in NODES if x not in POS_X + POS_Y + NEG_X]
+
+X_Y_MAPPING = {
+    "pos_x": POS_X,
+    "pos_y": POS_Y,
+    "neg_x": NEG_X,
+    "neg_y": NEG_Y,
+}

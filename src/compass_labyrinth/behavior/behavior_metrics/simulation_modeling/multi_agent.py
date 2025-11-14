@@ -1,0 +1,634 @@
+"""
+MULTI-AGENT MODELING
+Author: Shreya Bangera
+Goal:
+   ├── Simulated Agent, Binary Agent, 3/4 way Agent Modelling
+   ├── Comparsion across Agents
+"""
+
+import pandas as pd
+import numpy as np
+import random
+from pathlib import Path
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from .simulated_agent import trim_to_common_epochs
+
+
+##################################################################
+# Simulated Agent, Binary Agent, 3/4-way Agent Modelling & Comparison
+###################################################################
+# -------------------- Step 0: Chunking Utility -------------------- #
+def split_into_epochs_multi(df: pd.DataFrame, epoch_size: int) -> list:
+    """
+    Split the DataFrame into epochs of specified size for each session.
+
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame containing navigation data.
+    epoch_size : int
+        Number of steps per epoch.
+
+    Returns:
+    --------
+    list
+        A list of tuples containing (session, epoch index, chunk DataFrame).
+    """
+    epochs = []
+    for session, sess_df in df.groupby("Session"):
+        for i in range(0, len(sess_df), epoch_size):
+            chunk = sess_df.iloc[i : i + epoch_size]
+            if not chunk.empty:
+                epochs.append((session, i // epoch_size + 1, chunk))
+    return epochs
+
+
+# -------------------- Step 1: Transition Tracking -------------------- #
+def track_valid_transitions_multi(
+    df: pd.DataFrame,
+    decision_label: str,
+    reward_label: str,
+) -> tuple[dict, dict]:
+    """
+    Track valid and optimal transitions for each session.
+
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame containing navigation data.
+    decision_label : str
+        Label for decision nodes.
+    reward_label : str
+        Label for reward path regions.
+
+    Returns:
+    --------
+    tuple[dict, dict]
+        A tuple containing two dictionaries:
+        - session_valid: Maps session to valid transitions.
+        - session_optimal: Maps session to optimal transitions.
+    """
+    session_valid = {}
+    session_optimal = {}
+
+    for session, group in df.groupby("Session"):
+        valid_dict = {}
+        optimal_dict = {}
+
+        for i in range(len(group) - 1):
+            if group.iloc[i]["NodeType"] == decision_label:
+                curr_grid = group.iloc[i]["Grid Number"]
+                next_grid = group.iloc[i + 1]["Grid Number"]
+                next_region = group.iloc[i + 1]["Region"]
+
+                valid_dict.setdefault(curr_grid, set()).add(next_grid)
+
+                if next_region == reward_label:
+                    optimal_dict.setdefault(curr_grid, set()).add(next_grid)
+
+        session_valid[session] = valid_dict
+        session_optimal[session] = optimal_dict
+
+    return session_valid, session_optimal
+
+
+# -------------------- Step 2: Simulated Agent Logic -------------------- #
+def simulate_random_agent_multi(
+    chunk: pd.DataFrame,
+    valid_dict: dict,
+    optimal_dict: dict,
+    decision_label: str,
+    n_simulations: int,
+) -> tuple[list, list]:
+    """
+    Simulate a random agent's performance over the given chunk of data.
+
+    Parameters:
+    -----------
+    chunk : pd.DataFrame
+        DataFrame chunk representing an epoch of navigation data.
+    valid_dict : dict
+        Dictionary mapping current grid numbers to valid next grid numbers.
+    optimal_dict : dict
+        Dictionary mapping current grid numbers to optimal next grid numbers.
+    decision_label : str
+        Label for decision nodes.
+    n_simulations : int
+        Number of simulations to run for estimating performance.
+
+    Returns:
+    --------
+    tuple[list, list]
+        A tuple containing two lists:
+        - actual: List of actual performance (1 for optimal transition, 0 otherwise).
+        - random_perf: List of average performance from random agent simulations.
+    """
+    actual, random_perf = [], []
+
+    for i in range(len(chunk) - 1):
+        if chunk.iloc[i]["NodeType"] == decision_label:
+            curr = chunk.iloc[i]["Grid Number"]
+            next_actual = chunk.iloc[i + 1]["Grid Number"]
+
+            is_opt = next_actual in optimal_dict.get(curr, set())
+            actual.append(1 if is_opt else 0)
+
+            sim_choices = [
+                1 if random.choice(list(valid_dict[curr])) in optimal_dict.get(curr, set()) else 0
+                for _ in range(n_simulations)
+                if curr in valid_dict
+            ]
+            if sim_choices:
+                random_perf.append(np.mean(sim_choices))
+
+    return actual, random_perf
+
+
+def simulate_binary_agent_multi(
+    chunk: pd.DataFrame,
+    valid_dict: dict,
+    optimal_dict: dict,
+    decision_label: str,
+    n_simulations: int,
+) -> list:
+    """
+    Simulate a binary agent's performance over the given chunk of data.
+
+    Parameters:
+    -----------
+    chunk : pd.DataFrame
+        DataFrame chunk representing an epoch of navigation data.
+    valid_dict : dict
+        Dictionary mapping current grid numbers to valid next grid numbers.
+    optimal_dict : dict
+        Dictionary mapping current grid numbers to optimal next grid numbers.
+    decision_label : str
+        Label for decision nodes.
+    n_simulations : int
+        Number of simulations to run for estimating performance.
+
+    Returns:
+    --------
+    list
+        A list containing the average performance of the binary agent simulations.
+    """
+    binary_perf = []
+
+    for i in range(len(chunk) - 1):
+        if chunk.iloc[i]["NodeType"] == decision_label:
+            curr = chunk.iloc[i]["Grid Number"]
+            choices = list(valid_dict.get(curr, []))
+
+            opt = [x for x in choices if x in optimal_dict.get(curr, set())]
+            non_opt = [x for x in choices if x not in opt]
+
+            if opt and non_opt:
+                sim_choices = [opt[0], non_opt[0]]
+            elif len(choices) >= 2:
+                sim_choices = random.sample(choices, 2)
+            else:
+                continue
+
+            binary_opt = [1 if random.choice(sim_choices) in opt else 0 for _ in range(n_simulations)]
+            binary_perf.append(np.mean(binary_opt))
+
+    return binary_perf
+
+
+def simulate_multiway_agent_multi(
+    chunk: pd.DataFrame,
+    decision_label: str,
+    three_nodes: list,
+    four_nodes: list,
+    n_simulations: int,
+) -> list:
+    """
+    Simulate a multiway agent's performance over the given chunk of data.
+
+    Parameters:
+    -----------
+    chunk : pd.DataFrame
+        DataFrame chunk representing an epoch of navigation data.
+    decision_label : str
+        Label for decision nodes.
+    three_nodes : list
+        List of grid numbers for three-way decision nodes.
+    four_nodes : list
+        List of grid numbers for four-way decision nodes.
+    n_simulations : int
+        Number of simulations to run for estimating performance.
+
+    Returns:
+    --------
+    list
+        A list containing the average performance of the multiway agent simulations.
+    """
+    perf = []
+    for i in range(len(chunk) - 1):
+        if chunk.iloc[i]["NodeType"] == decision_label:
+            curr = chunk.iloc[i]["Grid Number"]
+            prob = None
+            if curr in three_nodes:
+                prob = 1 / 3
+            elif curr in four_nodes:
+                prob = 1 / 4
+            if prob:
+                perf.append(np.mean([1 if random.random() < prob else 0 for _ in range(n_simulations)]))
+
+    return perf
+
+
+# -------------------- Step 3: Metric Evaluation -------------------- #
+def bootstrap_means_multi(data, n):
+    return np.mean(np.random.choice(data, (n, len(data)), replace=True), axis=1)
+
+
+def evaluate_epoch_multi(
+    chunk: pd.DataFrame,
+    valid_dict: dict,
+    optimal_dict: dict,
+    decision_label: str,
+    three_nodes: list,
+    four_nodes: list,
+    n_bootstrap: int,
+    n_simulations: int,
+) -> pd.Series:
+    """
+    Evaluate performance metrics for all agent types over a given epoch chunk.
+
+    Parameters:
+    -----------
+    chunk : pd.DataFrame
+        DataFrame chunk representing an epoch of navigation data.
+    valid_dict : dict
+        Dictionary mapping current grid numbers to valid next grid numbers.
+    optimal_dict : dict
+        Dictionary mapping current grid numbers to optimal next grid numbers.
+    decision_label : str
+        Label for decision nodes.
+    three_nodes : list
+        List of grid numbers for three-way decision nodes.
+    four_nodes : list
+        List of grid numbers for four-way decision nodes.
+    n_bootstrap : int
+        Number of bootstrap samples for confidence intervals.
+    n_simulations : int
+        Number of simulations for agent performance.
+
+    Returns:
+    --------
+    pd.Series
+        Series containing performance metrics for the epoch.
+    """
+    if chunk.empty or decision_label not in chunk["NodeType"].values:
+        return pd.Series(dtype="float64")  # Empty metrics
+
+    actual, random_perf = simulate_random_agent_multi(
+        chunk=chunk,
+        valid_dict=valid_dict,
+        optimal_dict=optimal_dict,
+        decision_label=decision_label,
+        n_simulations=n_simulations,
+    )
+    binary_perf = simulate_binary_agent_multi(
+        chunk=chunk,
+        valid_dict=valid_dict,
+        optimal_dict=optimal_dict,
+        decision_label=decision_label,
+        n_simulations=n_simulations,
+    )
+    multiway_perf = simulate_multiway_agent_multi(
+        chunk=chunk,
+        decision_label=decision_label,
+        three_nodes=three_nodes,
+        four_nodes=four_nodes,
+        n_simulations=n_simulations,
+    )
+
+    if not (actual and random_perf and binary_perf and multiway_perf):
+        return pd.Series(dtype="float64")
+
+    actual_boot = bootstrap_means_multi(actual, n_bootstrap)
+    random_boot = bootstrap_means_multi(random_perf, n_bootstrap)
+    binary_boot = bootstrap_means_multi(binary_perf, n_bootstrap)
+    multi_boot = bootstrap_means_multi(multiway_perf, n_bootstrap)
+
+    return pd.Series(
+        {
+            "Actual Reward Path %": actual_boot.mean(),
+            "Random Agent Reward Path %": random_boot.mean(),
+            "Binary Agent Reward Path %": binary_boot.mean(),
+            "Three/Four Way Agent Reward Path %": multi_boot.mean(),
+            "Actual Reward Path % CI Lower": np.percentile(actual_boot, 5),
+            "Actual Reward Path % CI Upper": np.percentile(actual_boot, 95),
+            "Random Agent Reward Path % CI Lower": np.percentile(random_boot, 5),
+            "Random Agent Reward Path % CI Upper": np.percentile(random_boot, 95),
+            "Binary Agent Reward Path % CI Lower": np.percentile(binary_boot, 5),
+            "Binary Agent Reward Path % CI Upper": np.percentile(binary_boot, 95),
+            "Three/Four Way Agent Reward Path % CI Lower": np.percentile(multi_boot, 5),
+            "Three/Four Way Agent Reward Path % CI Upper": np.percentile(multi_boot, 95),
+            "Relative Performance (Actual/Random)": (
+                actual_boot.mean() / random_boot.mean() if random_boot.mean() > 0 else np.nan
+            ),
+            "Relative Performance (Actual/Binary)": (
+                actual_boot.mean() / binary_boot.mean() if binary_boot.mean() > 0 else np.nan
+            ),
+        }
+    )
+
+
+# -------------------- Step 4: Main Evaluation Wrapper -------------------- #
+def evaluate_agent_performance_multi(
+    df: pd.DataFrame,
+    epoch_size: int,
+    n_bootstrap: int,
+    n_simulations: int,
+    decision_label: str = "Decision (Reward)",
+    reward_label: str = "reward_path",
+    trim: bool = True,
+    three_nodes: list | None = None,
+    four_nodes: list | None = None,
+) -> pd.DataFrame:
+    """
+    Evaluate the performance of different agent types over multiple epochs.
+
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame containing navigation data.
+    epoch_size : int
+        Number of steps per epoch.
+    n_bootstrap : int
+        Number of bootstrap samples for confidence intervals.
+    n_simulations : int
+        Number of simulations for agent performance.
+    decision_label : str
+        Label for decision nodes.
+    reward_label : str
+        Label for reward path regions.
+    trim : bool
+        Whether to trim results to common epochs across sessions.
+    three_nodes : list, optional
+        List of grid numbers for three-way decision nodes.
+    four_nodes : list, optional
+        List of grid numbers for four-way decision nodes.
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame with performance metrics for each epoch.
+    """
+    if three_nodes is None:
+        three_nodes = [20, 17, 39, 51, 63, 60, 77, 89, 115, 114, 110, 109, 98]
+    if four_nodes is None:
+        four_nodes = [32, 14]
+
+    valid_dict_all, optimal_dict_all = track_valid_transitions_multi(
+        df,
+        decision_label,
+        reward_label,
+    )
+    epochs = split_into_epochs_multi(df, epoch_size)
+
+    all_results = []
+    for session, idx, chunk in epochs:
+        valid_dict = valid_dict_all.get(session, {})
+        optimal_dict = optimal_dict_all.get(session, {})
+        metrics = evaluate_epoch_multi(
+            chunk=chunk,
+            valid_dict=valid_dict,
+            optimal_dict=optimal_dict,
+            decision_label=decision_label,
+            three_nodes=three_nodes,
+            four_nodes=four_nodes,
+            n_bootstrap=n_bootstrap,
+            n_simulations=n_simulations,
+        )
+        metrics["Session"] = int(session)
+        metrics["Epoch Number"] = int(idx)
+        all_results.append(metrics)
+
+    results = pd.DataFrame(all_results)
+    if trim:
+        results = trim_to_common_epochs(results)
+
+    return results
+
+
+##################################################################
+## Plot 5: All Agents Comparative Performance over time
+###################################################################
+def plot_agent_vs_mouse_performance_multi(
+    config: dict,
+    df_metrics: pd.DataFrame,
+    cohort_metadata: pd.DataFrame,
+    genotype: str,
+    figsize: tuple = (12, 6),
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
+    """
+    Plot actual vs. simulated agent reward path performance across epochs for a specified genotype.
+
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary containing project settings.
+    df_metrics : pd.DataFrame
+        Output from evaluate_agent_performance_multi().
+    cohort_metadata : pd.DataFrame
+        Metadata mapping sessions to genotypes.
+    genotype : str
+        Genotype to filter (e.g., 'WT-WT').
+    figsize : tuple
+        Size of the plot.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    plt.Figure or None
+        The figure object if return_fig is True, otherwise None.
+    """
+    # --- Constants ---
+    x_col = "Epoch Number"
+    y_col_actual = "Actual Reward Path %"
+    y_col_random = "Random Agent Reward Path %"
+    y_col_binary = "Binary Agent Reward Path %"
+    y_col_multi = "Three/Four Way Agent Reward Path %"
+    title = "Mouse vs. Agent Reward Path Transition Proportion"
+
+    # --- Filter sessions by genotype ---
+    sessions_reqd = cohort_metadata.loc[cohort_metadata.Genotype == genotype, "Session #"].unique()
+    df_filtered = df_metrics[df_metrics["Session"].isin(sessions_reqd)].copy()
+
+    # --- Plot ---
+    fig = plt.figure(figsize=figsize)
+
+    sns.lineplot(
+        data=df_filtered,
+        x=x_col,
+        y=y_col_actual,
+        marker="o",
+        label="Mouse",
+        color="black",
+    )
+    sns.lineplot(
+        data=df_filtered,
+        x=x_col,
+        y=y_col_random,
+        linestyle="dashed",
+        label="Random Agent",
+        color="navy",
+    )
+    sns.lineplot(
+        data=df_filtered,
+        x=x_col,
+        y=y_col_binary,
+        linestyle="dashed",
+        label="Binary Agent",
+        color="green",
+    )
+    sns.lineplot(
+        data=df_filtered,
+        x=x_col,
+        y=y_col_multi,
+        linestyle="dashed",
+        label="Three/Four Way Agent",
+        color="maroon",
+    )
+
+    plt.xlabel("Epochs (in maze)", fontsize=12)
+    plt.ylabel("Proportion of Reward Path Transitions", fontsize=12)
+    plt.title(title, fontsize=14, fontweight="bold")
+    plt.grid(True)
+    plt.legend(
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
+        frameon=False,
+        title="Agent",
+    )
+    plt.tight_layout()
+
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / f"{genotype}_multiple_agent.pdf"
+        plt.savefig(save_path, bbox_inches="tight", dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
+
+    # Return figure
+    if return_fig:
+        return fig
+
+
+###################################################################
+## Plot 6: Cumulative Agent Performance
+###################################################################
+def plot_cumulative_agent_comparison_boxplot_multi(
+    config: dict,
+    df_metrics: pd.DataFrame,
+    cohort_metadata: pd.DataFrame,
+    genotype: str,
+    figsize: tuple = (10, 6),
+    save_fig: bool = True,
+    show_fig: bool = True,
+    return_fig: bool = False,
+) -> None | plt.Figure:
+    """
+    Plots a boxplot comparing the cumulative reward path transition percentage
+    across all sessions for the specified genotype for mouse and simulated agents.
+
+    Parameters:
+    -----------
+    config : dict
+        Configuration dictionary containing project settings.
+    df_metrics : pd.DataFrame
+        Output from evaluate_agent_performance_multi().
+    cohort_metadata : pd.DataFrame
+        Metadata mapping sessions to genotypes.
+    genotype : str
+        Genotype to filter (e.g., 'WT-WT').
+    figsize : tuple
+        Size of the plot.
+    save_fig : bool
+        Whether to save the figure.
+    show_fig : bool
+        Whether to display the figure.
+    return_fig : bool
+        Whether to return the figure object.
+
+    Returns:
+    --------
+    plt.Figure or None
+        The figure object if return_fig is True, otherwise None.
+    """
+    # --- Constants ---
+    metric_cols = {
+        "Mouse": "Actual Reward Path %",
+        "Random Agent": "Random Agent Reward Path %",
+        "Binary Agent": "Binary Agent Reward Path %",
+        "3/4-Way Agent": "Three/Four Way Agent Reward Path %",
+    }
+
+    # --- Filter sessions for the genotype ---
+    sessions_reqd = cohort_metadata.loc[cohort_metadata.Genotype == genotype, "Session #"].unique()
+    df_filtered = df_metrics[df_metrics["Session"].isin(sessions_reqd)].copy()
+
+    # --- Aggregate to session level (mean across epochs) ---
+    df_agg = df_filtered.groupby("Session")[[*metric_cols.values()]].mean().reset_index()
+
+    # --- Melt for plotting ---
+    df_melt = df_agg.melt(id_vars="Session", var_name="Agent", value_name="Reward Path %")
+    df_melt["Agent"] = df_melt["Agent"].map({v: k for k, v in metric_cols.items()})
+
+    # --- Plot ---
+    fig = plt.figure(figsize=figsize)
+    sns.boxplot(
+        data=df_melt,
+        x="Agent",
+        y="Reward Path %",
+        palette="Set2",
+    )
+    sns.stripplot(
+        data=df_melt,
+        x="Agent",
+        y="Reward Path %",
+        color="black",
+        size=4,
+        jitter=True,
+        alpha=0.6,
+    )
+
+    plt.title(
+        f"Cumulative Reward Path Transition % across Sessions\nGenotype: {genotype}", fontsize=14, fontweight="bold"
+    )
+    plt.ylabel("Mean Reward Path Transition %")
+    plt.xlabel("")
+    plt.ylim(0, 1)
+    plt.grid(axis="y", linestyle="--", alpha=0.7)
+    plt.tight_layout()
+
+    # Save figure
+    if save_fig:
+        save_path = Path(config["project_path_full"]) / "figures" / f"{genotype}_cumulative_multiple_agent.pdf"
+        plt.savefig(save_path, bbox_inches="tight", dpi=300)
+        print(f"Figure saved at: {save_path}")
+
+    # Show figure
+    if show_fig:
+        plt.show()
+
+    # Return figure
+    if return_fig:
+        return fig

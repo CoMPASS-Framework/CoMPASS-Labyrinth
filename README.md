@@ -32,32 +32,87 @@ CoMPASS-Labyrinth is a unified computational and behavioral framework for analyz
 
 5. **Translational Relevance**: Sensitive detection of early cognitive deficits in models of neurodegenerative disease (e.g., App-KI mice), with broader implications for human cognition, learning, and memory.
 
+## Prerequisites
+
+- Python 3.11 or higher
+- R version 4.4.0 or lower
+
 ## Installation
 
-* Recommended with conda environment
+### Option A: Using Conda
 
-1. Clone repo from github
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth.git
+   cd CoMPASS-Labyrinth
+   ```
 
-In anaconda prompt:
-2. Navigate to cloned repo folder with `cd`
+2. **Create Python environment**
+   ```bash
+   conda env create -f environment.yml
+   conda activate compass-labyrinth
+   ```
+   This automatically installs the package with all dependencies from `pyproject.toml`.
 
-3. `conda env create -f environment.yml`
+3. **Initialize R environment**
+   ```bash
+   Rscript init_renv.R
+   ```
+   This installs all required R packages using renv. First run may take several minutes.
 
-4. `conda activate compass-labyrinth`
+### Option B: Using pip with pyproject.toml
 
-5. `Rscript set_R_Packages.R`
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth.git
+   cd CoMPASS-Labyrinth
+   ```
 
-6. type `code` to open VScode through the compass-labyrinth environment
+2. **Create Python virtual environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-## Instructions
+3. **Install the package with all dependencies**
+   ```bash
+   pip install -e ".[dev]"  # Includes Jupyter and development tools
+   # or
+   pip install -e .  # Core dependencies only
+   ```
 
-1. See individual README.md files within **CoMPASS-Labyrinth\src** for detailed instructions for descriptions of individual modules and code elements.
+4. **Initialize R environment**
+   ```bash
+   Rscript init_renv.R
+   ```
 
-2. See **CoMPASS-Labyrinth\notebooks** for examples of running the code and instructions for usage. See `data` for example data, dataset information, and metadata. Example datasets are already preprocessed, so avoid notebooks 01, 02, 08
+### Notes on Dependency Management
 
-3. Set paths within the **CoMPASS-Labyrinth\notebooks\init_config.py** and **CoMPASS-Labyrinth\src\compass\level_2\compass_config.py**
+- **Python packages**: Managed via `pyproject.toml`
+- **R packages**: Managed via `renv`
+- When you start R in this directory, renv will automatically activate
 
-4. Run **CoMPASS-Labyrinth\notebooks**. Jupyter is highly recommended for interactive features.
+## Usage
+
+1. See individual README.md files within **src\compass-labyrinth** for detailed instructions for descriptions of individual modules and code elements.
+
+2. See **tutorials** for examples of running the code and instructions for usage. The tutorials have been numbered in order of usage and contain a description on the code and how to run it.
+
+3. Tutorials included:
+- **00_dlc_processing_template** : Custom processing using DLC (outside of the compass-labyrinth env)
+- **01_create_project** : Initialization of project and concatenating post-DLC results 
+- **02_task_performance** : Task performance metrics
+- **03_simulated_agent_modeling** : Simulated Agent modeling
+- **04_compass_level_1** : CoMPASS Level 1 model
+- **05_compass_level_1_post_analysis** : CoMPASS Level 1 post analysis
+- **06_compass_level_2** : CoMPASS Level 2 model
+
+<p align="center">
+  <img src="media/compass_workflow.png" alt="Workflow" width="900"/>
+</p>
+
+4. Test datasets present in **tests/assests** 
+
 
 ## Citation
 If you use this framework, please cite the below manuscript:

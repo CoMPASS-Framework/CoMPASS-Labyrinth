@@ -1,0 +1,51 @@
+name: Testing
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/testing.yaml'
+      - 'src/**'
+      - 'tests/**'
+  pull_request:
+    branches:
+      - main
+      - dev
+    paths:
+      - '.github/workflows/testing.yaml'
+      - 'src/**'
+      - 'tests/**'
+
+jobs:
+  run:
+    name: ${{ matrix.os }} Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11"]
+        R-version: [ "4.5.1" ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]" --no-cache-dir
+
+      - name: Run tests
+        run: |
+          pytest --cov=src/compass_labyrinth --cov-report=xml --cov-report=term-missing -v
+      
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
