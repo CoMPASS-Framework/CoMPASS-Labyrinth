@@ -109,8 +109,13 @@ CoMPASS-Labyrinth is a unified computational and behavioral framework for analyz
   <img src="media/compass_workflow.png" alt="Workflow" width="900"/>
 </p>
 
-4. Test datasets present in **tests/assests** 
+4. Test datasets present in **tests/assests**
+5. Go through **src/compass_labyrinth/compass/level_1/README.md** and **src/compass_labyrinth/compass/level_2/README.md** for instructions on optimal model parameters. NOTE: Please test all and input all parameters to get optimal results.
 
 
 ## Citation
 If you use this framework, please cite the below manuscript:
+
+**Decoding hidden goal-directed navigational states and their neuronal representations using a novel labyrinth paradigm and probabilistic modeling framework**. bioarxiv (2025)
+ Patrick S Honma*, Shreya C Bangera*, Reuben R Thomas, Nicholas Kaliss, Dan Xia, Jorge J Palop
+doi: https://doi.org/10.1101/2025.11.13.688348
