@@ -117,5 +117,7 @@ CoMPASS-Labyrinth is a unified computational and behavioral framework for analyz
 If you use this framework, please cite the below manuscript:
 
 **Decoding hidden goal-directed navigational states and their neuronal representations using a novel labyrinth paradigm and probabilistic modeling framework**. bioarxiv (2025)
+
  Patrick S Honma*, Shreya C Bangera*, Reuben R Thomas, Nicholas Kaliss, Dan Xia, Jorge J Palop
+
 doi: https://doi.org/10.1101/2025.11.13.688348
