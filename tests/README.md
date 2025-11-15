@@ -53,8 +53,12 @@ def test_my_feature(test_project):
 ## Test Assets
 
 The `tests/assets/` directory contains:
-- `Session-3withGrids.csv` - Test DLC output CSV
-- `Session-4withGrids.csv` - Test DLC output CSV
+- `Session-3withGrids.csv` - Test DLC output CSV (similar for 4,5,6,7)
+  
+- `Session-3 grid.dbf` - attribute table (row-level data for each cell)
+- `Session-3 grid.shp` - geometry of each grid cell (polygon)
+- `Session-3 grid.shx` - spatial index
+
 - `WT_DSI_Labyrinth_Metadata.csv` - Test metadata file
 
 ## Running Tests
