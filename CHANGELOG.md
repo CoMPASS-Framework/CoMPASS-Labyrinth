@@ -1,3 +1,11 @@
+# CHANGELOG.md
+
+# v0.1.1
+
+Fixes:
+- Added missing PyYAML dependency to `pyproject.toml`
+
+
 # v0.1.0
 
 Re-organization of the CoMPASS-Labyrinth project:
