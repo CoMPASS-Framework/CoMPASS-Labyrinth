@@ -47,6 +47,7 @@ dependencies = [
     
     # File I/O
     "openpyxl",
+    "PyYAML",
 ]
 
 [project.optional-dependencies]
