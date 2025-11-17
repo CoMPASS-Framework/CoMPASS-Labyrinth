@@ -54,9 +54,11 @@ dependencies = [
 dev = [
     "jupyterlab>=4.3.5",
     "ipykernel",
+    "black>=23.0.0",
+]
+tests = [
     "pytest>=7.0.0",
     "pytest-cov",
-    "black>=23.0.0",
 ]
 
 [project.urls]
