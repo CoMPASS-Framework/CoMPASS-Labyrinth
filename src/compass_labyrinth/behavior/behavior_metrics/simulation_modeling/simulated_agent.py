@@ -31,7 +31,7 @@ def get_valid_and_optimal_transitions(
     """
     Extract valid and optimal transitions per session.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         DataFrame containing navigation data.
@@ -71,7 +71,7 @@ def simulate_agent_vs_actual(
     """
     Simulate random agent transitions and compare with actual.
 
-    Parameters:
+    Parameters
     -----------
     df_slice : pd.DataFrame
         DataFrame segment for the epoch.
@@ -84,7 +84,7 @@ def simulate_agent_vs_actual(
     decision_label : str
         Label for decision points.
 
-    Returns:
+    Returns
     --------
     tuple of lists
         Lists of actual and simulated optimal transitions (1 for optimal, 0 otherwise).
@@ -117,14 +117,14 @@ def bootstrap_distribution(
     """
     Generate bootstrap sample means.
 
-    Parameters:
+    Parameters
     -----------
     data : list
         Data points.
     n_samples : int
         Number of bootstrap samples.
 
-    Returns:
+    Returns
     --------
     np.ndarray
         Array of bootstrap sample means.
@@ -144,7 +144,7 @@ def compute_epoch_metrics(
     """
     Compute performance metrics for a single epoch of navigation.
 
-    Parameters:
+    Parameters
     -----------
     df_slice : pd.DataFrame
         DataFrame segment for the epoch.
@@ -159,7 +159,7 @@ def compute_epoch_metrics(
     decision_label : str
         Label for decision points.
 
-    Returns:
+    Returns
     --------
     pd.Series
         Series with computed metrics.
@@ -223,14 +223,14 @@ def segment_data_by_epoch(
     """
     Split DataFrame by genotype and session into sequential time-based epochs.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         DataFrame containing navigation data.
     epoch_size : int
         Number of rows per epoch.
 
-    Returns:
+    Returns
     --------
     list of tuples
         Each tuple contains (session, epoch_number, epoch_dataframe).
@@ -248,14 +248,14 @@ def trim_to_common_epochs(df_results: pd.DataFrame) -> pd.DataFrame:
     """
     Trims the results dataframe to retain only the maximum number of epochs common across all sessions.
 
-    Parameters:
+    Parameters
     -----------
     df_results : pd.DataFrame
         The output of evaluate_agent_performance.
             - 'Session' (str): Column name indicating sessions.
             - 'Epoch_Number' (str): Column name indicating epoch/bin number.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Trimmed dataframe with only common epochs.
@@ -295,7 +295,7 @@ def evaluate_agent_performance(
     """
     Run full evaluation pipeline for simulated agent vs. actual mouse.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         DataFrame containing navigation data.
@@ -314,7 +314,7 @@ def evaluate_agent_performance(
     trim : bool
         Whether to trim to common epochs across sessions.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         DataFrame with performance metrics per epoch.
@@ -370,7 +370,7 @@ def plot_agent_transition_performance(
     """
     Plot performance comparison between actual mouse and simulated agent over time.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings.
@@ -385,7 +385,7 @@ def plot_agent_transition_performance(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The figure object if return_fig is True, otherwise None.
@@ -470,7 +470,7 @@ def plot_relative_agent_performance(
     """
     Plot relative performance of mouse vs simulated agent over time.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings.
@@ -485,7 +485,7 @@ def plot_relative_agent_performance(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The figure object if return_fig is True, otherwise None.
@@ -551,12 +551,12 @@ def fit_mixed_effects_model(df_long: pd.DataFrame) -> tuple:
     """
     Fit a linear mixed-effects model comparing agent types.
 
-    Parameters:
+    Parameters
     -----------
     df_long : pd.DataFrame
         Long-form DataFrame with columns 'AgentType', 'Performance', and session info.
 
-    Returns:
+    Returns
     --------
     tuple
         Tuple with result (Fitted model object) and p_value (P-value for AgentType effect).
@@ -574,7 +574,7 @@ def plot_agent_performance_boxplot(df_long: pd.DataFrame, p_value: float, palett
     """
     Plot boxplot comparing actual vs simulated agent with p-value annotation.
 
-    Parameters:
+    Parameters
     -----------
     df_long : pd.DataFrame
         Long-form DataFrame.
@@ -583,7 +583,7 @@ def plot_agent_performance_boxplot(df_long: pd.DataFrame, p_value: float, palett
     palette : list or None
         Color palette for the boxplot.
 
-    Returns:
+    Returns
     --------
     None
     """
@@ -607,13 +607,13 @@ def reshape_for_mixedlm(df_results: pd.DataFrame) -> pd.DataFrame:
     """
     Reshape the dataframe to long format for mixed-effects modeling.
 
-    Parameters:
+    Parameters
     -----------
     df_results : pd.DataFrame
         DataFrame with columns 'Actual Reward Path %', 'Simulated Agent Reward Path %',
         'Session', 'Epoch Number' and 'Genotype'.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Long-form DataFrame suitable for mixedlm.
@@ -637,12 +637,12 @@ def fit_mixed_effects_model(df_long: pd.DataFrame) -> tuple:
     """
     Fit a linear mixed-effects model comparing agent types.
 
-    Parameters:
+    Parameters
     -----------
     df_long : pd.DataFrame
         Long-form DataFrame.
 
-    Returns:
+    Returns
     --------
     tuple
         Tuple with result (Fitted model object) and p_value (P-value for AgentType effect).
@@ -667,7 +667,7 @@ def plot_agent_performance_boxplot_ax(
     """
     Plot a boxplot of agent performance.
 
-    Parameters:
+    Parameters
     -----------
     ax : plt.Axes
         Matplotlib Axes object to plot on.
@@ -680,7 +680,7 @@ def plot_agent_performance_boxplot_ax(
     genotype : str or None
         Genotype name for the title.
 
-    Returns:
+    Returns
     --------
     None
     """
@@ -704,7 +704,7 @@ def run_mixedlm_for_all_genotypes(
     """
     Run mixed-effects modeling and plot results for all genotypes.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings..
@@ -717,7 +717,7 @@ def run_mixedlm_for_all_genotypes(
     show_fig : bool
         Whether to display the figure.
 
-    Returns:
+    Returns
     --------
     dict
         Dictionary with p-values for each genotype.
@@ -775,12 +775,12 @@ def compute_chi_square_statistic(df: pd.DataFrame) -> pd.DataFrame:
     Compute the chi-square statistic between actual and simulated reward path usage
     for each row in the DataFrame. Also ensures 'Epoch Number' and 'Session' are integers.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         DataFrame with columns 'Actual Reward Path %' and 'Simulated Agent Reward Path %'.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Updated DataFrame with 'Chi Square Statistic' and cleaned column types.
@@ -809,7 +809,7 @@ def compute_rolling_chi_square(df: pd.DataFrame, window: int = 3) -> pd.DataFram
     window : int
         Window size for rolling average.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Updated DataFrame with 'Rolling Chi Square' column.
@@ -825,12 +825,12 @@ def compute_cumulative_chi_square(df: pd.DataFrame) -> pd.DataFrame:
     """
     Compute cumulative sum of chi-square statistic within each session.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         DataFrame with 'Chi Square Statistic' column.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Updated DataFrame with 'Cumulative Chi Square' column.
@@ -876,7 +876,7 @@ def plot_chi_square_and_rolling(
     """
     Plot chi-square and rolling statistics for each genotype.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings..
@@ -895,7 +895,7 @@ def plot_chi_square_and_rolling(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The figure object if return_fig is True, otherwise None.
@@ -967,7 +967,7 @@ def plot_rolling_mean(
     """
     Plot rolling chi-square statistics for each genotype.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings..
@@ -984,7 +984,7 @@ def plot_rolling_mean(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The figure object if return_fig is True, otherwise None.
@@ -1046,7 +1046,7 @@ def plot_cumulative_chi_square(
     """
     Plot cumulative chi-square statistics for each genotype.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings..
@@ -1063,7 +1063,7 @@ def plot_cumulative_chi_square(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The figure object if return_fig is True, otherwise None.

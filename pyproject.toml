@@ -60,6 +60,12 @@ tests = [
     "pytest>=7.0.0",
     "pytest-cov",
 ]
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocstrings[python]",
+    "mkdocs-jupyter",
+]
 
 [project.urls]
 homepage = "https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth"

@@ -37,14 +37,14 @@ def get_max_session_row_bracket(
     Finds the session with the maximum number of rows and returns the largest
     lower multiple of 10,000.
 
-    Parameters:
+    Parameters
     -----------
     df_combined : pd.DataFrame
         Combined dataframe containing multiple sessions.
     session_col : str
         Name of the column representing session ID.
 
-    Returns:
+    Returns
     --------
     int
         Lower bracketed row count (e.g., 20000 if max session has 23567 rows).
@@ -65,7 +65,7 @@ def generate_region_heatmap_pivots(
     """
     Create binned pivot tables for each genotype showing region occupancy over time windows.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         Input DataFrame containing 'Session', 'Genotype', and 'Region' columns.
@@ -80,7 +80,7 @@ def generate_region_heatmap_pivots(
     region_lengths : dict
         Dictionary with total lengths for each region.
 
-    Returns:
+    Returns
     -----------
     pivot_dict : dict
         Dictionary with Genotype as keys and list of pivot DataFrames as values.
@@ -152,7 +152,7 @@ def compute_target_zone_usage(
     """
     Compute target zone usage from a time-binned pivot dictionary.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         DataFrame containing 'Session' and 'Genotype' columns.
@@ -163,7 +163,7 @@ def compute_target_zone_usage(
     difference : int
         Bin size.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         DataFrame containing target zone usage information.
@@ -192,7 +192,7 @@ def summarize_target_usage(
     """
     Summarize target zone usage per session.
 
-    Parameters:
+    Parameters
     -----------
     region_target : str
         The target region to summarize.
@@ -201,7 +201,7 @@ def summarize_target_usage(
     cohort_metadata : pd.DataFrame
         DataFrame containing cohort metadata.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         DataFrame containing the summary of target zone usage.
@@ -224,7 +224,7 @@ def plot_target_usage_vs_frames(
     """
     Plot target zone usage vs number of frames.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings.
@@ -237,7 +237,7 @@ def plot_target_usage_vs_frames(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The figure object if return_fig is True, otherwise None.
@@ -295,7 +295,7 @@ def exclude_low_performing_sessions(
     """
     Exclude sessions based on target usage and frame count thresholds.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         The original DataFrame containing session data.
@@ -306,7 +306,7 @@ def exclude_low_performing_sessions(
     min_frames : int | None
         The minimum number of frames threshold for excluding sessions.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         The cleaned DataFrame with low-performing sessions excluded.
@@ -345,7 +345,7 @@ def plot_target_usage_with_exclusions(
     """
     Plot target zone usage vs number of frames, marking excluded sessions.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings.
@@ -360,7 +360,7 @@ def plot_target_usage_with_exclusions(
     return_fig : bool
         Whether to return the figure.
 
-    Returns:
+    Returns
     --------
     None | plt.Figure
         The created figure, if return_fig is True.
@@ -425,14 +425,14 @@ def subset_pivot_dict_sessions(pivot_dict: dict, df_all_csv: pd.DataFrame) -> di
     """
     Subset an existing pivot_dict to only include valid sessions from df_all_csv.
 
-    Parameters:
+    Parameters
     -----------
     pivot_dict : dict
         Original pivot_dict with all sessions.
     df_all_csv : pd.DataFrame
         Must contain 'Session' and 'Genotype' columns.
 
-    Returns:
+    Returns
     --------
     dict
         Filtered pivot_dict with only valid sessions per genotype.
@@ -477,7 +477,7 @@ def plot_region_heatmaps(
     """
     Clean and aesthetically pleasing vertically stacked heatmaps with one colorbar per bin.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings.
@@ -506,7 +506,7 @@ def plot_region_heatmaps(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     None | plt.Figure
         The figure object if return_fig is True, otherwise None.
@@ -620,7 +620,7 @@ def plot_region_heatmaps_all_genotypes(
     - Rows: bins
     - Columns: genotypes
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings.
@@ -657,7 +657,7 @@ def plot_region_heatmaps_all_genotypes(
     return_fig : bool
         If True, return the figure object
 
-    Returns:
+    Returns
     --------
     None | plt.Figure
         The figure object if return_fig is True, otherwise None.
@@ -763,7 +763,7 @@ def compute_shannon_entropy_per_bin(
     Computes Shannon entropy per bin per session.
     Uses df_all_csv for genotype mapping and ensures robust merging.
 
-    Parameters:
+    Parameters
     -----------
     pivot_dict : dict
         Dictionary with Genotype as keys and list of pivot DataFrames as values.
@@ -772,7 +772,7 @@ def compute_shannon_entropy_per_bin(
     bin_size : int
         Size of each time bin.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         DataFrame with columns: 'Session', 'Bin', 'Entropy', 'Genotype'.
@@ -838,7 +838,7 @@ def plot_entropy_over_bins(
     """
     Plot Shannon's entropy across bins for each genotype.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings.
@@ -855,7 +855,7 @@ def plot_entropy_over_bins(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     None | plt.Figure
         The figure object if return_fig is True, otherwise None.
@@ -909,12 +909,12 @@ def run_entropy_anova(entropy_df: pd.DataFrame) -> AnovaRM | None:
     Run repeated measures ANOVA using Bin as within-subject factor.
     Fills missing Entropy values with 0 (only here).
 
-    Parameters:
+    Parameters
     -----------
     entropy_df : pd.DataFrame
         DataFrame containing 'Session', 'Bin', 'Entropy', and 'Genotype' columns
 
-    Returns:
+    Returns
     --------
     AnovaRM | None
         The fitted ANOVA model or None if it fails.
@@ -939,12 +939,12 @@ def run_fdr_pairwise_tests(entropy_df: pd.DataFrame) -> pd.DataFrame | None:
     For each bin, performs pairwise t-tests between all genotype pairs.
     Applies FDR correction across all tests.
 
-    Parameters:
+    Parameters
     -----------
     entropy_df : pd.DataFrame
         DataFrame containing 'Session', 'Bin', 'Entropy', and 'Genotype' columns
 
-    Returns:
+    Returns
     --------
     pd.DataFrame | None
         DataFrame with pairwise test results.
@@ -985,12 +985,12 @@ def run_mixed_model_per_genotype_pair(entropy_df: pd.DataFrame) -> tuple[dict, p
     For each genotype pair, test if Bin x Genotype interaction is significant.
     Does NOT fill NaNs. Uses only complete-case rows per model.
 
-    Parameters:
+    Parameters
     -----------
     entropy_df : pd.DataFrame
         DataFrame containing 'Session', 'Bin', 'Entropy', and 'Genotype' columns
 
-    Returns:
+    Returns
     --------
     result_dict : dict
         Model summaries
@@ -1051,7 +1051,7 @@ def compute_region_usage_over_bins(
     """
     Computes binned region usage across sessions for the given region.
 
-    Parameters:
+    Parameters
     -----------
     pivot_dict : dict
         Dictionary with genotype keys and binned pivot tables.
@@ -1062,7 +1062,7 @@ def compute_region_usage_over_bins(
     bin_size : int
         Size of each bin (in frames).
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Binned region usage across sessions with Genotype labels.
@@ -1102,7 +1102,7 @@ def plot_region_usage_over_bins(
     """
     Plots the proportion of usage over time bins for a specific region.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings.
@@ -1121,7 +1121,7 @@ def plot_region_usage_over_bins(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     None | plt.Figure
         The figure object if return_fig is True, otherwise None.
@@ -1177,7 +1177,7 @@ def plot_all_regions_usage_over_bins(
     """
     Plots usage over bins for multiple regions in a 2x3 subplot layout with a shared legend outside.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings.
@@ -1200,7 +1200,7 @@ def plot_all_regions_usage_over_bins(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     None | plt.Figure
         The figure object if return_fig is True, otherwise None.
@@ -1270,14 +1270,14 @@ def run_region_usage_stats_mixedlm(reg_binned: pd.DataFrame, region_col: str = "
     """
     Mixed Effects Model (Bin x Genotype) with missing bins dropped.
 
-    Parameters:
+    Parameters
     -----------
     reg_binned : pd.DataFrame
         DataFrame from compute_region_usage_over_bins().
     region_col : str
         Column name for the region of interest. Default is "target_zone".
 
-    Returns:
+    Returns
     --------
     None
     """
@@ -1307,14 +1307,14 @@ def run_region_usage_stats_fdr(
     """
     Pairwise genotype comparisons at each bin (FDR corrected).
 
-    Parameters:
+    Parameters
     -----------
     reg_binned : pd.DataFrame
         DataFrame from compute_region_usage_over_bins().
     region_col : str
         Column name for the region of interest. Default is "target_zone".
 
-    Returns:
+    Returns
     --------
     pd.DataFrame | None
         DataFrame with pairwise test results or None if an error occurs.

@@ -37,7 +37,7 @@ def compute_state_proportion(
     """
     Compute state proportions and return filtered dataframe for given genotype and HMM state.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         DataFrame containing columns: 'Genotype', 'Grid Number', 'HMM_State', 'x', 'y'.
@@ -46,7 +46,7 @@ def compute_state_proportion(
     hmm_state : int
         HMM state to filter.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         DataFrame with computed proportions for the specified genotype and HMM state.
@@ -106,7 +106,7 @@ def plot_grid_heatmap(
     """
     Plot grid heatmap for state proportions.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project details.
@@ -127,7 +127,7 @@ def plot_grid_heatmap(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     fig : plt.Figure | None
         Matplotlib Figure object if return_fig is True, else None.
@@ -194,7 +194,7 @@ def plot_all_genotype_heatmaps(
     """
     Plot grid heatmaps for all genotypes.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project details.
@@ -217,7 +217,7 @@ def plot_all_genotype_heatmaps(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     fig : plt.Figure | None
         Matplotlib Figure object if return_fig is True, else None.
@@ -314,7 +314,7 @@ def overlay_trajectory_lines_plotly(
     """
     Overlay trajectory lines on the interactive heatmap.
 
-    Parameters:
+    Parameters
     -----------
     fig : go.Figure
         Plotly Figure object to overlay lines on.
@@ -327,7 +327,7 @@ def overlay_trajectory_lines_plotly(
     top_percent : float
         Top percentage of transitions to visualize.
 
-    Returns:
+    Returns
     --------
     None
     """
@@ -388,7 +388,7 @@ def plot_interactive_heatmap(
     """
     Plot interactive heatmap for state proportions.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project details.
@@ -409,7 +409,7 @@ def plot_interactive_heatmap(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     fig : go.Figure | None
         Plotly Figure object if return_fig is True, else None.
@@ -550,7 +550,7 @@ def plot_all_genotype_interactive_heatmaps(
     """
     Plot interactive grid heatmaps for all genotypes.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project details.
@@ -575,7 +575,7 @@ def plot_all_genotype_interactive_heatmaps(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     fig : go.Figure | None
         Plotly Figure object if return_fig is True, else None.

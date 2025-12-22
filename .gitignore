@@ -71,5 +71,8 @@ renv/*
 .DS_Store
 Thumbs.db
 
+# MkDocs
+site/
+
 # Temporary
 notebooks/*

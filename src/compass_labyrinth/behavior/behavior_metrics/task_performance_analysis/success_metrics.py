@@ -31,14 +31,14 @@ def assign_bout_indices_from_entry_node(
     Assigns bout indices to each row of a session based on entries to a delimiter node (e.g., Entry node = 47).
     A new bout starts every time the delimiter node is encountered.
 
-    Parameters:
+    Parameters
     -----------
     navigation_df : pd.DataFrame
         DataFrame with 'Session' and 'Grid Number' columns.
     delimiter_node : int
         Grid number that marks the entry point for bouts.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         DataFrame with an added 'Bout_ID' column.
@@ -71,7 +71,7 @@ def summarize_bout_success_by_session(
     """
     Computes number of total, valid, successful, and perfect bouts per session.
 
-    Parameters:
+    Parameters
     -----------
     navigation_df : pd.DataFrame
         DataFrame with 'Session', 'Genotype', 'Region', and 'Bout_Index'.
@@ -82,7 +82,7 @@ def summarize_bout_success_by_session(
     min_bout_length : int
         Minimum length of frames required to count a bout as valid.
 
-    Returns:
+    Returns
     --------
     summary_table : pd.DataFrame
         DataFrame summarizing bout stats by session.
@@ -131,7 +131,7 @@ def plot_success_rate(
     """
     Plots a barplot showing success rates across genotypes from the bout summary.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Project configuration dictionary.
@@ -146,7 +146,7 @@ def plot_success_rate(
     return_fig : bool, default False
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The matplotlib figure object if return_fig is True, else None.
@@ -203,14 +203,14 @@ def perform_genotype_ttests(
     """
     Performs t-tests between genotypes on a given rate column (e.g., success_rate or perfect_rate).
 
-    Parameters:
+    Parameters
     -----------
     summary_table : pd.DataFrame
         DataFrame from `summarize_bout_success_by_session`
     rate_col : str, default 'success_rate'
         Column to compare across genotypes. Default is 'success_rate'.
 
-    Returns:
+    Returns
     --------
     dict
         Dictionary with t-test results between each genotype pair.
@@ -251,7 +251,7 @@ def compute_binned_success_summary(
     """
     Computes successful bout metrics per session, binned by cumulative frame index.
 
-    Parameters:
+    Parameters
     -----------
     df_all_csv : pd.DataFrame
         DataFrame with 'Session', 'Genotype', 'Region', 'Bout_ID', and 'Frame' columns.
@@ -268,7 +268,7 @@ def compute_binned_success_summary(
     target_zone : str
         Region considered as successful bout completion.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         DataFrame summarizing binned successful bout metrics per session.
@@ -323,7 +323,7 @@ def plot_binned_success(
     """
     Plots % of successful bouts over time across genotypes.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Project configuration dictionary.
@@ -338,7 +338,7 @@ def plot_binned_success(
     return_fig : bool, default False
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The matplotlib figure object if return_fig is True, else None.
