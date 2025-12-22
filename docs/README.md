@@ -19,7 +19,7 @@ This installs:
 ### 2. Serve Documentation Locally
 
 ```bash
-mkdocs serve --watch ./src --watch ./docs --watch ./mkdocs.yml
+mkdocs serve --watch src/
 ```
 
 This starts a local development server at `http://127.0.0.1:8000` with live-reload functionality. Any changes you make to the documentation files will automatically refresh in your browser.
