@@ -33,7 +33,7 @@ def load_and_preprocess_session_data(
     """
     Loads DLC-tracked session data and assigns spatial regions based on grid numbers.
 
-    Parameters:
+    Parameters
     -----------
     filename : str
         CSV file path for a session.
@@ -44,7 +44,7 @@ def load_and_preprocess_session_data(
     region_mapping : dict
         Dictionary mapping region names to grid number lists.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Cleaned and region-labeled DataFrame for the session.
@@ -79,7 +79,7 @@ def compile_mouse_sessions(
     """
     Compiles all sessions into a single DataFrame.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Project configuration dictionary.
@@ -88,7 +88,7 @@ def compile_mouse_sessions(
     region_mapping : dict
         Region name → grid number list.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Combined session dataframe with Region, Genotype, Sex.
@@ -128,14 +128,15 @@ def remove_until_initial_node(df: pd.DataFrame, initial_nodes: list = [47, 46, 3
     Removes all rows in the dataframe until the first occurrence of a grid node
     in the provided initial_nodes list.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     df : pd.DataFrame
         The input session dataframe.
     initial_nodes : list
         List of grid node integers to detect.
 
-    Returns:
+    Returns
+    ------
     pd.DataFrame
         Truncated dataframe starting from the first initial node.
     """
@@ -156,14 +157,15 @@ def remove_invalid_grid_transitions(
     Removes rows from the dataframe where the transition between consecutive
     grid numbers is not valid (i.e., not adjacent in the adjacency matrix).
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     df : pd.DataFrame
         The session dataframe after initial truncation.
     adjacency_matrix : pd.DataFrame
         Square adjacency matrix with binary values.
 
-    Returns:
+    Returns
+    -------
     pd.DataFrame
         Cleaned dataframe with only valid grid transitions.
     """
@@ -196,7 +198,7 @@ def preprocess_sessions(
     """
     Full preprocessing pipeline for all sessions: trims to initial nodes and removes invalid transitions.
 
-    Parameters:
+    Parameters
     -----------
     df_comb: pd.DataFrame
         Combined dataframe with all sessions.
@@ -205,7 +207,7 @@ def preprocess_sessions(
     initial_nodes: list
         Nodes that mark the true session start.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Fully cleaned and combined dataframe across all sessions.

@@ -76,7 +76,7 @@ def prep_data(
     - Computes step and angle per ID using coordinates.
     - Retains covariates and optionally adds center/centroid distance/angle features.
 
-    Parameters:
+    Parameters
     -----------
     data : pd.DataFrame
         Input data.
@@ -95,7 +95,7 @@ def prep_data(
     altCoordNames : str | None
         Alternative base name for output coordinate columns. Default is None.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Processed DataFrame with step, angle, covariates, and optional center/centroid features.

@@ -32,7 +32,7 @@ def compute_node_state_medians_over_time(
     """
     Compute time-binned medians of HMM state proportions for decision and non-decision nodes.
 
-    Parameters:
+    Parameters
     -----------
     df_hmm : pd.DataFrame
         Dataframe with 'Genotype', 'Session', 'HMM_State', and 'Grid Number'.
@@ -49,7 +49,7 @@ def compute_node_state_medians_over_time(
     nondecision_nodes : str
         Type of non-decision node to consider for surveillance probability.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Dataframe with median proportions per session, time bin, node type, and genotype
@@ -119,7 +119,7 @@ def plot_node_state_median_curve(
     """
     Plot time-binned inverse median probabilities (1 - median) for decision and non-decision nodes.
 
-    Parameters:
+    Parameters
     -----------
     deci_df : pd.DataFrame
         DataFrame containing 'Time_Bins', '1-Median_Probability', and 'Genotype + Node Type'
@@ -136,7 +136,7 @@ def plot_node_state_median_curve(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure
         Seaborn FacetGrid object
@@ -193,14 +193,14 @@ def get_max_session_row_bracket(
     """
     Finds the session with the maximum number of rows and returns the largest lower multiple of 10,000.
 
-    Parameters:
+    Parameters
     -----------
     df_combined : pd.DataFrame
         Combined dataframe containing multiple sessions.
     session_col : str
         Name of the column representing session ID.
 
-    Returns:
+    Returns
     --------
     int
         Lower bracketed row count (e.g., 20000 if max session has 23567 rows).
@@ -217,14 +217,14 @@ def get_min_session_row_bracket(
     """
     Finds the session with the minimum number of rows and returns the largest lower multiple of 10,000.
 
-    Parameters:
+    Parameters
     -----------
     df_combined : pd.DataFrame
         Combined dataframe containing multiple sessions.
     session_col : str
         Name of the column representing session ID.
 
-    Returns:
+    Returns
     --------
     int
         Lower bracketed row count (e.g., 10000 if min session has 10234 rows).

@@ -78,7 +78,7 @@ def run_compass(
     """
     Run CoMPASS.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary.
@@ -107,7 +107,7 @@ def run_compass(
     verbose : bool, optional
         Whether to print detailed logs during model training (default is False).
 
-    Returns:
+    Returns
     --------
     tuple
         A tuple containing:
@@ -242,7 +242,7 @@ def visualize_cv_results(
     """
     Visualize cross-validation results.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary.
@@ -255,7 +255,7 @@ def visualize_cv_results(
     return_fig : bool, optional
         Whether to return the figures (default is False).
 
-    Returns:
+    Returns
     --------
     None or list of plt.Figure
         List of figures if return_fig is True, otherwise None.
@@ -412,7 +412,7 @@ def assign_reward_orientation(
     Assigns reward orientation labels ('Reward Oriented' or 'Non-Reward Oriented') to Level 2 states per session,
     based on the median Targeted_Angle_smooth within each state and relative to session median.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         Input dataframe with columns for session, level 2 state, and angle.
@@ -423,7 +423,7 @@ def assign_reward_orientation(
     session_col : str
         Column name for session identifier.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Updated dataframe with 'Reward_Oriented' column.
@@ -479,7 +479,7 @@ def assign_hhmm_state(
     Assigns a final HHMM (Hierarchical Hidden Markov Model) state to the dataframe.
     The final HHMM state is based on the combination of level 1 and level 2 states.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         Dataframe containing the level_1_state_col and level_2_state_col columns.
@@ -488,7 +488,7 @@ def assign_hhmm_state(
     level_2_state_col : str
         The name of the column representing the second-level state (reward-oriented or not).
 
-    Returns:
+    Returns
     --------
     df : pd.DataFrame
         DataFrame with an additional 'HHMM State' column indicating the final HHMM state.
@@ -523,9 +523,9 @@ def plot_hhmm_state_sequence(
     df: pd.DataFrame,
     session_col: str = "Session",
     state_col: str = "HHMM State",
-    session_id:  None | int = None,
+    session_id: None | int = None,
     title_prefix: str = "State Sequence",
-    colors:  None | dict = None,
+    colors: None | dict = None,
     save_fig: bool = True,
     show_fig: bool = True,
     return_fig: bool = False,
@@ -533,7 +533,7 @@ def plot_hhmm_state_sequence(
     """
     Plots a rectangular sequence of HHMM states for a given session.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary for the project.
@@ -556,7 +556,7 @@ def plot_hhmm_state_sequence(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     None or plt.Figure
         The figure object if return_fig is True, otherwise None.

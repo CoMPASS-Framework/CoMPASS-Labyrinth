@@ -24,14 +24,14 @@ def split_into_epochs_multi(df: pd.DataFrame, epoch_size: int) -> list:
     """
     Split the DataFrame into epochs of specified size for each session.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         DataFrame containing navigation data.
     epoch_size : int
         Number of steps per epoch.
 
-    Returns:
+    Returns
     --------
     list
         A list of tuples containing (session, epoch index, chunk DataFrame).
@@ -54,7 +54,7 @@ def track_valid_transitions_multi(
     """
     Track valid and optimal transitions for each session.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         DataFrame containing navigation data.
@@ -63,7 +63,7 @@ def track_valid_transitions_multi(
     reward_label : str
         Label for reward path regions.
 
-    Returns:
+    Returns
     --------
     tuple[dict, dict]
         A tuple containing two dictionaries:
@@ -105,7 +105,7 @@ def simulate_random_agent_multi(
     """
     Simulate a random agent's performance over the given chunk of data.
 
-    Parameters:
+    Parameters
     -----------
     chunk : pd.DataFrame
         DataFrame chunk representing an epoch of navigation data.
@@ -118,7 +118,7 @@ def simulate_random_agent_multi(
     n_simulations : int
         Number of simulations to run for estimating performance.
 
-    Returns:
+    Returns
     --------
     tuple[list, list]
         A tuple containing two lists:
@@ -156,7 +156,7 @@ def simulate_binary_agent_multi(
     """
     Simulate a binary agent's performance over the given chunk of data.
 
-    Parameters:
+    Parameters
     -----------
     chunk : pd.DataFrame
         DataFrame chunk representing an epoch of navigation data.
@@ -169,7 +169,7 @@ def simulate_binary_agent_multi(
     n_simulations : int
         Number of simulations to run for estimating performance.
 
-    Returns:
+    Returns
     --------
     list
         A list containing the average performance of the binary agent simulations.
@@ -207,7 +207,7 @@ def simulate_multiway_agent_multi(
     """
     Simulate a multiway agent's performance over the given chunk of data.
 
-    Parameters:
+    Parameters
     -----------
     chunk : pd.DataFrame
         DataFrame chunk representing an epoch of navigation data.
@@ -220,7 +220,7 @@ def simulate_multiway_agent_multi(
     n_simulations : int
         Number of simulations to run for estimating performance.
 
-    Returns:
+    Returns
     --------
     list
         A list containing the average performance of the multiway agent simulations.
@@ -258,7 +258,7 @@ def evaluate_epoch_multi(
     """
     Evaluate performance metrics for all agent types over a given epoch chunk.
 
-    Parameters:
+    Parameters
     -----------
     chunk : pd.DataFrame
         DataFrame chunk representing an epoch of navigation data.
@@ -277,7 +277,7 @@ def evaluate_epoch_multi(
     n_simulations : int
         Number of simulations for agent performance.
 
-    Returns:
+    Returns
     --------
     pd.Series
         Series containing performance metrics for the epoch.
@@ -354,7 +354,7 @@ def evaluate_agent_performance_multi(
     """
     Evaluate the performance of different agent types over multiple epochs.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         DataFrame containing navigation data.
@@ -375,7 +375,7 @@ def evaluate_agent_performance_multi(
     four_nodes : list, optional
         List of grid numbers for four-way decision nodes.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         DataFrame with performance metrics for each epoch.
@@ -433,7 +433,7 @@ def plot_agent_vs_mouse_performance_multi(
     """
     Plot actual vs. simulated agent reward path performance across epochs for a specified genotype.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings.
@@ -452,7 +452,7 @@ def plot_agent_vs_mouse_performance_multi(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The figure object if return_fig is True, otherwise None.
@@ -549,7 +549,7 @@ def plot_cumulative_agent_comparison_boxplot_multi(
     Plots a boxplot comparing the cumulative reward path transition percentage
     across all sessions for the specified genotype for mouse and simulated agents.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings.
@@ -568,7 +568,7 @@ def plot_cumulative_agent_comparison_boxplot_multi(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The figure object if return_fig is True, otherwise None.

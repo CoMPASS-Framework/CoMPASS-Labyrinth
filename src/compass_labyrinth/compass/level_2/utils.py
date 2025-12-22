@@ -14,7 +14,7 @@ def assign_bouts_per_session(
     Assigns bout numbers to a DataFrame based on terminal grid node values,
     if the specified bout column does not already exist.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         Input DataFrame with 'Grid Number' column.
@@ -23,7 +23,7 @@ def assign_bouts_per_session(
     bout_col : str
         Name of the output column to store bout numbers.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         DataFrame with the specified bout column added or preserved.

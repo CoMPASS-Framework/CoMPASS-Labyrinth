@@ -8,13 +8,13 @@ def load_project(project_path: Path | str) -> tuple[dict, pd.DataFrame]:
     """
     Loads configuration parameters and metadata from an existing project.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     project_path: Path | str
         The path to the project directory containing the config.yaml and cohort_metadata.csv files.
 
-    Returns:
-    --------
+    Returns
+    -------
     config: dict
         A dictionary containing configuration parameters.
     metadata_df: pd.DataFrame
@@ -43,13 +43,13 @@ def load_cohort_metadata(config: dict) -> pd.DataFrame:
     """
     Loads cohort metadata from the CSV file specified in the project configuration.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     config: dict
         The project configuration dictionary containing the path to the cohort metadata CSV.
 
-    Returns:
-    --------
+    Returns
+    -------
     metadata_df: pd.DataFrame
         A DataFrame containing cohort metadata.
     """
