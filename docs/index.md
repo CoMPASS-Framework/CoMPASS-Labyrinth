@@ -30,14 +30,6 @@ CoMPASS-Labyrinth is a unified computational and behavioral framework for analyz
 
 5. **Translational Relevance**: Sensitive detection of early cognitive deficits in models of neurodegenerative disease (e.g., App-KI mice), with broader implications for human cognition, learning, and memory.
 
-## Quick Links
-
-- [Getting Started](getting-started.md) - Installation and setup
-- [User Guide](user-guide/index.md) - Step-by-step usage guides
-- [Framework Details](framework/index.md) - CoMPASS architecture and methodology
-- [API Reference](api/index.md) - Complete API documentation
-- [Tutorials](tutorials.md) - Jupyter notebook tutorials
-
 ## Workflow Overview
 
 <p align="center">
@@ -53,19 +45,31 @@ The CoMPASS-Labyrinth workflow includes:
 5. **CoMPASS Level 2** - Goal-directed cognitive state inference (BGMM + GMM-HMM)
 6. **Post-hoc Analysis** - Spatial, temporal, and bout-wise analysis
 
+## Quick Links
+
+- [Getting Started](getting-started.md) - Installation and setup
+- [User Guide](user-guide/index.md) - Step-by-step usage guides
+- [Framework Details](framework/index.md) - CoMPASS architecture and methodology
+- [API Reference](api/index.md) - Complete API documentation
+- [Tutorials](tutorials.md) - Jupyter notebook tutorials
+
 ## Citation
 
 If you use this framework, please cite our manuscript:
 
 !!! info "Citation"
-    Citation information will be added here upon publication.
+    **Decoding hidden goal-directed navigational states and their neuronal representations using a novel labyrinth paradigm and probabilistic modeling framework. bioarxiv (2025)**
+
+    Patrick S Honma, Shreya C Bangera*, Reuben R Thomas, Nicholas Kaliss, Dan Xia, Jorge J Palop
+
+    DOI: <https://doi.org/10.1101/2025.11.13.688348>
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth/blob/main/LICENSE.md) file for details.
+This project is licensed under the *GNU General Public License v3.0* (GPL-3.0) License - see the [LICENSE.md](https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth/blob/main/LICENSE.md) file for details.
 
 ## Contributors
 
-- Shreya Bangera
-- Patrick Honma
-- Luiz Tauffer
+- [Shreya Bangera](https://github.com/ShreyaBangera30)
+- [Patrick Honma](https://github.com/pshonma)
+- [Luiz Tauffer](https://github.com/luiztauffer)
