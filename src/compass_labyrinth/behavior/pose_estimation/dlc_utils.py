@@ -828,8 +828,8 @@ def check_preprocessing_status(source_data_path, video_type=".mp4"):
     dict
         Status dictionary with keys: 'ready', 'next_step', 'details'
 
-    Raises:
-    -------
+    Raises
+    ------
     FileNotFoundError
         If the workflow cannot proceed
     """
@@ -1052,8 +1052,8 @@ def _validate_complete_preprocessing(source_data_path, grid_files, require_dlc=T
         Whether to require DLC .h5/.csv files (default: True)
         Set to False if pose data is already in grid files
 
-    Raises:
-    -------
+    Raises
+    ------
     FileNotFoundError
         If any required files are missing
     """

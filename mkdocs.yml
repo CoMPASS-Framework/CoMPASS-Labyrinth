@@ -71,6 +71,10 @@ nav:
   - Tutorials: tutorials.md
   - Contributing: contributing.md
 
+exclude_docs: |
+  README.md
+  */README.md
+
 plugins:
   - search
   - mkdocstrings:

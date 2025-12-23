@@ -41,7 +41,7 @@ CoMPASS-Labyrinth is a unified computational and behavioral framework for analyz
 ## Workflow Overview
 
 <p align="center">
-  <img src="../media/compass_workflow.png" alt="Workflow" width="900"/>
+  <img src="https://raw.githubusercontent.com/CoMPASS-Framework/CoMPASS-Labyrinth/refs/heads/main/media/compass_workflow.png" alt="Workflow" width="900"/>
 </p>
 
 The CoMPASS-Labyrinth workflow includes:
