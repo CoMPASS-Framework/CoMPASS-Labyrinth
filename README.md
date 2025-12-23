@@ -1,5 +1,14 @@
 # CoMPASS-Labyrinth
 
+<p align="center">
+<a href="https://codecov.io/gh/CoMPASS-Framework/CoMPASS-Labyrinth" >
+ <img src="https://codecov.io/gh/CoMPASS-Framework/CoMPASS-Labyrinth/graph/badge.svg?token=J1CUXB4N0E"/>
+ </a>
+   <a href="https://pypi.org/project/compass-labyrinth">
+    <img src="https://img.shields.io/pypi/v/compass-labyrinth?color=%231BA331&label=PyPI&logo=python&logoColor=%23F7F991%20">
+  </a>
+</p>
+
 CoMPASS-Labyrinth is a unified computational and behavioral framework for analyzing goal-directed navigation in complex, ethologically valid maze environments using hierarchical probabilistic models. This project integrates behavioral modeling with neural data analysis to uncover latent cognitive states and their underlying neural dynamics during complex decision-making tasks.
 
 
@@ -33,62 +42,40 @@ CoMPASS-Labyrinth is a unified computational and behavioral framework for analyz
 ## Prerequisites
 
 - Python 3.11 or higher
-- R version 4.4.0 or lower
 
 ## Installation
 
-### Option A: Using Conda
+You can install CoMPASS-Labyrinth directly with pip:
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth.git
-   cd CoMPASS-Labyrinth
-   ```
+```bash
+pip install compass-labyrinth
+```
 
-2. **Create Python environment**
-   ```bash
-   conda env create -f environment.yml
-   conda activate compass-labyrinth
-   ```
-   This automatically installs the package with all dependencies from `pyproject.toml`.
+or from source for development:
 
-3. **Initialize R environment**
-   ```bash
-   Rscript init_renv.R
-   ```
-   This installs all required R packages using renv. First run may take several minutes.
+```bash
+git clone https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth.git
+cd CoMPASS-Labyrinth
 
-### Option B: Using pip with pyproject.toml
+# Core dependencies only
+pip install -e .
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth.git
-   cd CoMPASS-Labyrinth
-   ```
+# Or with development tools
+pip install -e ".[dev]"
 
-2. **Create Python virtual environment**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+# Or with documentation tools
+pip install -e ".[docs]"
 
-3. **Install the package with all dependencies**
-   ```bash
-   pip install -e ".[dev]"  # Includes Jupyter and development tools
-   # or
-   pip install -e .  # Core dependencies only
-   ```
+# Or install all optional dependencies
+pip install -e ".[dev,tests,docs]"
+```
 
-4. **Initialize R environment**
-   ```bash
-   Rscript init_renv.R
-   ```
+You can also use Conda to manage your environment:
 
-### Notes on Dependency Management
-
-- **Python packages**: Managed via `pyproject.toml`
-- **R packages**: Managed via `renv`
-- When you start R in this directory, renv will automatically activate
+```bash
+conda env create -f environment.yml
+conda activate compass-labyrinth
+```
 
 ## Usage
 
