@@ -1,52 +1,44 @@
-# User Guide
+# Installation
 
-!!! info "Coming Soon"
-    Detailed user guides are currently being developed. Please check back soon!
+**Prerequisites:** Python 3.11 or higher
 
-In the meantime, please refer to:
+You can install CoMPASS-Labyrinth directly with pip:
 
-- [Getting Started](../getting-started.md) - Installation and setup instructions
-- [Tutorials](../tutorials.md) - Jupyter notebook tutorials with step-by-step examples
-- [API Reference](../api/index.md) - Complete API documentation
+```bash
+pip install compass-labyrinth
+```
 
-## Planned Content
+or from source for development:
 
-This user guide will cover:
+```bash
+git clone https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth.git
+cd CoMPASS-Labyrinth
 
-### Data Preprocessing
-- Working with DeepLabCut outputs
-- Grid processing and alignment
-- Data quality checks and validation
+# Core dependencies only
+pip install -e .
 
-### Task Performance Analysis
-- Computing behavioral metrics
-- Success rate analysis
-- Trajectory analysis
-- Region usage and entropy
+# Or with development tools
+pip install -e ".[dev]"
 
-### Simulated Agent Modeling
-- Creating simulated agents
-- Explore-exploit dynamics
-- Model comparison and validation
+# Or with documentation tools
+pip install -e ".[docs]"
 
-### CoMPASS Level 1
-- Understanding motor state inference
-- Running HMM models
-- Interpreting surveillance and ambulation states
-- Parameter tuning and validation
+# Or install all optional dependencies
+pip install -e ".[dev,tests,docs]"
+```
 
-### CoMPASS Level 2
-- Goal-directed cognitive state inference
-- Combining Level 1 and Level 2 states
-- Analyzing hierarchical dynamics
-- Visualizing results
+You can also use Conda to manage your environment:
 
-### Post-hoc Analysis
-- Spatial analysis techniques
-- Temporal dynamics
-- Bout-wise analysis
-- Statistical testing
+```bash
+conda env create -f environment.yml
+conda activate compass-labyrinth
+```
 
-## Contributing to Documentation
+## Next Steps
 
-If you'd like to help improve this documentation, please see our [Contributing Guide](../contributing.md).
+Now that you have CoMPASS-Labyrinth installed, you can:
+
+- Explore the [Tutorials](../tutorials.md) to learn how to use the framework
+- Check the [API Reference](../api/index.md) for detailed documentation
+
+For more help, please [open an issue](https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth/issues) on GitHub.

@@ -38,11 +38,9 @@ theme:
 
 nav:
   - Home: index.md
-  - Getting Started: getting-started.md
-  - User Guide:
+  - User Guide: 
     - user-guide/index.md
-  - Framework:
-    - framework/index.md
+    - user-guide/framework.md
   - API Reference:
     - api/index.md
     - Core: api/core.md
