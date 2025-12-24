@@ -116,10 +116,4 @@ graph TD
 !!! tip "Getting Started"
     If you're new to CoMPASS-Labyrinth, we recommend starting with **Tutorial 1** (Create Project) and following the numbered sequence.
 
----
 
-## Additional Resources
-
-- [User Guide](user-guide/index.md) - Detailed explanations of concepts
-- [Framework Overview](framework/index.md) - Understanding CoMPASS methodology
-- [API Reference](api/index.md) - Complete function documentation

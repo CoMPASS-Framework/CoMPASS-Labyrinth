@@ -45,14 +45,6 @@ The CoMPASS-Labyrinth workflow includes:
 5. **CoMPASS Level 2** - Goal-directed cognitive state inference (BGMM + GMM-HMM)
 6. **Post-hoc Analysis** - Spatial, temporal, and bout-wise analysis
 
-## Quick Links
-
-- [Getting Started](getting-started.md) - Installation and setup
-- [User Guide](user-guide/index.md) - Step-by-step usage guides
-- [Framework Details](framework/index.md) - CoMPASS architecture and methodology
-- [API Reference](api/index.md) - Complete API documentation
-- [Tutorials](tutorials.md) - Jupyter notebook tutorials
-
 ## Citation
 
 If you use this framework, please cite our manuscript:

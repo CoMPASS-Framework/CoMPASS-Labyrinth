@@ -5,7 +5,7 @@
 
 ## Overview
 
-CoMPASS (Computational Model for Probabilistic Assessment of Spatial Strategies) is a hierarchical probabilistic framework that integrates local movement dynamics with goal-directed cognitive states to decode latent behavioral states from complex spatial navigation data.
+CoMPASS (Cognitive Mapping of Planned Actions with State Spaces) is a hierarchical probabilistic framework that integrates local movement dynamics with goal-directed cognitive states to decode latent behavioral states from complex spatial navigation data.
 
 ## Two-Level Hierarchy
 
@@ -48,30 +48,3 @@ CoMPASS (Computational Model for Probabilistic Assessment of Spatial Strategies)
 - Per-frame latent state sequence
 
 ---
-
-## Composite States
-
-Combining Level 1 and Level 2 states yields four composite behavioral states:
-
-1. **Ambulatory, Oriented** - Direct goal-directed navigation
-2. **Ambulatory, Non-Oriented** - Fast exploration
-3. **Active Surveillance, Oriented** - Careful goal-directed navigation
-4. **Active Surveillance, Non-Oriented** - Local exploration/assessment
-
-## Key References
-
-For more detailed information, see:
-
-- [Tutorials](../tutorials.md) - Practical examples of running CoMPASS
-- [API Reference](../api/index.md) - Complete technical documentation
-- Source code in `src/compass_labyrinth/compass/`
-
-## Mathematical Details
-
-!!! note "Under Development"
-    Detailed mathematical formulations, model equations, and algorithm descriptions will be added here.
-
-## Validation
-
-!!! note "Under Development"
-    Information about model validation, cross-validation strategies, and performance metrics will be added here.
