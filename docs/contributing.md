@@ -2,35 +2,31 @@
 
 Thank you for your interest in contributing to CoMPASS-Labyrinth! This document provides guidelines for contributing to the project.
 
-## Getting Started
+## Setting Up Development Environment
 
-### Setting Up Development Environment
+Fork and clone the repository:
 
-1. **Fork and clone the repository**
+```bash
+git clone https://github.com/YOUR_USERNAME/CoMPASS-Labyrinth.git
+cd CoMPASS-Labyrinth
+```
 
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/CoMPASS-Labyrinth.git
-   cd CoMPASS-Labyrinth
-   ```
+Create a development environment:
 
-2. **Create a development environment**
+```bash
+conda env create -f environment.yml
+conda activate compass-labyrinth
+```
 
-   ```bash
-   conda env create -f environment.yml
-   conda activate compass-labyrinth
-   ```
+Or with pip:
 
-   Or with pip:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -e ".[dev,tests,docs]"
+```
 
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -e ".[dev,tests,docs]"
-   ```
-
-## Development Workflow
-
-### Code Style
+## Code Style
 
 We use `black` for Python code formatting:
 
@@ -40,7 +36,7 @@ black src/ tests/
 
 Configuration is in `pyproject.toml` with a line length of 120.
 
-### Running Tests
+## Running Tests
 
 Before submitting changes, make sure all tests pass:
 
@@ -54,68 +50,51 @@ To run tests with coverage:
 pytest tests/ --cov=compass_labyrinth --cov-report=html
 ```
 
-### Documentation
+## Documentation
 
-#### Building Documentation Locally
+### Building Documentation Locally
 
-1. **Install documentation dependencies**
+Install documentation dependencies:
 
-   ```bash
-   pip install -e ".[docs]"
-   ```
+```bash
+pip install -e ".[docs]"
+```
 
-2. **Serve documentation locally**
+Serve documentation locally:
 
-   ```bash
-   mkdocs serve --watch src/
-   ```
+```bash
+mkdocs serve
+```
 
-   The documentation will be available at `http://127.0.0.1:8000`
+The documentation will be available at `http://127.0.0.1:8000`
 
-3. **Build static documentation**
+Build static documentation:
 
-   ```bash
-   mkdocs build
-   ```
+```bash
+mkdocs build
+```
 
-#### Adding to Documentation
+### Adding to Documentation
 
 - Documentation source files are in the `docs/` directory
 - Edit markdown files directly
 - API documentation is auto-generated from docstrings using mkdocstrings
 - Use numpy-style docstrings in your code
 
-### Submitting Changes
+## Submitting Changes
 
-1. **Create a new branch**
+1. Create a new branch: `git checkout -b feature/your-feature-name`
 
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-2. **Make your changes**
+2. Make your changes
    - Write clear, commented code
    - Add tests for new functionality
    - Update documentation as needed
 
-3. **Commit your changes**
+3. Commit your changes: `git commit -m "Clear description of your changes"`
 
-   ```bash
-   git add .
-   git commit -m "Clear description of your changes"
-   ```
+4. Push to your fork: `git push origin feature/your-feature-name`
 
-4. **Push to your fork**
-
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-5. **Open a Pull Request**
-   - Go to the original repository on GitHub
-   - Click "New Pull Request"
-   - Describe your changes clearly
-   - Reference any related issues
+5. Open a Pull Request, referencing any related issues
 
 ## Code Review Process
 
@@ -143,17 +122,9 @@ We welcome feature requests! Please:
 - Clearly describe the feature and its use case
 - Explain how it would benefit the project
 
-## Questions?
-
-If you have questions about contributing:
-
-- Open a [GitHub discussion](https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth/discussions)
-- Check existing documentation and tutorials
-- Reach out to the maintainers
-
 ## License
 
-By contributing to CoMPASS-Labyrinth, you agree that your contributions will be licensed under the MIT License.
+By contributing to CoMPASS-Labyrinth, you agree that your contributions will be licensed under the project's [GPL-3.0 License](https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth/?tab=GPL-3.0-1-ov-file#readme).
 
 ## Recognition
 
