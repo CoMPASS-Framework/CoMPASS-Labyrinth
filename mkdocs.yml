@@ -39,8 +39,16 @@ theme:
 nav:
   - Home: index.md
   - User Guide: 
-    - user-guide/index.md
     - user-guide/framework.md
+    - user-guide/installation.md
+  - Tutorials:
+    - DLC Grid Processing: tutorials/00_dlc_grid_processing.md
+    - Create Project: tutorials/01_create_project.md
+    - Task Performance Analysis: tutorials/02_task_performance_analysis.md
+    - Simulated Agent Modelling: tutorials/03_simulated_agent_modelling.md
+    - CoMPASS Level 1: tutorials/04_compass_level_1.md
+    - CoMPASS Level 1 Post Analysis: tutorials/05_compass_level_1_post_analysis.md
+    - CoMPASS Level 2: tutorials/06_compass_level_2.md
   - API Reference:
     - api/index.md
     - Core: api/core.md
@@ -66,7 +74,6 @@ nav:
       - Temporal Analysis: api/post-hoc/temporal-analysis.md
       - Bout Analysis: api/post-hoc/bout-analysis.md
       - Grid Heatmaps: api/post-hoc/grid-heatmap.md
-  - Tutorials: tutorials.md
   - Contributing: contributing.md
 
 exclude_docs: |
