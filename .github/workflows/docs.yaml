@@ -33,6 +33,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[docs]"
 
+      - name: Convert Jupyter notebooks to Markdown
+        run: python docs/run_jupyter_to_markdown.py
+
       - name: Build documentation
         run: mkdocs build --strict
 
