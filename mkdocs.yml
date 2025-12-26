@@ -1,0 +1,138 @@
+site_name: CoMPASS-Labyrinth
+site_description: A unified computational and behavioral framework for analyzing goal-directed navigation in complex maze environments using hierarchical probabilistic models.
+site_author: Shreya Bangera, Patrick Honma, Luiz Tauffer
+site_url: https://compass-framework.github.io/CoMPASS-Labyrinth/
+
+repo_name: CoMPASS-Framework/CoMPASS-Labyrinth
+repo_url: https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - User Guide: 
+    - user-guide/framework.md
+    - user-guide/installation.md
+  - Tutorials:
+    - DLC Grid Processing: tutorials/00_dlc_grid_processing.md
+    - Create Project: tutorials/01_create_project.md
+    - Task Performance Analysis: tutorials/02_task_performance_analysis.md
+    - Simulated Agent Modelling: tutorials/03_simulated_agent_modelling.md
+    - CoMPASS Level 1: tutorials/04_compass_level_1.md
+    - CoMPASS Level 1 Post Analysis: tutorials/05_compass_level_1_post_analysis.md
+    - CoMPASS Level 2: tutorials/06_compass_level_2.md
+  - API Reference:
+    - api/index.md
+    - Core: api/core.md
+    - Behavior:
+      - Preprocessing: api/behavior/preprocessing.md
+      - Pose Estimation: api/behavior/pose-estimation.md
+      - Performance Metrics: api/behavior/performance-metrics.md
+      - Success Metrics: api/behavior/success-metrics.md
+      - Trajectory Analysis: api/behavior/trajectory-analysis.md
+      - Simulated Agents: api/behavior/simulated-agents.md
+    - CoMPASS:
+      - Level 1:
+        - Data Preparation: api/compass/level-1-prep.md
+        - HMM Models: api/compass/level-1-model.md
+        - Visualization: api/compass/level-1-viz.md
+      - Level 2:
+        - Data Streams: api/compass/level-2-datastreams.md
+        - Models: api/compass/level-2-model.md
+        - Plotting: api/compass/level-2-plots.md
+        - Utilities: api/compass/level-2-utils.md
+    - Post-hoc Analysis:
+      - Spatial Analysis: api/post-hoc/spatial-analysis.md
+      - Temporal Analysis: api/post-hoc/temporal-analysis.md
+      - Bout Analysis: api/post-hoc/bout-analysis.md
+      - Grid Heatmaps: api/post-hoc/grid-heatmap.md
+  - Contributing: contributing.md
+
+exclude_docs: |
+  README.md
+  */README.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: numpy
+            docstring_section_style: list
+            show_docstring_attributes: true
+            show_docstring_functions: true
+            show_docstring_classes: true
+            show_docstring_modules: true
+            show_docstring_description: true
+            show_docstring_examples: true
+            show_docstring_other_parameters: true
+            show_docstring_parameters: true
+            show_docstring_raises: true
+            show_docstring_receives: true
+            show_docstring_returns: true
+            show_docstring_warns: true
+            show_docstring_yields: true
+            show_source: true
+            show_root_heading: true
+            show_signature_annotations: true
+            separate_signature: true
+            merge_init_into_class: true
+            show_bases: true
+            heading_level: 3
+            members_order: source
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            filters: ["!^_"]
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth

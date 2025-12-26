@@ -33,7 +33,7 @@ def compute_state_probability(
     Computes HMM state proportions by category (e.g., NodeType or Region).
     Optionally reassigns decision node labels for 3-way and 4-way decisions.
 
-    Parameters:
+    Parameters
     -----------
     df_hmm: pd.DataFrame
         Dataframe with 'Genotype', 'Session', 'HMM_State', and category column.
@@ -44,7 +44,7 @@ def compute_state_probability(
     state: int
         HMM_state of interest
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Dataframe with proportions per session.
@@ -93,7 +93,7 @@ def plot_state_probability_boxplot(
     """
     Plots boxplot of HMM state probabilities by category and genotype.
 
-    Parameters:
+    Parameters
     state_count: pd.DataFrame
         Dataframe returned from compute_state_probability()
     column_of_interest: str
@@ -111,7 +111,7 @@ def plot_state_probability_boxplot(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     fig : plt.Figure | None
         Matplotlib Figure object if return_fig is True, else None.
@@ -157,14 +157,14 @@ def run_pairwise_ttests(
     """
     Perform pairwise t-tests between genotypes within each level of the column_of_interest.
 
-    Parameters:
+    Parameters
     -----------
     state_count_df: pd.DataFrame
         DataFrame returned from compute_state_probability
     column_of_interest: str
         Column over which comparisons are grouped
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Dataframe with columns: [Group, Genotype1, Genotype2, t-stat, p-value]

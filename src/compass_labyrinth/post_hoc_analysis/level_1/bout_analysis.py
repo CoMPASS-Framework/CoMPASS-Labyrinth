@@ -34,7 +34,7 @@ def assign_bout_indices(
     Assign bout indices to each row in the dataframe based on delimiter nodes.
     Bout = delimiter_node --> Other non-entry nodes --> delimiter_node
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         Dataframe with 'Session' and 'Grid Number' columns.
@@ -69,14 +69,14 @@ def compute_surveillance_probabilities(
     - Successful -> reached the target at least once
     - Unsuccessful -> doesn't reached the target
 
-    Parameters:
+    Parameters
     -----------
     df_hmm : pd.DataFrame
         Dataframe with 'Genotype', 'Session', 'HMM_State', 'Grid Number', 'Region', and 'Bout_Index'.
     decision_nodes : str
         Type of decision node to consider for surveillance probability.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Dataframe with median surveillance probabilities per genotype, session, and bout type.
@@ -125,7 +125,7 @@ def plot_surveillance_by_bout(
     """
     Barplot to depict the surveillance probabilities with t-test independent p-values.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Project configuration dictionary.
@@ -144,7 +144,7 @@ def plot_surveillance_by_bout(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure
         The generated matplotlib figure.
@@ -244,7 +244,7 @@ def run_within_genotype_mixedlm_with_fdr(median_df: pd.DataFrame) -> pd.DataFram
     Run a mixed-effects model per genotype comparing Successful vs Unsuccessful bouts,
     with Session as a random effect. Applies FDR correction.
 
-    Returns:
+    Returns
     - DataFrame with Genotype, Effect size, raw P-value, FDR P-value, and significance flag.
     """
     results = []

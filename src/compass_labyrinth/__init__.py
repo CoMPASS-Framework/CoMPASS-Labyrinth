@@ -10,7 +10,7 @@ from .behavior.pose_estimation.dlc_utils import (
     import_cohort_metadata,
     validate_metadata,
     save_first_frame,
-    check_preprocessing_status
+    check_preprocessing_status,
 )
 
 
@@ -32,22 +32,34 @@ def init_project(
     - Copying user metadata file to project directory
     - Creating a config.yaml file with project parameters
 
-    Parameters:
-    -----------
-    project_name: str
+    Parameters
+    ----------
+    project_name : str
         The name of the project.
-    project_path: Path | str
+    project_path : Path | str
         The path to the project directory.
-    source_data_path: Path | str
+    source_data_path : Path | str
         The path to the source data directory containing videos and DLC outputs.
-    user_metadata_file_path: Path | str
+    user_metadata_file_path : Path | str
         The path to the user metadata Excel file.
+    trial_type : str, optional
+        Type of trial. Default is "Labyrinth_DSI".
+    file_ext : str, optional
+        File extension for data files. Default is ".csv".
+    video_type : str, optional
+        Video file extension. Default is ".mp4".
+    dlc_scorer : str, optional
+        DeepLabCut scorer identifier. Default is "DLC_resnet50_LabyrinthMar13shuffle1_1000000".
+    experimental_groups : list, optional
+        List of experimental groups. Default is ["A", "B", "C", "D"].
+    palette : str, optional
+        Color palette for visualizations. Default is "grey".
 
-    Returns:
-    --------
-    config: dict
+    Returns
+    -------
+    config : dict
         A dictionary containing configuration parameters.
-    metadata_df: pd.DataFrame
+    metadata_df : pd.DataFrame
         A DataFrame containing cohort metadata.
     """
     # Project name checks should be alphanumeric and underscores only

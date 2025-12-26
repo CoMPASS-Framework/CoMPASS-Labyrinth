@@ -18,7 +18,7 @@ class TestCompassLevel2:
             plot_spatial_embedding,
             run_compass,
             visualize_cv_results,
-            assign_reward_orientation,    
+            assign_reward_orientation,
             assign_hhmm_state,
             plot_state_sequences,
             plot_hhmm_state_sequence,
@@ -77,7 +77,7 @@ class TestCompassLevel2:
         assert save_path.exists()
 
         # Run CoMPASS Level 2
-        features = ['HMM_State','VB_Distance','Targeted_Angle_smooth_abs','KDE']
+        features = ["HMM_State", "VB_Distance", "Targeted_Angle_smooth_abs", "KDE"]
         for f in features:
             assert f in df_hmm.columns
 
@@ -90,7 +90,7 @@ class TestCompassLevel2:
             k_options=[2],
             reg_options=[1e-4],
             terminal_values=[47],
-            bout_col='Bout_ID',
+            bout_col="Bout_ID",
             patience=None,
         )
         assert isinstance(df_hier, pd.DataFrame)
@@ -117,16 +117,16 @@ class TestCompassLevel2:
         # Assign reward orientation based on session-specific angle medians
         df_hier = assign_reward_orientation(
             df_hier,
-            angle_col='Targeted_Angle_smooth_abs',
-            level_2_state_col='Level_2_States',
-            session_col='Session',
+            angle_col="Targeted_Angle_smooth_abs",
+            level_2_state_col="Level_2_States",
+            session_col="Session",
         )
 
         # Then assign the final HHMM state
         df_hier = assign_hhmm_state(
             df_hier,
-            level_1_state_col='HMM_State',
-            level_2_state_col='Reward_Oriented',
+            level_1_state_col="HMM_State",
+            level_2_state_col="Reward_Oriented",
         )
 
         assert isinstance(df_hier, pd.DataFrame)
@@ -137,11 +137,11 @@ class TestCompassLevel2:
         # Plot state sequences for all sessions
         all_figs_2 = plot_state_sequences(
             config=config,
-            df=df_hier,     
-            genotype='WT',
-            state_col='Level_2_States',
-            sessions_to_plot='all',
-            title_prefix='State Sequence',
+            df=df_hier,
+            genotype="WT",
+            state_col="Level_2_States",
+            sessions_to_plot="all",
+            title_prefix="State Sequence",
             save_fig=True,
             show_fig=False,
             return_fig=True,
@@ -155,8 +155,8 @@ class TestCompassLevel2:
         all_figs_3 = plot_hhmm_state_sequence(
             config=config,
             df=df_hier,
-            session_col='Session',
-            state_col='HHMM State',
+            session_col="Session",
+            state_col="HHMM State",
             save_fig=True,
             show_fig=False,
             return_fig=True,
