@@ -42,6 +42,7 @@ nav:
     - user-guide/framework.md
     - user-guide/installation.md
   - Tutorials:
+    - Overview: tutorials/index.md
     - DLC Grid Processing: tutorials/00_dlc_grid_processing.md
     - Create Project: tutorials/01_create_project.md
     - Task Performance Analysis: tutorials/02_task_performance_analysis.md

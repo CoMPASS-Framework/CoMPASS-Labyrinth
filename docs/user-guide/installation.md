@@ -38,7 +38,7 @@ conda activate compass-labyrinth
 
 Now that you have CoMPASS-Labyrinth installed, you can:
 
-- Explore the [Tutorials](../tutorials.md) to learn how to use the framework
+- Explore the [Tutorials](../tutorials/index.md) to learn how to use the framework
 - Check the [API Reference](../api/index.md) for detailed documentation
 
 For more help, please [open an issue](https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth/issues) on GitHub.

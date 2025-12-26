@@ -23,7 +23,7 @@ The model identifies two primary states:
 
 ### GammaHMM
 
-::: compass_labyrinth.compass.level_1.momentu.GammaHMM
+::: compass_labyrinth.compass.level_1.momentuPY.GammaHMM
     options:
       show_source: false
       members: true
@@ -34,11 +34,11 @@ The model identifies two primary states:
 
 ### fit_best_hmm
 
-::: compass_labyrinth.compass.level_1.momentu.fit_best_hmm
+::: compass_labyrinth.compass.level_1.momentuPY.fit_best_hmm
 
 ### save_compass_level_1_results
 
-::: compass_labyrinth.compass.level_1.momentu.save_compass_level_1_results
+::: compass_labyrinth.compass.level_1.momentuPY.save_compass_level_1_results
 
 ---
 
@@ -46,7 +46,7 @@ The model identifies two primary states:
 
 ### compute_parameter_ranges
 
-::: compass_labyrinth.compass.level_1.momentu.compute_parameter_ranges
+::: compass_labyrinth.compass.level_1.momentuPY.compute_parameter_ranges
 
 ---
 
@@ -54,11 +54,11 @@ The model identifies two primary states:
 
 ### forward_backward
 
-::: compass_labyrinth.compass.level_1.momentu.forward_backward
+::: compass_labyrinth.compass.level_1.momentuPY.forward_backward
 
 ### viterbi
 
-::: compass_labyrinth.compass.level_1.momentu.viterbi
+::: compass_labyrinth.compass.level_1.momentuPY.viterbi
 
 ---
 
@@ -66,11 +66,11 @@ The model identifies two primary states:
 
 ### logpdf_gamma
 
-::: compass_labyrinth.compass.level_1.momentu.logpdf_gamma
+::: compass_labyrinth.compass.level_1.momentuPY.logpdf_gamma
 
 ### logpdf_vonmises
 
-::: compass_labyrinth.compass.level_1.momentu.logpdf_vonmises
+::: compass_labyrinth.compass.level_1.momentuPY.logpdf_vonmises
 
 ---
 
@@ -78,7 +78,7 @@ The model identifies two primary states:
 
 ### print_hmm_summary
 
-::: compass_labyrinth.compass.level_1.momentu.print_hmm_summary
+::: compass_labyrinth.compass.level_1.momentuPY.print_hmm_summary
 
 ---
 
