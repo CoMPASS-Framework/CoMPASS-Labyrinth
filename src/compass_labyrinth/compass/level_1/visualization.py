@@ -14,7 +14,7 @@ def plot_step_and_angle_distributions(
     """
     Plot histograms for the Step Length Distribution and Turning Angle Distribution.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary containing project settings.
@@ -27,7 +27,7 @@ def plot_step_and_angle_distributions(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The figure object if return_fig is True, otherwise None.

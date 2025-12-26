@@ -93,7 +93,7 @@ def plot_spatial_embedding(
     """
     Plot a heatmap of the spatial embedding grid.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Configuration dictionary for this project.
@@ -108,7 +108,7 @@ def plot_spatial_embedding(
     return_fig : bool
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The matplotlib Figure object if return_fig is True, else None.

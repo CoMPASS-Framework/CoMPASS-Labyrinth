@@ -32,7 +32,7 @@ def ensure_velocity_column(
     Ensure the DataFrame contains a 'Velocity' column. If not, it is computed as the Euclidean distance
     between consecutive (x, y) coordinates multiplied by the frame rate.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         Input DataFrame.
@@ -43,7 +43,7 @@ def ensure_velocity_column(
     frame_rate : float
         Sampling rate (Hz) to convert framewise displacement into velocity.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Updated DataFrame with 'Velocity' column.
@@ -63,14 +63,14 @@ def assign_bout_indices_from_entry_node(df: pd.DataFrame, delimiter_node: int = 
     """
     Assigns bout indices to each row in the DataFrame based on the occurrence of a delimiter node.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         Input DataFrame.
     delimiter_node : int
         The grid number that serves as the delimiter for new bouts.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         DataFrame with assigned bout indices.
@@ -95,14 +95,14 @@ def ensure_bout_indices(df: pd.DataFrame, delimiter_node: int = 47) -> pd.DataFr
     """
     Ensure Bout indices exist.
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         Input DataFrame.
     delimiter_node : int
         The grid number that serves as the delimiter for new bouts.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         DataFrame with ensured bout indices.
@@ -126,14 +126,14 @@ def compute_deviation_velocity(
     """
     Compute deviation and velocity per bout
 
-    Parameters:
+    Parameters
     -----------
     df : pd.DataFrame
         Input DataFrame with 'Session', 'Genotype', 'Region', 'Grid Number', and 'Velocity' columns.
     key_regions : list
         List of key regions to consider for deviation calculation.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         DataFrame with computed deviation and velocity per bout.
@@ -167,14 +167,14 @@ def process_deviation_velocity(
     """
     Process deviation and velocity (normalize, smooth, fit curves).
 
-    Parameters:
+    Parameters
     -----------
     index_df : pd.DataFrame
         Input DataFrame with 'deviation', 'velocity', 'genotype', and 'ind_no' columns.
     genotype : str
         Genotype to filter the DataFrame.
 
-    Returns:
+    Returns
     --------
     pd.DataFrame
         Processed DataFrame with smoothed and normalized columns.
@@ -216,7 +216,7 @@ def plot_deviation_velocity_fit(
     """
     Plot deviation and velocity with exponential fits for a given genotype.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Project configuration dictionary.
@@ -237,7 +237,7 @@ def plot_deviation_velocity_fit(
     return_fig : bool, default False
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The matplotlib figure object if return_fig is True, else None.
@@ -313,7 +313,7 @@ def plot_deviation_velocity_all(
     Creates a grid of subplots (auto-arranged) for each genotype showing smoothed
     deviation from reward path and velocity with exponential fits.
 
-    Parameters:
+    Parameters
     -----------
     config : dict
         Project configuration dictionary.
@@ -328,7 +328,7 @@ def plot_deviation_velocity_all(
     return_fig : bool, default False
         Whether to return the figure object.
 
-    Returns:
+    Returns
     --------
     plt.Figure or None
         The matplotlib figure object if return_fig is True, else None.

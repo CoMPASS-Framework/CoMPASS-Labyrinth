@@ -1,10 +1,11 @@
-'''
-    Correlation Analysis 
-    Author: Shreya Bangera 
-    Goal: 
-        ├── Correlation Analysis of Neural features across Optimal and Non-Optimal Transitions at Decision nodes for Successful & Unsuccessful bouts
-        
-'''
+"""
+Correlation Analysis
+Author: Shreya Bangera
+Goal:
+    ├── Correlation Analysis of Neural features across Optimal and Non-Optimal Transitions at Decision nodes for Successful & Unsuccessful bouts
+
+"""
+
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -21,23 +22,24 @@ import textwrap
 
 
 #######################################################
-# Assign Bout Numbers 
+# Assign Bout Numbers
 #######################################################
+
 
 def assign_bout_numbers(df, grid_anchor=47):
     """
     Assign bout numbers based on visits to a specific anchor node (default: Grid Number == 47).
     """
-    session_groups = [x for _, x in df.groupby('Session')]
+    session_groups = [x for _, x in df.groupby("Session")]
     for dflin in session_groups:
         dflin.reset_index(drop=True, inplace=True)
-        dflin['Bout_num'] = 0
+        dflin["Bout_num"] = 0
         j = 1
         for i in range(len(dflin)):
-            if dflin.loc[i, 'Grid Number'] != grid_anchor:
-                dflin.loc[i, 'Bout_num'] = j
+            if dflin.loc[i, "Grid Number"] != grid_anchor:
+                dflin.loc[i, "Bout_num"] = j
             else:
-                dflin.loc[i, 'Bout_num'] = 0
+                dflin.loc[i, "Bout_num"] = 0
                 j += 1
     return pd.concat(session_groups, axis=0, ignore_index=True)
 
@@ -45,6 +47,7 @@ def assign_bout_numbers(df, grid_anchor=47):
 #######################################################
 # Normalization of Features
 #######################################################
+
 
 def normalize_features(df, features):
     """
@@ -54,9 +57,11 @@ def normalize_features(df, features):
         df[f"{feat}2"] = (df[feat] - df[feat].min()) / (df[feat].max() - df[feat].min())
     return df
 
+
 #######################################################
 # Compute Correlation Matrix
 #######################################################
+
 
 def get_node_combinations(nodes, size=1):
     """
@@ -65,10 +70,10 @@ def get_node_combinations(nodes, size=1):
     return list(chain.from_iterable(combinations(nodes, r) for r in range(1, size + 1)))
 
 
-def compute_decision_node_metrics(df, decision_nodes, features=['gamma', 'theta', 'Velocity'], grid_anchor=47):
+def compute_decision_node_metrics(df, decision_nodes, features=["gamma", "theta", "Velocity"], grid_anchor=47):
     """
     Computes per-bout metrics including transition probabilities and feature medians for each decision node.
-    
+
     Parameters
     ----------
     df : pd.DataFrame
@@ -88,7 +93,7 @@ def compute_decision_node_metrics(df, decision_nodes, features=['gamma', 'theta'
     # Assign bout numbers and normalize features
     df = assign_bout_numbers(df, grid_anchor=grid_anchor)
     df = normalize_features(df, features)
-    
+
     # Generate combinations
     node_combos = get_node_combinations(decision_nodes, size=1)
 
@@ -96,40 +101,45 @@ def compute_decision_node_metrics(df, decision_nodes, features=['gamma', 'theta'
     prob_cols = [f"Prob_D{c}" for c in node_combos]
     opt_cols = [f"{feat}_Opt_D{c}" for c in node_combos for feat in features]
     nonopt_cols = [f"{feat}_NonOpt_D{c}" for c in node_combos for feat in features]
-    
+
     # Initialize output DataFrame
-    index_df = pd.DataFrame(columns=['Session', 'Genotype', 'Bout_no', 'Successful_bout'] + 
-                            prob_cols + opt_cols + nonopt_cols)
+    index_df = pd.DataFrame(
+        columns=["Session", "Genotype", "Bout_no", "Successful_bout"] + prob_cols + opt_cols + nonopt_cols
+    )
 
     row_idx = 0
-    for _, sess_df in df.groupby('Session'):
-        bouts = [x for _, x in sess_df.groupby('Bout_num')]
-        if len(bouts) > 0 and bouts[0]['Bout_num'].iloc[0] == 0:
+    for _, sess_df in df.groupby("Session"):
+        bouts = [x for _, x in sess_df.groupby("Bout_num")]
+        if len(bouts) > 0 and bouts[0]["Bout_num"].iloc[0] == 0:
             bouts.pop(0)
 
         for bout_num, bout in enumerate(bouts, start=1):
-            index_df.loc[row_idx, 'Session'] = bout['Session'].iloc[0]
-            index_df.loc[row_idx, 'Genotype'] = bout['Genotype'].iloc[0]
-            index_df.loc[row_idx, 'Bout_no'] = bout_num
-            index_df.loc[row_idx, 'Successful_bout'] = 'Successful' if 'Target Zone' in bout['Region'].values else 'Unsuccessful'
+            index_df.loc[row_idx, "Session"] = bout["Session"].iloc[0]
+            index_df.loc[row_idx, "Genotype"] = bout["Genotype"].iloc[0]
+            index_df.loc[row_idx, "Bout_no"] = bout_num
+            index_df.loc[row_idx, "Successful_bout"] = (
+                "Successful" if "Target Zone" in bout["Region"].values else "Unsuccessful"
+            )
 
             for combo in node_combos:
                 total, opt, opt_idx, nonopt_idx = 0, 0, [], []
                 for node in combo:
-                    node_locs = bout.index[bout['Grid Number'] == node].tolist()
+                    node_locs = bout.index[bout["Grid Number"] == node].tolist()
                     for idx in node_locs:
                         future = bout.index[bout.index > idx]
-                        next_diff = next((j for j in future if bout.loc[j, 'Grid Number'] != bout.loc[idx, 'Grid Number']), None)
+                        next_diff = next(
+                            (j for j in future if bout.loc[j, "Grid Number"] != bout.loc[idx, "Grid Number"]), None
+                        )
                         if next_diff is not None:
-                            next_region = bout.loc[next_diff, 'Region']
+                            next_region = bout.loc[next_diff, "Region"]
                             total += 1
-                            if next_region == 'Reward Path':
+                            if next_region == "Reward Path":
                                 opt += 1
                                 opt_idx.append(next_diff)
                             else:
                                 nonopt_idx.append(next_diff)
 
-                index_df.loc[row_idx, f'Prob_D{combo}'] = opt / total if total > 0 else np.nan
+                index_df.loc[row_idx, f"Prob_D{combo}"] = opt / total if total > 0 else np.nan
 
                 # Compute feature medians
                 if opt_idx:
@@ -150,8 +160,8 @@ def compute_decision_node_metrics(df, decision_nodes, features=['gamma', 'theta'
 # Plot Correlation heatmaps
 #######################################################
 
-def plot_feature_corr_heatmaps(index_df, feature_set, decision_nodes, successful_only=True,bout_ranges=None):
 
+def plot_feature_corr_heatmaps(index_df, feature_set, decision_nodes, successful_only=True, bout_ranges=None):
     """
     Plot correlation heatmaps of features across bout number ranges.
 
@@ -174,15 +184,15 @@ def plot_feature_corr_heatmaps(index_df, feature_set, decision_nodes, successful
     plt.figure(figsize=(22, 18))
 
     for i, (start, end) in enumerate(ranges):
-        subset = index_df[(index_df['Bout_no'] >= start) & (index_df['Bout_no'] <= end)]
+        subset = index_df[(index_df["Bout_no"] >= start) & (index_df["Bout_no"] <= end)]
         if successful_only:
-            subset = subset[subset['Successful_bout'] == 'Successful']
+            subset = subset[subset["Successful_bout"] == "Successful"]
 
         plt.subplot(5, 5, i + 1)
         corr = subset[feature_cols].corr()
-        sns.heatmap(corr, annot=False, cmap='RdBu_r', center=0)
-        plt.title(f'Bout Range {start}-{end}', fontsize=12)
-        plt.xticks(rotation=45, ha='right', fontsize=8)
+        sns.heatmap(corr, annot=False, cmap="RdBu_r", center=0)
+        plt.title(f"Bout Range {start}-{end}", fontsize=12)
+        plt.xticks(rotation=45, ha="right", fontsize=8)
         plt.yticks(rotation=0, fontsize=8)
 
     plt.tight_layout()
@@ -194,7 +204,8 @@ def plot_feature_corr_heatmaps(index_df, feature_set, decision_nodes, successful
 # Velocity column creation
 #######################################################
 
-def ensure_velocity_column(df, x_col='x', y_col='y', velocity_col='Velocity'):
+
+def ensure_velocity_column(df, x_col="x", y_col="y", velocity_col="Velocity"):
     """
     Add a Velocity column to the DataFrame if it doesn't already exist.
     Velocity is computed as Euclidean distance between successive (x, y) points.
@@ -220,12 +231,11 @@ def ensure_velocity_column(df, x_col='x', y_col='y', velocity_col='Velocity'):
         return df
 
     # Group by session if available, else compute over the entire DataFrame
-    if 'Session' in df.columns:
-        df[velocity_col] = (
-            df.groupby('Session', group_keys=False)
-              .apply(lambda g: np.sqrt(g[x_col].diff()**2 + g[y_col].diff()**2).fillna(0))
+    if "Session" in df.columns:
+        df[velocity_col] = df.groupby("Session", group_keys=False).apply(
+            lambda g: np.sqrt(g[x_col].diff() ** 2 + g[y_col].diff() ** 2).fillna(0)
         )
     else:
-        df[velocity_col] = np.sqrt(df[x_col].diff()**2 + df[y_col].diff()**2).fillna(0)
+        df[velocity_col] = np.sqrt(df[x_col].diff() ** 2 + df[y_col].diff() ** 2).fillna(0)
 
     return df
