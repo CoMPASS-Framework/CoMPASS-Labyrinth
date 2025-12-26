@@ -1,0 +1,4333 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A unified computational and behavioral framework for analyzing goal-directed navigation in complex maze environments using hierarchical probabilistic models.">
+      
+      
+        <meta name="author" content="Shreya Bangera, Patrick Honma, Luiz Tauffer">
+      
+      
+        <link rel="canonical" href="https://compass-framework.github.io/CoMPASS-Labyrinth/tutorials/02_task_performance_analysis/">
+      
+      
+        <link rel="prev" href="../01_create_project/">
+      
+      
+        <link rel="next" href="../03_simulated_agent_modelling/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Task Performance Analysis - CoMPASS-Labyrinth</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#table-of-contents" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="CoMPASS-Labyrinth" class="md-header__button md-logo" aria-label="CoMPASS-Labyrinth" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            CoMPASS-Labyrinth
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Task Performance Analysis
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CoMPASS-Framework/CoMPASS-Labyrinth
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user-guide/framework/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+  Tutorials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../contributing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="CoMPASS-Labyrinth" class="md-nav__button md-logo" aria-label="CoMPASS-Labyrinth" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    CoMPASS-Labyrinth
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CoMPASS-Framework/CoMPASS-Labyrinth
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/framework/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CoMPASS Framework
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00_dlc_grid_processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DLC Grid Processing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_create_project/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Create Project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Task Performance Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03_simulated_agent_modelling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulated Agent Modelling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04_compass_level_1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CoMPASS Level 1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05_compass_level_1_post_analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CoMPASS Level 1 Post Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06_compass_level_2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CoMPASS Level 2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Behavior
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Behavior
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/behavior/preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preprocessing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/behavior/pose-estimation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pose Estimation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/behavior/performance-metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/behavior/success-metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Success Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/behavior/trajectory-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trajectory Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/behavior/simulated-agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulated Agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CoMPASS
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    CoMPASS
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_4_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4_1" id="__nav_4_4_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Level 1
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_4_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Level 1
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/compass/level-1-prep/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Preparation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/compass/level-1-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HMM Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/compass/level-1-viz/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4_2" id="__nav_4_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Level 2
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Level 2
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/compass/level-2-datastreams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Streams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/compass/level-2-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/compass/level-2-plots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plotting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/compass/level-2-utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utilities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Post-hoc Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Post-hoc Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/post-hoc/spatial-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spatial Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/post-hoc/temporal-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Temporal Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/post-hoc/bout-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bout Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/post-hoc/grid-heatmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid Heatmaps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="table-of-contents">Table of Contents<a class="headerlink" href="#table-of-contents" title="Permanent link">&para;</a></h1>
+<ol>
+<li><a href="#Load-project">Load project</a></li>
+<li><a href="#import-combined-dlc-csv">Import Combined DLC CSV</a></li>
+<li><a href="##create-time-binned-dictionary">Create time-binned dictionary</a></li>
+<li><a href="#exclusion-criteria">Exclusion Criteria</a><ol>
+<li><a href="#Save-new-preprocessed-csv-post-exclusions">Save new preprocessed csv post exclusions</a></li>
+<li><a href="#Subset-the-Time-Binned-Dictionary-based-on-Valid-Sessions">Subset the Time-Binned Dictionary based on Valid Sessions</a></li>
+</ol>
+</li>
+<li><a href="#plot-1-heatmap-representations">Plot 1: Heatmap Representations</a><ol>
+<li><a href="#EXTRA:-Heatmap-Representations-across-all-Genotypes-(when-multiple-genotypes)">Heatmap Representations across all Genotypes</a></li>
+</ol>
+</li>
+<li><a href="#shannons-entropy">Shannon's Entropy</a><ol>
+<li><a href="#plot-2-plotting-shannons-entropy-across-sessions-mice">Plot 2: Plotting Shannon's Entropy across Sessions</a></li>
+<li><a href="#Statistical-tests---Entropy">Statistical tests - Entropy</a></li>
+</ol>
+</li>
+<li><a href="#Proportion-of-Region-based-usage-across-Time-bins">Proportion of Region-based usage across Time bins</a><ol>
+<li><a href="#plot-3-proportion-of-usage-per-region-across-time">Plot 3: Proportion of usage per Region across time</a></li>
+<li><a href="#Statistical-tests---region-usage">Statistical tests - region usage</a></li>
+<li><a href="#Plot-4:-Proportion-of-usage-across-all-Regions">Plot 4: Proportion of usage across all Regions</a></li>
+</ol>
+</li>
+<li><a href="#Bout-Level-Success-Metrics">Bout-Level Success metrics</a><ol>
+<li><a href="#Plot-5:-Cumulative-Successful-Bout-Percentage">Plot 5: Cumulative Successful Bout Percentage</a></li>
+<li><a href="#Statistical-tests---genotypes">Statistical tests - genotypes</a></li>
+<li><a href="#Plot-6:-Time-based-Successful-Bout-Percentage">Plot 6: Time-based Successful Bout Percentage</a></li>
+<li><a href="#Statistical-tests---time-based">Statistical tests - time-based</a></li>
+</ol>
+</li>
+<li><a href="#Plot-7:-Deviation-from-Reward-Path-and-Velocity">Plot 7: Deviation from Reward Path and Velocity</a><ol>
+<li><a href="#Deviation-from-Reward-Path-and-Velocity-for-all-Genotypes">Deviation from Reward Path and Velocity for all Genotypes</a></li>
+</ol>
+</li>
+</ol>
+<h1 id="load-project">Load project<a class="headerlink" href="#load-project" title="Permanent link">&para;</a></h1>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_project</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">project_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;my_project_2&quot;</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">config</span><span class="p">,</span> <span class="n">cohort_metadata</span> <span class="o">=</span> <span class="n">load_project</span><span class="p">(</span><span class="n">project_path</span><span class="o">=</span><span class="n">project_path</span><span class="p">)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">config</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>{&#39;bodyparts&#39;: [&#39;nose&#39;,
+  &#39;sternum&#39;,
+  &#39;belly&#39;,
+  &#39;tailbase&#39;,
+  &#39;leftflank&#39;,
+  &#39;rightflank&#39;],
+ &#39;creation_date_time&#39;: &#39;2025-10-14T16:13:40.839920&#39;,
+ &#39;dlc_scorer&#39;: &#39;DLC_resnet50_LabyrinthMar13shuffle1_1000000&#39;,
+ &#39;experimental_groups&#39;: [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;],
+ &#39;file_ext&#39;: &#39;.csv&#39;,
+ &#39;palette&#39;: &#39;grey&#39;,
+ &#39;project_name&#39;: &#39;my_project_2&#39;,
+ &#39;project_path_full&#39;: &#39;/Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2&#39;,
+ &#39;session_names&#39;: [&#39;Session-3&#39;,
+  &#39;Session-4&#39;,
+  &#39;Session-5&#39;,
+  &#39;Session-6&#39;,
+  &#39;Session-7&#39;],
+ &#39;trial_type&#39;: &#39;Labyrinth_DSI&#39;,
+ &#39;video_type&#39;: &#39;.mp4&#39;}
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">cohort_metadata</span>
+</span></code></pre></div>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Session #</th>
+      <th>Run Date</th>
+      <th>Time Of Day</th>
+      <th>Rack Location</th>
+      <th>Computer</th>
+      <th>Noldus Chamber</th>
+      <th>Camera #</th>
+      <th>Noldus Trial</th>
+      <th>Noldus Project Name</th>
+      <th>DSI Trial</th>
+      <th>...</th>
+      <th>Birth Date</th>
+      <th>Age (months)</th>
+      <th>Housing ID</th>
+      <th>Transmitter #</th>
+      <th>Exclude Trial</th>
+      <th>X1</th>
+      <th>X2</th>
+      <th>Y1</th>
+      <th>Y2</th>
+      <th>NOTES</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>3</td>
+      <td>2024-11-18T00:00:00</td>
+      <td>17:15:00</td>
+      <td>BR</td>
+      <td>1</td>
+      <td>TR</td>
+      <td>6</td>
+      <td>1</td>
+      <td>20241118_WT_DSI_Labyrinth_2</td>
+      <td>2</td>
+      <td>...</td>
+      <td>2024-06-01T00:00:00</td>
+      <td>5m13d</td>
+      <td>H-11495-17</td>
+      <td>3,4</td>
+      <td>NaN</td>
+      <td>1486</td>
+      <td>2399</td>
+      <td>70</td>
+      <td>986</td>
+      <td>Grabbed all pellets early on</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>4</td>
+      <td>2024-11-18T00:00:00</td>
+      <td>17:15:00</td>
+      <td>TR</td>
+      <td>1</td>
+      <td>BR</td>
+      <td>2</td>
+      <td>1</td>
+      <td>20241118_WT_DSI_Labyrinth_2</td>
+      <td>2</td>
+      <td>...</td>
+      <td>2024-06-02T00:00:00</td>
+      <td>5m12d</td>
+      <td>H-11497-17</td>
+      <td>5,6</td>
+      <td>NaN</td>
+      <td>1435</td>
+      <td>2359</td>
+      <td>1086</td>
+      <td>2015</td>
+      <td>Light turned off; slightly dark</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>5</td>
+      <td>2024-11-20T00:00:00</td>
+      <td>17:15:00</td>
+      <td>BR</td>
+      <td>1</td>
+      <td>TR</td>
+      <td>4</td>
+      <td>3</td>
+      <td>20241118_WT_DSI_Labyrinth_2</td>
+      <td>4</td>
+      <td>...</td>
+      <td>2024-06-01T00:00:00</td>
+      <td>5m13d</td>
+      <td>H-11495-17</td>
+      <td>3,4</td>
+      <td>NaN</td>
+      <td>1486</td>
+      <td>2399</td>
+      <td>70</td>
+      <td>986</td>
+      <td>Entered</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>6</td>
+      <td>2024-12-02T00:00:00</td>
+      <td>17:15:00</td>
+      <td>BR</td>
+      <td>1</td>
+      <td>TR</td>
+      <td>4</td>
+      <td>5</td>
+      <td>20241118_WT_DSI_Labyrinth_2</td>
+      <td>6</td>
+      <td>...</td>
+      <td>2024-06-02T00:00:00</td>
+      <td>5m12d</td>
+      <td>H-11497-17</td>
+      <td>3,4</td>
+      <td>NaN</td>
+      <td>1486</td>
+      <td>2399</td>
+      <td>70</td>
+      <td>986</td>
+      <td>Entered</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>7</td>
+      <td>2024-12-03T00:00:00</td>
+      <td>17:15:00</td>
+      <td>BL</td>
+      <td>1</td>
+      <td>TL</td>
+      <td>1</td>
+      <td>6</td>
+      <td>20241118_WT_DSI_Labyrinth_2</td>
+      <td>7</td>
+      <td>...</td>
+      <td>2024-06-01T00:00:00</td>
+      <td>5m13d</td>
+      <td>H-11495-17</td>
+      <td>1,2</td>
+      <td>NaN</td>
+      <td>144</td>
+      <td>1075</td>
+      <td>19</td>
+      <td>954</td>
+      <td>Entered</td>
+    </tr>
+  </tbody>
+</table>
+<p>5 rows × 26 columns</p>
+</div>
+
+<h1 id="import-combined-dlc-csv">Import Combined DLC CSV<a class="headerlink" href="#import-combined-dlc-csv" title="Permanent link">&para;</a></h1>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">df_all_csv</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">project_path</span> <span class="o">/</span> <span class="s2">&quot;csvs&quot;</span> <span class="o">/</span> <span class="s2">&quot;combined&quot;</span> <span class="o">/</span> <span class="s2">&quot;Preprocessed_combined_file.csv&quot;</span><span class="p">)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">df_all_csv</span>
+</span></code></pre></div>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>x</th>
+      <th>y</th>
+      <th>Grid Number</th>
+      <th>likelihood</th>
+      <th>S_no</th>
+      <th>Region</th>
+      <th>Session</th>
+      <th>Genotype</th>
+      <th>Sex</th>
+      <th>NodeType</th>
+      <th>Velocity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>275.057129</td>
+      <td>875.337219</td>
+      <td>47</td>
+      <td>0.983259</td>
+      <td>748</td>
+      <td>entry_zone</td>
+      <td>3</td>
+      <td>WT</td>
+      <td>Female</td>
+      <td>Entry Nodes</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>271.037537</td>
+      <td>872.005432</td>
+      <td>47</td>
+      <td>0.989085</td>
+      <td>749</td>
+      <td>entry_zone</td>
+      <td>3</td>
+      <td>WT</td>
+      <td>Female</td>
+      <td>Entry Nodes</td>
+      <td>26.104563</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>267.526978</td>
+      <td>873.733704</td>
+      <td>47</td>
+      <td>0.986050</td>
+      <td>750</td>
+      <td>entry_zone</td>
+      <td>3</td>
+      <td>WT</td>
+      <td>Female</td>
+      <td>Entry Nodes</td>
+      <td>19.564603</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>265.571991</td>
+      <td>873.412659</td>
+      <td>47</td>
+      <td>0.953975</td>
+      <td>751</td>
+      <td>entry_zone</td>
+      <td>3</td>
+      <td>WT</td>
+      <td>Female</td>
+      <td>Entry Nodes</td>
+      <td>9.905860</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>266.325684</td>
+      <td>874.166748</td>
+      <td>47</td>
+      <td>0.958631</td>
+      <td>752</td>
+      <td>entry_zone</td>
+      <td>3</td>
+      <td>WT</td>
+      <td>Female</td>
+      <td>Entry Nodes</td>
+      <td>5.330815</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>265495</th>
+      <td>228.690262</td>
+      <td>814.897949</td>
+      <td>34</td>
+      <td>0.999385</td>
+      <td>225311</td>
+      <td>reward_path</td>
+      <td>7</td>
+      <td>KO</td>
+      <td>Female</td>
+      <td>Non-Decision (Reward)</td>
+      <td>293.221609</td>
+    </tr>
+    <tr>
+      <th>265496</th>
+      <td>292.517883</td>
+      <td>837.722717</td>
+      <td>46</td>
+      <td>0.999992</td>
+      <td>225312</td>
+      <td>entry_zone</td>
+      <td>7</td>
+      <td>KO</td>
+      <td>Female</td>
+      <td>Entry Nodes</td>
+      <td>338.929760</td>
+    </tr>
+    <tr>
+      <th>265497</th>
+      <td>295.305054</td>
+      <td>862.294739</td>
+      <td>47</td>
+      <td>0.999458</td>
+      <td>225313</td>
+      <td>entry_zone</td>
+      <td>7</td>
+      <td>KO</td>
+      <td>Female</td>
+      <td>Entry Nodes</td>
+      <td>123.647944</td>
+    </tr>
+    <tr>
+      <th>265498</th>
+      <td>295.361694</td>
+      <td>876.922546</td>
+      <td>47</td>
+      <td>0.999976</td>
+      <td>225314</td>
+      <td>entry_zone</td>
+      <td>7</td>
+      <td>KO</td>
+      <td>Female</td>
+      <td>Entry Nodes</td>
+      <td>73.139586</td>
+    </tr>
+    <tr>
+      <th>265499</th>
+      <td>294.444183</td>
+      <td>901.016602</td>
+      <td>47</td>
+      <td>0.962276</td>
+      <td>225315</td>
+      <td>entry_zone</td>
+      <td>7</td>
+      <td>KO</td>
+      <td>Female</td>
+      <td>Entry Nodes</td>
+      <td>120.557592</td>
+    </tr>
+  </tbody>
+</table>
+<p>265500 rows × 11 columns</p>
+</div>
+
+<h1 id="create-time-binned-dictionary">Create Time-Binned Dictionary<a class="headerlink" href="#create-time-binned-dictionary" title="Permanent link">&para;</a></h1>
+<p>This workflow bins data from each session into defined intervals and calculates normalized region occupancy for each genotype. Each pivot table summarizes the proportion of time spent in each region across all sessions for a given bin.</p>
+<h3 id="recommended-use">Recommended Use:<a class="headerlink" href="#recommended-use" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Ensure <code>df_all_csv</code> contains 'Session', 'Genotype', and 'Region' columns.</li>
+<li>Set <code>LOWER_LIMIT</code> and <code>UPPER_LIMIT</code> to define the full range of timepoints to analyze.</li>
+<li>Set <code>BIN_SIZE</code> (used as <code>difference</code>) to determine the duration of each bin (e.g., 10000).</li>
+<li>Provide <code>region_lengths</code> as a dictionary mapping region names to their total grid lengths.</li>
+<li>The function returns a dictionary of pivot tables (one per genotype), useful for heatmap plotting.</li>
+</ol>
+<p>Let's generate pivot tables for each genotype and time bin:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_region_heatmap_pivots</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">pivot_dict</span> <span class="o">=</span> <span class="n">generate_region_heatmap_pivots</span><span class="p">(</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">df</span><span class="o">=</span><span class="n">df_all_csv</span><span class="p">,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">lower_lim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>        <span class="c1"># Start of time window</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">upper_lim</span><span class="o">=</span><span class="mi">80000</span><span class="p">,</span>    <span class="c1"># End of time window</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">difference</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>   <span class="c1"># Bin width in timepoints</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">)</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="n">pivot_dict</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>{&#39;WT&#39;: [Session              3         4         5    6    7
+  Region                                              
+  dead_ends     0.026238  0.102472  0.049415  NaN  NaN
+  entry_zone     0.27963  0.350917  0.283783  NaN  NaN
+  loops         0.020899  0.096457  0.045463  NaN  NaN
+  neutral_zone  0.017005  0.158748  0.065333  NaN  NaN
+  reward_path   0.066233  0.151273  0.110471  NaN  NaN
+  target_zone   0.589995  0.140132  0.445534  NaN  NaN,
+  Session              3         4         5    6    7
+  Region                                              
+  dead_ends     0.029137  0.045469  0.040759  NaN  NaN
+  entry_zone    0.081512  0.122688  0.198544  NaN  NaN
+  loops         0.029018  0.040293  0.039939  NaN  NaN
+  neutral_zone  0.073554   0.03325  0.046698  NaN  NaN
+  reward_path   0.097059  0.088841  0.141311  NaN  NaN
+  target_zone   0.689719  0.669459  0.532749  NaN  NaN,
+  Session              3         4         5    6    7
+  Region                                              
+  dead_ends      0.07332  0.042224  0.025213  NaN  NaN
+  entry_zone     0.18708  0.224646  0.125912  NaN  NaN
+  loops         0.029001  0.033814  0.035429  NaN  NaN
+  neutral_zone  0.062257  0.033544  0.088323  NaN  NaN
+  reward_path   0.125924  0.130415  0.084648  NaN  NaN
+  target_zone   0.522419  0.535356  0.640475  NaN  NaN,
+  Session              3    4         5    6    7
+  Region                                         
+  dead_ends     0.043817  NaN  0.048661  NaN  NaN
+  entry_zone    0.109593  NaN  0.341505  NaN  NaN
+  loops         0.033375  NaN  0.059773  NaN  NaN
+  neutral_zone  0.037078  NaN  0.055517  NaN  NaN
+  reward_path   0.161017  NaN  0.108825  NaN  NaN
+  target_zone    0.61512  NaN  0.385719  NaN  NaN,
+  Session              3    4         5    6    7
+  Region                                         
+  dead_ends     0.051835  NaN  0.082675  NaN  NaN
+  entry_zone    0.351637  NaN  0.313184  NaN  NaN
+  loops         0.047363  NaN  0.086704  NaN  NaN
+  neutral_zone  0.078946  NaN  0.101196  NaN  NaN
+  reward_path   0.159491  NaN  0.174884  NaN  NaN
+  target_zone   0.310728  NaN  0.241358  NaN  NaN,
+  Session              3    4         5    6    7
+  Region                                         
+  dead_ends     0.043033  NaN   0.05823  NaN  NaN
+  entry_zone    0.530307  NaN  0.605594  NaN  NaN
+  loops         0.078033  NaN  0.077525  NaN  NaN
+  neutral_zone  0.066665  NaN   0.07914  NaN  NaN
+  reward_path   0.167965  NaN  0.110694  NaN  NaN
+  target_zone   0.113996  NaN  0.068817  NaN  NaN,
+  Session              3    4    5    6    7
+  Region                                    
+  dead_ends     0.043239  NaN  NaN  NaN  NaN
+  entry_zone    0.270779  NaN  NaN  NaN  NaN
+  loops         0.024505  NaN  NaN  NaN  NaN
+  neutral_zone  0.022525  NaN  NaN  NaN  NaN
+  reward_path   0.092019  NaN  NaN  NaN  NaN
+  target_zone   0.546933  NaN  NaN  NaN  NaN,
+  Session              3    4    5    6    7
+  Region                                    
+  dead_ends     0.015728  NaN  NaN  NaN  NaN
+  entry_zone    0.288438  NaN  NaN  NaN  NaN
+  loops              0.0  NaN  NaN  NaN  NaN
+  neutral_zone       0.0  NaN  NaN  NaN  NaN
+  reward_path   0.065409  NaN  NaN  NaN  NaN
+  target_zone   0.630425  NaN  NaN  NaN  NaN],
+ &#39;KO&#39;: [Session         3    4    5         6         7
+  Region                                         
+  dead_ends     NaN  NaN  NaN  0.045004  0.044383
+  entry_zone    NaN  NaN  NaN  0.307047  0.319502
+  loops         NaN  NaN  NaN  0.041874  0.061598
+  neutral_zone  NaN  NaN  NaN  0.074687  0.052373
+  reward_path   NaN  NaN  NaN  0.092255  0.103164
+  target_zone   NaN  NaN  NaN  0.439133  0.418981,
+  Session         3    4    5         6         7
+  Region                                         
+  dead_ends     NaN  NaN  NaN  0.053663  0.041702
+  entry_zone    NaN  NaN  NaN  0.281968  0.110074
+  loops         NaN  NaN  NaN   0.02657  0.026993
+  neutral_zone  NaN  NaN  NaN  0.057004  0.063573
+  reward_path   NaN  NaN  NaN  0.096596  0.074752
+  target_zone   NaN  NaN  NaN  0.484198  0.682905,
+  Session         3    4    5         6         7
+  Region                                         
+  dead_ends     NaN  NaN  NaN   0.05693  0.035876
+  entry_zone    NaN  NaN  NaN  0.302763  0.145048
+  loops         NaN  NaN  NaN  0.027042  0.024638
+  neutral_zone  NaN  NaN  NaN  0.089156  0.043116
+  reward_path   NaN  NaN  NaN  0.099508  0.080032
+  target_zone   NaN  NaN  NaN  0.424601  0.671289,
+  Session         3    4    5         6         7
+  Region                                         
+  dead_ends     NaN  NaN  NaN  0.055025  0.066398
+  entry_zone    NaN  NaN  NaN   0.39776  0.207308
+  loops         NaN  NaN  NaN  0.033348  0.061158
+  neutral_zone  NaN  NaN  NaN  0.048632   0.02619
+  reward_path   NaN  NaN  NaN  0.092559  0.153013
+  target_zone   NaN  NaN  NaN  0.372676  0.485933,
+  Session         3    4    5         6         7
+  Region                                         
+  dead_ends     NaN  NaN  NaN   0.07803  0.056418
+  entry_zone    NaN  NaN  NaN  0.527229  0.111492
+  loops         NaN  NaN  NaN  0.029762  0.059491
+  neutral_zone  NaN  NaN  NaN  0.079348  0.027319
+  reward_path   NaN  NaN  NaN   0.08669  0.160993
+  target_zone   NaN  NaN  NaN  0.198941  0.584287,
+  Session         3    4    5         6         7
+  Region                                         
+  dead_ends     NaN  NaN  NaN   0.05972  0.055855
+  entry_zone    NaN  NaN  NaN  0.443182   0.13774
+  loops         NaN  NaN  NaN  0.053432   0.04803
+  neutral_zone  NaN  NaN  NaN  0.099545  0.060367
+  reward_path   NaN  NaN  NaN  0.091393  0.224139
+  target_zone   NaN  NaN  NaN  0.252727   0.47387,
+  Session         3    4    5    6         7
+  Region                                    
+  dead_ends     NaN  NaN  NaN  NaN  0.103525
+  entry_zone    NaN  NaN  NaN  NaN  0.168228
+  loops         NaN  NaN  NaN  NaN  0.095542
+  neutral_zone  NaN  NaN  NaN  NaN  0.084114
+  reward_path   NaN  NaN  NaN  NaN  0.170478
+  target_zone   NaN  NaN  NaN  NaN  0.378113]}
+</code></pre></div>
+<h1 id="exclusion-criteria">Exclusion Criteria<a class="headerlink" href="#exclusion-criteria" title="Permanent link">&para;</a></h1>
+<p>This workflow quantifies target zone engagement across bouts and sessions, plots the relationship between target usage and session duration, and interactively excludes low-performing sessions based on user-defined thresholds.</p>
+<h3 id="recommended-use_1">Recommended Use:<a class="headerlink" href="#recommended-use_1" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Ensure <code>df_all_csv</code> contains 'Session', 'Genotype', 'Grid.Number', and 'Bout_Index' columns.</li>
+<li>Run <code>compute_frames_per_session()</code> to get the number of frames per session.</li>
+<li>Use <code>compute_target_zone_usage()</code> to calculate per-bout usage for a specified region; set <code>region</code> and <code>difference</code> accordingly.</li>
+<li>Summarize target usage at the session level using <code>summarize_target_usage()</code> with <code>mouseinfo</code> to add sex/genotype metadata.</li>
+<li>Visualize the relationship between number of frames and target usage using <code>plot_target_usage_vs_frames()</code>.</li>
+<li>Call <code>exclude_low_performing_sessions()</code> to interactively remove sessions below usage and duration thresholds.</li>
+</ol>
+<p>Example Workflow:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">compute_frames_per_session</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">compute_target_zone_usage</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">summarize_target_usage</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">plot_target_usage_vs_frames</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">exclude_low_performing_sessions</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">plot_target_usage_with_exclusions</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">)</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="c1"># Set these values</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="n">BIN_SIZE</span> <span class="o">=</span> <span class="mi">10000</span>               <span class="c1"># BASED ON THE TIME-BINNED DICTIONARY</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="n">REGION</span> <span class="o">=</span> <span class="s2">&quot;target_zone&quot;</span>         <span class="c1"># Region to evaluate usage</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="c1"># Step 1: Total frames per session</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="n">frames_df</span> <span class="o">=</span> <span class="n">compute_frames_per_session</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df_all_csv</span><span class="p">)</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="c1"># Step 2: Target zone usage per bout</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="n">region_target</span> <span class="o">=</span> <span class="n">compute_target_zone_usage</span><span class="p">(</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    <span class="n">df</span><span class="o">=</span><span class="n">df_all_csv</span><span class="p">,</span>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    <span class="n">pivot_dict</span><span class="o">=</span><span class="n">pivot_dict</span><span class="p">,</span>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    <span class="n">region</span><span class="o">=</span><span class="n">REGION</span><span class="p">,</span>
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>    <span class="n">difference</span><span class="o">=</span><span class="n">BIN_SIZE</span><span class="p">,</span>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="p">)</span>
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="c1"># Step 3: Session-level summary</span>
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a><span class="n">region_summary</span> <span class="o">=</span> <span class="n">summarize_target_usage</span><span class="p">(</span>
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>    <span class="n">region_target</span><span class="o">=</span><span class="n">region_target</span><span class="p">,</span>
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>    <span class="n">frames_df</span><span class="o">=</span><span class="n">frames_df</span><span class="p">,</span>
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>    <span class="n">cohort_metadata</span><span class="o">=</span><span class="n">cohort_metadata</span><span class="p">,</span>
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="p">)</span>
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="c1"># Step 4: Visualize usage vs. session duration</span>
+</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a><span class="n">plot_target_usage_vs_frames</span><span class="p">(</span>
+</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>    <span class="n">summary_df</span><span class="o">=</span><span class="n">region_summary</span><span class="p">,</span>
+</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a><span class="p">)</span>
+</span><span id="__span-4-38"><a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>
+</span><span id="__span-4-39"><a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a><span class="c1"># Step 5: Interactive exclusion based on usage and frame thresholds</span>
+</span><span id="__span-4-40"><a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a><span class="n">df_all_csv</span> <span class="o">=</span> <span class="n">exclude_low_performing_sessions</span><span class="p">(</span>
+</span><span id="__span-4-41"><a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>    <span class="n">df</span><span class="o">=</span><span class="n">df_all_csv</span><span class="p">,</span>
+</span><span id="__span-4-42"><a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a>    <span class="n">summary_df</span><span class="o">=</span><span class="n">region_summary</span><span class="p">,</span>
+</span><span id="__span-4-43"><a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>    <span class="n">usage_threshold</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+</span><span id="__span-4-44"><a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>    <span class="n">min_frames</span><span class="o">=</span><span class="mi">30000</span><span class="p">,</span>
+</span><span id="__span-4-45"><a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a><span class="p">)</span>
+</span><span id="__span-4-46"><a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a>
+</span><span id="__span-4-47"><a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a><span class="c1"># Step 6: Replot the target usage v/s frames plot with the excluded sessions &#39;X&#39; out</span>
+</span><span id="__span-4-48"><a id="__codelineno-4-48" name="__codelineno-4-48" href="#__codelineno-4-48"></a><span class="n">sessions_to_exclude</span> <span class="o">=</span> <span class="n">region_summary</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+</span><span id="__span-4-49"><a id="__codelineno-4-49" name="__codelineno-4-49" href="#__codelineno-4-49"></a>    <span class="o">~</span><span class="n">region_summary</span><span class="p">[</span><span class="s1">&#39;Session&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">df_all_csv</span><span class="p">[</span><span class="s1">&#39;Session&#39;</span><span class="p">])</span>
+</span><span id="__span-4-50"><a id="__codelineno-4-50" name="__codelineno-4-50" href="#__codelineno-4-50"></a><span class="p">][</span><span class="s1">&#39;Session&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+</span><span id="__span-4-51"><a id="__codelineno-4-51" name="__codelineno-4-51" href="#__codelineno-4-51"></a>
+</span><span id="__span-4-52"><a id="__codelineno-4-52" name="__codelineno-4-52" href="#__codelineno-4-52"></a><span class="n">plot_target_usage_with_exclusions</span><span class="p">(</span>
+</span><span id="__span-4-53"><a id="__codelineno-4-53" name="__codelineno-4-53" href="#__codelineno-4-53"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-4-54"><a id="__codelineno-4-54" name="__codelineno-4-54" href="#__codelineno-4-54"></a>    <span class="n">summary_df</span><span class="o">=</span><span class="n">region_summary</span><span class="p">,</span>
+</span><span id="__span-4-55"><a id="__codelineno-4-55" name="__codelineno-4-55" href="#__codelineno-4-55"></a>    <span class="n">sessions_to_exclude</span><span class="o">=</span><span class="n">sessions_to_exclude</span><span class="p">,</span>
+</span><span id="__span-4-56"><a id="__codelineno-4-56" name="__codelineno-4-56" href="#__codelineno-4-56"></a><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/target_usage_vs_frames.png
+</code></pre></div>
+<p><img alt="png" src="../02_task_performance_analysis_files/02_task_performance_analysis_9_1.png" /></p>
+<div class="language-text highlight"><pre><span></span><code>Excluding 0 session(s): []
+Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/target_usage_vs_frames_exclusions.png
+</code></pre></div>
+<p><img alt="png" src="../02_task_performance_analysis_files/02_task_performance_analysis_9_3.png" /></p>
+<h3 id="save-new-preprocessed-csv-post-exclusions">Save new preprocessed csv post exclusions<a class="headerlink" href="#save-new-preprocessed-csv-post-exclusions" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Define path to the &#39;csvs&#39; folder and final output file</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">base_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;project_path_full&quot;</span><span class="p">])</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">output_file</span> <span class="o">=</span> <span class="n">base_path</span> <span class="o">/</span> <span class="s2">&quot;csvs&quot;</span> <span class="o">/</span> <span class="s2">&quot;combined&quot;</span> <span class="o">/</span> <span class="s2">&quot;Preprocessed_combined_file_exclusions.csv&quot;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># Save the DataFrame</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">df_all_csv</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="subset-the-time-binned-dictionary-based-on-valid-sessions">Subset the Time-Binned Dictionary based on Valid Sessions<a class="headerlink" href="#subset-the-time-binned-dictionary-based-on-valid-sessions" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">subset_pivot_dict_sessions</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">pivot_dict</span> <span class="o">=</span> <span class="n">subset_pivot_dict_sessions</span><span class="p">(</span><span class="n">pivot_dict</span><span class="p">,</span> <span class="n">df_all_csv</span><span class="p">)</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">pivot_dict</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>{&#39;WT&#39;: [Session              3         4         5
+  Region                                    
+  dead_ends     0.026238  0.102472  0.049415
+  entry_zone     0.27963  0.350917  0.283783
+  loops         0.020899  0.096457  0.045463
+  neutral_zone  0.017005  0.158748  0.065333
+  reward_path   0.066233  0.151273  0.110471
+  target_zone   0.589995  0.140132  0.445534,
+  Session              3         4         5
+  Region                                    
+  dead_ends     0.029137  0.045469  0.040759
+  entry_zone    0.081512  0.122688  0.198544
+  loops         0.029018  0.040293  0.039939
+  neutral_zone  0.073554   0.03325  0.046698
+  reward_path   0.097059  0.088841  0.141311
+  target_zone   0.689719  0.669459  0.532749,
+  Session              3         4         5
+  Region                                    
+  dead_ends      0.07332  0.042224  0.025213
+  entry_zone     0.18708  0.224646  0.125912
+  loops         0.029001  0.033814  0.035429
+  neutral_zone  0.062257  0.033544  0.088323
+  reward_path   0.125924  0.130415  0.084648
+  target_zone   0.522419  0.535356  0.640475,
+  Session              3    4         5
+  Region                               
+  dead_ends     0.043817  NaN  0.048661
+  entry_zone    0.109593  NaN  0.341505
+  loops         0.033375  NaN  0.059773
+  neutral_zone  0.037078  NaN  0.055517
+  reward_path   0.161017  NaN  0.108825
+  target_zone    0.61512  NaN  0.385719,
+  Session              3    4         5
+  Region                               
+  dead_ends     0.051835  NaN  0.082675
+  entry_zone    0.351637  NaN  0.313184
+  loops         0.047363  NaN  0.086704
+  neutral_zone  0.078946  NaN  0.101196
+  reward_path   0.159491  NaN  0.174884
+  target_zone   0.310728  NaN  0.241358,
+  Session              3    4         5
+  Region                               
+  dead_ends     0.043033  NaN   0.05823
+  entry_zone    0.530307  NaN  0.605594
+  loops         0.078033  NaN  0.077525
+  neutral_zone  0.066665  NaN   0.07914
+  reward_path   0.167965  NaN  0.110694
+  target_zone   0.113996  NaN  0.068817,
+  Session              3    4    5
+  Region                          
+  dead_ends     0.043239  NaN  NaN
+  entry_zone    0.270779  NaN  NaN
+  loops         0.024505  NaN  NaN
+  neutral_zone  0.022525  NaN  NaN
+  reward_path   0.092019  NaN  NaN
+  target_zone   0.546933  NaN  NaN,
+  Session              3    4    5
+  Region                          
+  dead_ends     0.015728  NaN  NaN
+  entry_zone    0.288438  NaN  NaN
+  loops              0.0  NaN  NaN
+  neutral_zone       0.0  NaN  NaN
+  reward_path   0.065409  NaN  NaN
+  target_zone   0.630425  NaN  NaN],
+ &#39;KO&#39;: [Session              6         7
+  Region                          
+  dead_ends     0.045004  0.044383
+  entry_zone    0.307047  0.319502
+  loops         0.041874  0.061598
+  neutral_zone  0.074687  0.052373
+  reward_path   0.092255  0.103164
+  target_zone   0.439133  0.418981,
+  Session              6         7
+  Region                          
+  dead_ends     0.053663  0.041702
+  entry_zone    0.281968  0.110074
+  loops          0.02657  0.026993
+  neutral_zone  0.057004  0.063573
+  reward_path   0.096596  0.074752
+  target_zone   0.484198  0.682905,
+  Session              6         7
+  Region                          
+  dead_ends      0.05693  0.035876
+  entry_zone    0.302763  0.145048
+  loops         0.027042  0.024638
+  neutral_zone  0.089156  0.043116
+  reward_path   0.099508  0.080032
+  target_zone   0.424601  0.671289,
+  Session              6         7
+  Region                          
+  dead_ends     0.055025  0.066398
+  entry_zone     0.39776  0.207308
+  loops         0.033348  0.061158
+  neutral_zone  0.048632   0.02619
+  reward_path   0.092559  0.153013
+  target_zone   0.372676  0.485933,
+  Session              6         7
+  Region                          
+  dead_ends      0.07803  0.056418
+  entry_zone    0.527229  0.111492
+  loops         0.029762  0.059491
+  neutral_zone  0.079348  0.027319
+  reward_path    0.08669  0.160993
+  target_zone   0.198941  0.584287,
+  Session              6         7
+  Region                          
+  dead_ends      0.05972  0.055855
+  entry_zone    0.443182   0.13774
+  loops         0.053432   0.04803
+  neutral_zone  0.099545  0.060367
+  reward_path   0.091393  0.224139
+  target_zone   0.252727   0.47387,
+  Session         6         7
+  Region                     
+  dead_ends     NaN  0.103525
+  entry_zone    NaN  0.168228
+  loops         NaN  0.095542
+  neutral_zone  NaN  0.084114
+  reward_path   NaN  0.170478
+  target_zone   NaN  0.378113]}
+</code></pre></div>
+<h1 id="plot-1-heatmap-representations">Plot 1: Heatmap Representations<a class="headerlink" href="#plot-1-heatmap-representations" title="Permanent link">&para;</a></h1>
+<p>Use this function to visualize how region occupancy evolves over time for a specific genotype or group in your behavioral dataset. Each heatmap corresponds to a fixed-length time bin and shows normalized region occupancy per session, allowing for temporal comparison.</p>
+<h3 id="recommended-use_2">Recommended Use:<a class="headerlink" href="#recommended-use_2" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Ensure that <code>pivot_dict</code> is generated using <code>generate_region_heatmap_pivots()</code>.</li>
+<li>Specify the genotype/group you want to plot (e.g., 'WT').</li>
+<li>Define the time binning parameters: <code>lower_lim</code>, <code>upper_lim</code>, and <code>difference</code>.</li>
+<li>Optionally set a custom region order and vmax for consistent color scaling.</li>
+<li>Run the function to display vertically stacked heatmaps across time bins.</li>
+</ol>
+<p>Example Workflow:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">get_max_session_row_bracket</span><span class="p">,</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="n">plot_region_heatmaps</span><span class="p">,</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="p">)</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Set these values</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="n">GENOTYPE_DISP</span> <span class="o">=</span> <span class="s1">&#39;WT&#39;</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="n">LOWER_LIMIT</span> <span class="o">=</span> <span class="mi">0</span>       <span class="c1"># lower limit for bins </span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">BIN_SIZE</span> <span class="o">=</span> <span class="mi">10000</span>      <span class="c1"># bin size for the heatmap plot</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">VMAX</span> <span class="o">=</span> <span class="mf">0.6</span>            <span class="c1"># max range on colorbar</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="n">UPPER_LIMIT</span> <span class="o">=</span> <span class="n">get_max_session_row_bracket</span><span class="p">(</span><span class="n">df_all_csv</span><span class="p">)</span>  <span class="c1"># upper limit for bins </span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="c1"># Store valid sessions post exclusion, specific to the genotype/group wanting to visualize</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="n">valid_sessions</span> <span class="o">=</span> <span class="n">df_all_csv</span><span class="p">[</span><span class="n">df_all_csv</span><span class="o">.</span><span class="n">Genotype</span> <span class="o">==</span> <span class="n">GENOTYPE_DISP</span><span class="p">][</span><span class="s1">&#39;Session&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_sessions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Valid sessions list is empty! Choose a valid Genotype.&quot;</span><span class="p">)</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="c1"># Plot the region-based heatmap</span>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="n">plot_region_heatmaps</span><span class="p">(</span>
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>    <span class="n">pivot_dict</span><span class="o">=</span><span class="n">pivot_dict</span><span class="p">,</span>
+</span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>    <span class="n">group_name</span><span class="o">=</span><span class="n">GENOTYPE_DISP</span><span class="p">,</span>
+</span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a>    <span class="n">lower_lim</span><span class="o">=</span><span class="n">LOWER_LIMIT</span><span class="p">,</span>
+</span><span id="__span-7-26"><a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a>    <span class="n">upper_lim</span><span class="o">=</span><span class="n">UPPER_LIMIT</span><span class="p">,</span>
+</span><span id="__span-7-27"><a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a>    <span class="n">difference</span><span class="o">=</span><span class="n">BIN_SIZE</span><span class="p">,</span>
+</span><span id="__span-7-28"><a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a>    <span class="n">vmax</span><span class="o">=</span><span class="n">VMAX</span><span class="p">,</span>
+</span><span id="__span-7-29"><a id="__codelineno-7-29" name="__codelineno-7-29" href="#__codelineno-7-29"></a>    <span class="n">included_sessions</span><span class="o">=</span><span class="n">valid_sessions</span><span class="p">,</span>
+</span><span id="__span-7-30"><a id="__codelineno-7-30" name="__codelineno-7-30" href="#__codelineno-7-30"></a><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/region_heatmaps_WT.pdf
+</code></pre></div>
+<p><img alt="png" src="../02_task_performance_analysis_files/02_task_performance_analysis_15_1.png" /></p>
+<h3 id="extra-heatmap-representations-across-all-genotypes-when-multiple-genotypes">EXTRA: Heatmap Representations across all Genotypes (when multiple genotypes)<a class="headerlink" href="#extra-heatmap-representations-across-all-genotypes-when-multiple-genotypes" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_region_heatmaps_all_genotypes</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Set these values</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">included_genotypes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;WT&quot;</span><span class="p">,</span> <span class="s2">&quot;KO&quot;</span><span class="p">]</span>  <span class="c1"># add more genotypes</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="n">LOWER_LIMIT</span> <span class="o">=</span> <span class="mi">0</span>              <span class="c1"># lower limit for bins </span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="n">BIN_SIZE</span> <span class="o">=</span> <span class="mi">10000</span>             <span class="c1"># bin size for the heatmap plot</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="n">VMAX</span> <span class="o">=</span> <span class="mf">0.6</span>                   <span class="c1"># Max. range on colorbar</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="n">UPPER_LIMIT</span> <span class="o">=</span> <span class="n">get_max_session_row_bracket</span><span class="p">(</span><span class="n">df_all_csv</span><span class="p">)</span> <span class="c1"># upper limit for bins </span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="n">plot_region_heatmaps_all_genotypes</span><span class="p">(</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>    <span class="n">pivot_dict</span><span class="o">=</span><span class="n">pivot_dict</span><span class="p">,</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>    <span class="n">df_all_csv</span><span class="o">=</span><span class="n">df_all_csv</span><span class="p">,</span> 
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>    <span class="n">lower_lim</span><span class="o">=</span><span class="n">LOWER_LIMIT</span><span class="p">,</span>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>    <span class="n">upper_lim</span><span class="o">=</span><span class="n">UPPER_LIMIT</span><span class="p">,</span>
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>    <span class="n">difference</span><span class="o">=</span><span class="n">BIN_SIZE</span><span class="p">,</span>
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>    <span class="n">included_genotypes</span><span class="o">=</span><span class="n">included_genotypes</span><span class="p">,</span>
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>    <span class="n">spacing_w</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>    <span class="n">spacing_h</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span>
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>    <span class="n">show_colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>    <span class="n">vmax</span><span class="o">=</span><span class="n">VMAX</span>
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/region_heatmaps_all_genotypes.pdf
+</code></pre></div>
+<p><img alt="png" src="../02_task_performance_analysis_files/02_task_performance_analysis_17_1.png" /></p>
+<h1 id="shannons-entropy">Shannon's Entropy<a class="headerlink" href="#shannons-entropy" title="Permanent link">&para;</a></h1>
+<p>This function calculates Shannon entropy over time, reflecting the diversity of region occupancy for each mouse/session within each time bin. A higher entropy indicates more distributed (less selective) region occupancy, whereas lower entropy suggests focused behavior within fewer regions.</p>
+<h3 id="recommended-use_3">Recommended Use:<a class="headerlink" href="#recommended-use_3" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Ensure <code>pivot_dict</code> has been generated using <code>generate_region_heatmap_pivots()</code>.</li>
+<li>Ensure <code>cohort_metadata</code> includes metadata </li>
+</ol>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_shannon_entropy_per_bin</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># Compute entropy values</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">entropy_df</span> <span class="o">=</span> <span class="n">compute_shannon_entropy_per_bin</span><span class="p">(</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">pivot_dict</span><span class="o">=</span><span class="n">pivot_dict</span><span class="p">,</span> 
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">df_all_csv</span><span class="o">=</span><span class="n">df_all_csv</span><span class="p">,</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="n">bin_size</span><span class="o">=</span><span class="n">BIN_SIZE</span>   <span class="c1"># As used and specified in pivot_dict creation</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="p">)</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="n">entropy_df</span>
+</span></code></pre></div>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Session</th>
+      <th>Bin</th>
+      <th>Entropy</th>
+      <th>Genotype</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>3</td>
+      <td>10000</td>
+      <td>1.576969</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>3</td>
+      <td>20000</td>
+      <td>1.564810</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>30000</td>
+      <td>1.992102</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3</td>
+      <td>40000</td>
+      <td>1.742714</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>3</td>
+      <td>50000</td>
+      <td>2.195503</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>3</td>
+      <td>60000</td>
+      <td>2.017632</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>3</td>
+      <td>70000</td>
+      <td>1.753554</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>3</td>
+      <td>80000</td>
+      <td>1.288536</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>4</td>
+      <td>10000</td>
+      <td>2.423388</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>4</td>
+      <td>20000</td>
+      <td>1.621939</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>4</td>
+      <td>30000</td>
+      <td>1.872103</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>4</td>
+      <td>40000</td>
+      <td>NaN</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>4</td>
+      <td>50000</td>
+      <td>NaN</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>4</td>
+      <td>60000</td>
+      <td>NaN</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>4</td>
+      <td>70000</td>
+      <td>NaN</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>4</td>
+      <td>80000</td>
+      <td>NaN</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>5</td>
+      <td>10000</td>
+      <td>2.060735</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>5</td>
+      <td>20000</td>
+      <td>1.926173</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>5</td>
+      <td>30000</td>
+      <td>1.703479</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>5</td>
+      <td>40000</td>
+      <td>2.094408</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>5</td>
+      <td>50000</td>
+      <td>2.397081</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>5</td>
+      <td>60000</td>
+      <td>1.869875</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>5</td>
+      <td>70000</td>
+      <td>NaN</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>5</td>
+      <td>80000</td>
+      <td>NaN</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>6</td>
+      <td>10000</td>
+      <td>2.034192</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>6</td>
+      <td>20000</td>
+      <td>1.948439</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>6</td>
+      <td>30000</td>
+      <td>2.065053</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>6</td>
+      <td>40000</td>
+      <td>1.983480</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>6</td>
+      <td>50000</td>
+      <td>1.984297</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>6</td>
+      <td>60000</td>
+      <td>2.137225</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>30</th>
+      <td>6</td>
+      <td>70000</td>
+      <td>NaN</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>31</th>
+      <td>6</td>
+      <td>80000</td>
+      <td>NaN</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>32</th>
+      <td>7</td>
+      <td>10000</td>
+      <td>2.059821</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>33</th>
+      <td>7</td>
+      <td>20000</td>
+      <td>1.590435</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>34</th>
+      <td>7</td>
+      <td>30000</td>
+      <td>1.581019</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>35</th>
+      <td>7</td>
+      <td>40000</td>
+      <td>2.034930</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>36</th>
+      <td>7</td>
+      <td>50000</td>
+      <td>1.848143</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>37</th>
+      <td>7</td>
+      <td>60000</td>
+      <td>2.075423</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>38</th>
+      <td>7</td>
+      <td>70000</td>
+      <td>2.361065</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>39</th>
+      <td>7</td>
+      <td>80000</td>
+      <td>NaN</td>
+      <td>KO</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="plot-2-plotting-shannons-entropy-across-sessions-mice">Plot 2: Plotting Shannon's Entropy across Sessions (/Mice)<a class="headerlink" href="#plot-2-plotting-shannons-entropy-across-sessions-mice" title="Permanent link">&para;</a></h2>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_entropy_over_bins</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1"># Plot entropy over time</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">plot_entropy_over_bins</span><span class="p">(</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="n">entropy_df</span><span class="o">=</span><span class="n">entropy_df</span><span class="p">,</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/shannon_entropy.pdf
+</code></pre></div>
+<p><img alt="png" src="../02_task_performance_analysis_files/02_task_performance_analysis_21_1.png" /></p>
+<h3 id="statistical-tests-entropy">Statistical tests - Entropy<a class="headerlink" href="#statistical-tests-entropy" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="n">run_entropy_anova</span><span class="p">,</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="n">run_fdr_pairwise_tests</span><span class="p">,</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">run_mixed_model_per_genotype_pair</span><span class="p">,</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="p">)</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="c1">## Need more than one genotype to run these</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="c1"># Repeated Measures ANOVA</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="n">anova_result</span> <span class="o">=</span> <span class="n">run_entropy_anova</span><span class="p">(</span><span class="n">entropy_df</span><span class="p">)</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="c1"># Pairwise t-tests + FDR correction (per bin, per genotype pair)</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="n">fdr_results</span> <span class="o">=</span> <span class="n">run_fdr_pairwise_tests</span><span class="p">(</span><span class="n">entropy_df</span><span class="p">)</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="nb">print</span><span class="p">(</span><span class="n">fdr_results</span><span class="p">)</span>
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="c1"># Run per-pair mixed models</span>
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="n">mixed_results</span><span class="p">,</span> <span class="n">interaction_table</span> <span class="o">=</span> <span class="n">run_mixed_model_per_genotype_pair</span><span class="p">(</span><span class="n">entropy_df</span><span class="p">)</span>
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a>
+</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="c1"># View pairwise Bin × Genotype interaction summary</span>
+</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a><span class="nb">print</span><span class="p">(</span><span class="n">interaction_table</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Repeated Measures ANOVA (within-subject Bin):
+              Anova
+=================================
+    F Value Num DF  Den DF Pr &gt; F
+---------------------------------
+Bin  4.1115 7.0000 28.0000 0.0032
+=================================
+
+     Bin Group1 Group2    t-stat     raw-p     FDR-p  Significant
+0  10000     WT     KO -0.108520  0.923442  0.923442        False
+1  20000     WT     KO -0.308332  0.789796  0.923442        False
+2  30000     WT     KO  0.128312  0.915462  0.923442        False
+3  40000     WT     KO -1.126728  0.376559  0.923442        False
+4  50000     WT     KO -0.500042  0.665967  0.923442        False
+5  60000     WT     KO -1.246799  0.338204  0.923442        False
+6  70000     WT     KO -0.452447  0.707578  0.923442        False
+7  80000     WT     KO  1.000000  0.422650  0.923442        False
+
+ MixedLM failed for WT vs KO: Singular matrix
+  Genotype1 Genotype2 Interaction_pvals  Significant
+0        WT        KO                {}        False
+</code></pre></div>
+<h1 id="proportion-of-region-based-usage-across-time-bins">Proportion of Region-based usage across Time bins<a class="headerlink" href="#proportion-of-region-based-usage-across-time-bins" title="Permanent link">&para;</a></h1>
+<p>This function computes the proportion of usage of a specified region across sequential time bins, grouped by session and genotype, using the binned pivot tables.</p>
+<h3 id="recommended-use_4">Recommended Use:<a class="headerlink" href="#recommended-use_4" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Ensure <code>pivot_dict</code> is the output from <code>generate_region_heatmap_pivots()</code> and contains binned region usage per genotype.</li>
+<li>Use <code>cohort_metadata</code> to map session IDs to genotypes for grouping.</li>
+<li>Set <code>region</code> to the name of the region you want to evaluate (e.g., "target_zone").</li>
+<li>Set <code>bin_size</code> to match the time resolution used when generating <code>pivot_dict</code>.</li>
+</ol>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_region_usage_over_bins</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="c1"># Set these values</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="n">REGION</span> <span class="o">=</span> <span class="s2">&quot;target_zone&quot;</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="n">BIN_SIZE</span> <span class="o">=</span> <span class="n">BIN_SIZE</span>    <span class="c1"># Based on pivot_dict</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="c1"># Compute region usage over time bins</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="n">reg_binned</span> <span class="o">=</span> <span class="n">compute_region_usage_over_bins</span><span class="p">(</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>    <span class="n">pivot_dict</span><span class="o">=</span><span class="n">pivot_dict</span><span class="p">,</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>    <span class="n">df_all_csv</span><span class="o">=</span><span class="n">df_all_csv</span><span class="p">,</span>
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>    <span class="n">region</span><span class="o">=</span><span class="n">REGION</span><span class="p">,</span>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>    <span class="n">bin_size</span><span class="o">=</span><span class="n">BIN_SIZE</span>
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="p">)</span>
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="n">reg_binned</span>
+</span></code></pre></div>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Region</th>
+      <th>Session</th>
+      <th>target_zone</th>
+      <th>Bin</th>
+      <th>Genotype</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>3</td>
+      <td>0.589995</td>
+      <td>10000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>4</td>
+      <td>0.140132</td>
+      <td>10000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>5</td>
+      <td>0.445534</td>
+      <td>10000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3</td>
+      <td>0.689719</td>
+      <td>20000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>4</td>
+      <td>0.669459</td>
+      <td>20000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>5</td>
+      <td>0.532749</td>
+      <td>20000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>3</td>
+      <td>0.522419</td>
+      <td>30000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>4</td>
+      <td>0.535356</td>
+      <td>30000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>5</td>
+      <td>0.640475</td>
+      <td>30000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>3</td>
+      <td>0.61512</td>
+      <td>40000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>4</td>
+      <td>NaN</td>
+      <td>40000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>5</td>
+      <td>0.385719</td>
+      <td>40000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>3</td>
+      <td>0.310728</td>
+      <td>50000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>4</td>
+      <td>NaN</td>
+      <td>50000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>5</td>
+      <td>0.241358</td>
+      <td>50000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>3</td>
+      <td>0.113996</td>
+      <td>60000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>4</td>
+      <td>NaN</td>
+      <td>60000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>5</td>
+      <td>0.068817</td>
+      <td>60000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>3</td>
+      <td>0.546933</td>
+      <td>70000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>4</td>
+      <td>NaN</td>
+      <td>70000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>5</td>
+      <td>NaN</td>
+      <td>70000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>3</td>
+      <td>0.630425</td>
+      <td>80000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>4</td>
+      <td>NaN</td>
+      <td>80000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>5</td>
+      <td>NaN</td>
+      <td>80000</td>
+      <td>WT</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>6</td>
+      <td>0.439133</td>
+      <td>10000</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>7</td>
+      <td>0.418981</td>
+      <td>10000</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>6</td>
+      <td>0.484198</td>
+      <td>20000</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>7</td>
+      <td>0.682905</td>
+      <td>20000</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>6</td>
+      <td>0.424601</td>
+      <td>30000</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>7</td>
+      <td>0.671289</td>
+      <td>30000</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>30</th>
+      <td>6</td>
+      <td>0.372676</td>
+      <td>40000</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>31</th>
+      <td>7</td>
+      <td>0.485933</td>
+      <td>40000</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>32</th>
+      <td>6</td>
+      <td>0.198941</td>
+      <td>50000</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>33</th>
+      <td>7</td>
+      <td>0.584287</td>
+      <td>50000</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>34</th>
+      <td>6</td>
+      <td>0.252727</td>
+      <td>60000</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>35</th>
+      <td>7</td>
+      <td>0.47387</td>
+      <td>60000</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>36</th>
+      <td>6</td>
+      <td>NaN</td>
+      <td>70000</td>
+      <td>KO</td>
+    </tr>
+    <tr>
+      <th>37</th>
+      <td>7</td>
+      <td>0.378113</td>
+      <td>70000</td>
+      <td>KO</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="plot-3-proportion-of-usage-per-region-across-time">Plot 3: Proportion of usage per Region across time<a class="headerlink" href="#plot-3-proportion-of-usage-per-region-across-time" title="Permanent link">&para;</a></h2>
+<p>Plot the region usage over time bins:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_region_usage_over_bins</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="n">fig</span> <span class="o">=</span> <span class="n">plot_region_usage_over_bins</span><span class="p">(</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="n">region_data</span><span class="o">=</span><span class="n">reg_binned</span><span class="p">,</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>    <span class="n">region_name</span><span class="o">=</span><span class="n">REGION</span><span class="p">,</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>    <span class="n">return_fig</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/target_zone_prop_usage.pdf
+</code></pre></div>
+<p><img alt="png" src="../02_task_performance_analysis_files/02_task_performance_analysis_27_1.png" /></p>
+<h3 id="statistical-tests-region-usage">Statistical tests - region usage<a class="headerlink" href="#statistical-tests-region-usage" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="n">run_region_usage_stats_mixedlm</span><span class="p">,</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>    <span class="n">run_region_usage_stats_fdr</span><span class="p">,</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="p">)</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="c1"># Run a Mixed Effects Model</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="n">run_region_usage_stats_mixedlm</span><span class="p">(</span><span class="n">reg_binned</span><span class="p">,</span> <span class="n">region_col</span><span class="o">=</span><span class="n">REGION</span><span class="p">)</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="c1"># Run pairwise comparison across genotypes with FDR correction</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="n">fdr_results</span> <span class="o">=</span> <span class="n">run_region_usage_stats_fdr</span><span class="p">(</span><span class="n">reg_binned</span><span class="p">,</span> <span class="n">region_col</span><span class="o">=</span><span class="n">REGION</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>=== Mixed Effects Model (missing values preserved) ===
+MixedLM error: endog has evaluated to an array with multiple columns that has shape (30, 30). This occurs when the variable converted to endog is non-numeric (e.g., bool or str).
+
+=== Pairwise t-tests between Genotypes at each Bin (FDR corrected) ===
+  Bin Group1 Group2     pval  pval_fdr  significant
+10000     WT     KO 0.805851  0.981351        False
+20000     WT     KO 0.723857  0.981351        False
+30000     WT     KO 0.908117  0.981351        False
+40000     WT     KO 0.654551  0.981351        False
+50000     WT     KO 0.463393  0.981351        False
+60000     WT     KO 0.199917  0.981351        False
+70000     WT     KO 0.981351  0.981351        False
+</code></pre></div>
+<h2 id="plot-4-proportion-of-usage-across-all-regions">Plot 4: Proportion of usage across all Regions<a class="headerlink" href="#plot-4-proportion-of-usage-across-all-regions" title="Permanent link">&para;</a></h2>
+<p>Plot usage over time bins for all Regions:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_all_regions_usage_over_bins</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">region_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;entry_zone&#39;</span><span class="p">,</span> <span class="s1">&#39;loops&#39;</span><span class="p">,</span><span class="s1">&#39;dead_ends&#39;</span><span class="p">,</span> <span class="s1">&#39;neutral_zone&#39;</span><span class="p">,</span> <span class="s1">&#39;reward_path&#39;</span><span class="p">,</span> <span class="s1">&#39;target_zone&#39;</span><span class="p">]</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="n">plot_all_regions_usage_over_bins</span><span class="p">(</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>    <span class="n">pivot_dict</span><span class="o">=</span><span class="n">pivot_dict</span><span class="p">,</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>    <span class="n">df_all_csv</span><span class="o">=</span><span class="n">df_all_csv</span><span class="p">,</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>    <span class="n">region_list</span><span class="o">=</span><span class="n">region_list</span><span class="p">,</span>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>    <span class="n">bin_size</span><span class="o">=</span><span class="n">BIN_SIZE</span><span class="p">,</span>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/all_regions_prop_usage.pdf
+</code></pre></div>
+<p><img alt="png" src="../02_task_performance_analysis_files/02_task_performance_analysis_31_1.png" /></p>
+<h1 id="bout-level-success-metrics">Bout-Level Success Metrics<a class="headerlink" href="#bout-level-success-metrics" title="Permanent link">&para;</a></h1>
+<h2 id="plot-5-cumulative-successful-bout-percentage">Plot 5: Cumulative Successful Bout Percentage<a class="headerlink" href="#plot-5-cumulative-successful-bout-percentage" title="Permanent link">&para;</a></h2>
+<p>A bout is defined as a continuous sequence starting from the Entry Zone, passing through non-entry nodes, and returning to the Entry Zone. </p>
+<p>A successful bout is defined as one in which the animal reaches the Target Zone at least once before returning to the Entry Zone.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="n">assign_bout_indices_from_entry_node</span><span class="p">,</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    <span class="n">summarize_bout_success_by_session</span><span class="p">,</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>    <span class="n">plot_success_rate</span><span class="p">,</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="p">)</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="c1"># 1. Assign bout indices to the navigation dataframe</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="n">df_all_csv_wbouts</span> <span class="o">=</span> <span class="n">assign_bout_indices_from_entry_node</span><span class="p">(</span><span class="n">df_all_csv</span><span class="p">)</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="c1"># 2. Compute success summary statistics</span>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="n">bout_summary</span> <span class="o">=</span> <span class="n">summarize_bout_success_by_session</span><span class="p">(</span><span class="n">df_all_csv_wbouts</span><span class="p">)</span>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a><span class="c1"># 3. Plot % of successful bouts per genotype</span>
+</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a><span class="n">plot_success_rate</span><span class="p">(</span>
+</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-16-17"><a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a>    <span class="n">summary_table</span><span class="o">=</span><span class="n">bout_summary</span><span class="p">,</span>
+</span><span id="__span-16-18"><a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/cumulative_successful_bouts.pdf
+</code></pre></div>
+<p><img alt="png" src="../02_task_performance_analysis_files/02_task_performance_analysis_34_1.png" /></p>
+<h3 id="statistical-tests-genotypes">Statistical tests - genotypes<a class="headerlink" href="#statistical-tests-genotypes" title="Permanent link">&para;</a></h3>
+<p>Perform t-test on Success Rate:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">perform_genotype_ttests</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="n">ttest_results_success</span> <span class="o">=</span> <span class="n">perform_genotype_ttests</span><span class="p">(</span><span class="n">bout_summary</span><span class="p">,</span> <span class="n">rate_col</span><span class="o">=</span><span class="s1">&#39;success_rate&#39;</span><span class="p">)</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;T-Test on Success Rate:&quot;</span><span class="p">)</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ttest_results_success</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: t=</span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;t_stat&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">, p=</span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;p_value&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, mean1=</span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;mean_1&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, mean2=</span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;mean_2&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>T-Test on Success Rate:
+WT vs KO: t=0.138, p=0.9082, mean1=40.72, mean2=39.46
+</code></pre></div>
+<h2 id="plot-6-time-based-successful-bout-percentage">Plot 6: Time-based Successful Bout Percentage<a class="headerlink" href="#plot-6-time-based-successful-bout-percentage" title="Permanent link">&para;</a></h2>
+<p>This function computes the percentage of successful bouts within sequential time bins across all sessions, allowing time-resolved assessment of goal-directed behavior.</p>
+<h3 id="recommended-use_5">Recommended Use:<a class="headerlink" href="#recommended-use_5" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Ensure <code>df_all_csv</code> includes 'Session', 'Grid.Number', 'Bout_Index', and time-ordered rows.</li>
+<li>Set <code>lower_succ_lim</code> and <code>upper_succ_lim</code> to define the full range of timepoints to analyze.</li>
+<li>Set <code>diff_succ</code> as the size of each time bin (e.g., 5000).</li>
+<li>Use <code>valid_bout_threshold</code> to exclude short bouts (e.g., &lt; 19 steps).</li>
+<li>Set <code>optimal_path_regions</code> to define which regions are required for optimal navigation.</li>
+<li>Set <code>target_zone</code> to specify the region that marks a successful bout.</li>
+</ol>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_binned_success_summary</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1"># Set these values</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="n">BIN_SIZE</span> <span class="o">=</span> <span class="mi">5000</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="n">LOWER_BOUND</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="n">UPPER_BOUND</span> <span class="o">=</span> <span class="mi">90000</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="n">summary_df</span> <span class="o">=</span> <span class="n">compute_binned_success_summary</span><span class="p">(</span>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>    <span class="n">df_all_csv</span><span class="o">=</span><span class="n">df_all_csv_wbouts</span><span class="p">,</span>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>    <span class="n">lower_succ_lim</span><span class="o">=</span><span class="n">LOWER_BOUND</span><span class="p">,</span>
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a>    <span class="n">upper_succ_lim</span><span class="o">=</span><span class="n">UPPER_BOUND</span><span class="p">,</span>
+</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>    <span class="n">diff_succ</span><span class="o">=</span><span class="n">BIN_SIZE</span><span class="p">,</span>
+</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a>    <span class="n">valid_bout_threshold</span><span class="o">=</span><span class="mi">19</span><span class="p">,</span>
+</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a>    <span class="n">optimal_path_regions</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;entry_zone&#39;</span><span class="p">,</span> <span class="s1">&#39;reward_path&#39;</span><span class="p">,</span> <span class="s1">&#39;target_zone&#39;</span><span class="p">],</span>
+</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a>    <span class="n">target_zone</span><span class="o">=</span><span class="s1">&#39;target_zone&#39;</span>
+</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="p">)</span>
+</span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="n">summary_df</span>
+</span></code></pre></div>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Session</th>
+      <th>Genotype</th>
+      <th>Bout_num</th>
+      <th>No_of_Bouts</th>
+      <th>No_Valid_bouts</th>
+      <th>No_of_Succ_Bouts</th>
+      <th>No_of_perfect_bouts</th>
+      <th>Succ_bout_perc</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>5000</td>
+      <td>32</td>
+      <td>19</td>
+      <td>3</td>
+      <td>0</td>
+      <td>15.789474</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>10000</td>
+      <td>8</td>
+      <td>6</td>
+      <td>4</td>
+      <td>0</td>
+      <td>66.666667</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>15000</td>
+      <td>10</td>
+      <td>8</td>
+      <td>4</td>
+      <td>0</td>
+      <td>50.000000</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>20000</td>
+      <td>12</td>
+      <td>8</td>
+      <td>4</td>
+      <td>0</td>
+      <td>50.000000</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>25000</td>
+      <td>12</td>
+      <td>9</td>
+      <td>3</td>
+      <td>0</td>
+      <td>33.333333</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>30000</td>
+      <td>17</td>
+      <td>9</td>
+      <td>6</td>
+      <td>0</td>
+      <td>66.666667</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>35000</td>
+      <td>9</td>
+      <td>8</td>
+      <td>4</td>
+      <td>0</td>
+      <td>50.000000</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>40000</td>
+      <td>11</td>
+      <td>7</td>
+      <td>5</td>
+      <td>0</td>
+      <td>71.428571</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>45000</td>
+      <td>23</td>
+      <td>13</td>
+      <td>6</td>
+      <td>0</td>
+      <td>46.153846</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>50000</td>
+      <td>23</td>
+      <td>12</td>
+      <td>2</td>
+      <td>0</td>
+      <td>16.666667</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>55000</td>
+      <td>16</td>
+      <td>11</td>
+      <td>2</td>
+      <td>0</td>
+      <td>18.181818</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>60000</td>
+      <td>23</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>65000</td>
+      <td>18</td>
+      <td>14</td>
+      <td>2</td>
+      <td>0</td>
+      <td>14.285714</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>70000</td>
+      <td>15</td>
+      <td>10</td>
+      <td>3</td>
+      <td>0</td>
+      <td>30.000000</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>3</td>
+      <td>WT</td>
+      <td>75000</td>
+      <td>8</td>
+      <td>3</td>
+      <td>1</td>
+      <td>0</td>
+      <td>33.333333</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>4</td>
+      <td>WT</td>
+      <td>5000</td>
+      <td>23</td>
+      <td>11</td>
+      <td>1</td>
+      <td>0</td>
+      <td>9.090909</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>4</td>
+      <td>WT</td>
+      <td>10000</td>
+      <td>18</td>
+      <td>10</td>
+      <td>2</td>
+      <td>0</td>
+      <td>20.000000</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>4</td>
+      <td>WT</td>
+      <td>15000</td>
+      <td>22</td>
+      <td>10</td>
+      <td>6</td>
+      <td>0</td>
+      <td>60.000000</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>4</td>
+      <td>WT</td>
+      <td>20000</td>
+      <td>9</td>
+      <td>8</td>
+      <td>5</td>
+      <td>0</td>
+      <td>62.500000</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>4</td>
+      <td>WT</td>
+      <td>25000</td>
+      <td>17</td>
+      <td>12</td>
+      <td>5</td>
+      <td>0</td>
+      <td>41.666667</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>4</td>
+      <td>WT</td>
+      <td>30000</td>
+      <td>9</td>
+      <td>4</td>
+      <td>1</td>
+      <td>0</td>
+      <td>25.000000</td>
+    </tr>
+    <tr>
+      <th>36</th>
+      <td>5</td>
+      <td>WT</td>
+      <td>5000</td>
+      <td>27</td>
+      <td>16</td>
+      <td>2</td>
+      <td>0</td>
+      <td>12.500000</td>
+    </tr>
+    <tr>
+      <th>37</th>
+      <td>5</td>
+      <td>WT</td>
+      <td>10000</td>
+      <td>12</td>
+      <td>10</td>
+      <td>5</td>
+      <td>0</td>
+      <td>50.000000</td>
+    </tr>
+    <tr>
+      <th>38</th>
+      <td>5</td>
+      <td>WT</td>
+      <td>15000</td>
+      <td>17</td>
+      <td>13</td>
+      <td>7</td>
+      <td>0</td>
+      <td>53.846154</td>
+    </tr>
+    <tr>
+      <th>39</th>
+      <td>5</td>
+      <td>WT</td>
+      <td>20000</td>
+      <td>14</td>
+      <td>13</td>
+      <td>6</td>
+      <td>0</td>
+      <td>46.153846</td>
+    </tr>
+    <tr>
+      <th>40</th>
+      <td>5</td>
+      <td>WT</td>
+      <td>25000</td>
+      <td>14</td>
+      <td>10</td>
+      <td>3</td>
+      <td>0</td>
+      <td>30.000000</td>
+    </tr>
+    <tr>
+      <th>41</th>
+      <td>5</td>
+      <td>WT</td>
+      <td>30000</td>
+      <td>12</td>
+      <td>8</td>
+      <td>5</td>
+      <td>0</td>
+      <td>62.500000</td>
+    </tr>
+    <tr>
+      <th>42</th>
+      <td>5</td>
+      <td>WT</td>
+      <td>35000</td>
+      <td>18</td>
+      <td>12</td>
+      <td>5</td>
+      <td>0</td>
+      <td>41.666667</td>
+    </tr>
+    <tr>
+      <th>43</th>
+      <td>5</td>
+      <td>WT</td>
+      <td>40000</td>
+      <td>24</td>
+      <td>17</td>
+      <td>6</td>
+      <td>0</td>
+      <td>35.294118</td>
+    </tr>
+    <tr>
+      <th>44</th>
+      <td>5</td>
+      <td>WT</td>
+      <td>45000</td>
+      <td>21</td>
+      <td>13</td>
+      <td>5</td>
+      <td>0</td>
+      <td>38.461538</td>
+    </tr>
+    <tr>
+      <th>45</th>
+      <td>5</td>
+      <td>WT</td>
+      <td>50000</td>
+      <td>21</td>
+      <td>15</td>
+      <td>6</td>
+      <td>0</td>
+      <td>40.000000</td>
+    </tr>
+    <tr>
+      <th>46</th>
+      <td>5</td>
+      <td>WT</td>
+      <td>55000</td>
+      <td>10</td>
+      <td>5</td>
+      <td>1</td>
+      <td>0</td>
+      <td>20.000000</td>
+    </tr>
+    <tr>
+      <th>54</th>
+      <td>6</td>
+      <td>KO</td>
+      <td>5000</td>
+      <td>24</td>
+      <td>16</td>
+      <td>6</td>
+      <td>0</td>
+      <td>37.500000</td>
+    </tr>
+    <tr>
+      <th>55</th>
+      <td>6</td>
+      <td>KO</td>
+      <td>10000</td>
+      <td>24</td>
+      <td>20</td>
+      <td>6</td>
+      <td>0</td>
+      <td>30.000000</td>
+    </tr>
+    <tr>
+      <th>56</th>
+      <td>6</td>
+      <td>KO</td>
+      <td>15000</td>
+      <td>27</td>
+      <td>20</td>
+      <td>5</td>
+      <td>0</td>
+      <td>25.000000</td>
+    </tr>
+    <tr>
+      <th>57</th>
+      <td>6</td>
+      <td>KO</td>
+      <td>20000</td>
+      <td>32</td>
+      <td>16</td>
+      <td>6</td>
+      <td>0</td>
+      <td>37.500000</td>
+    </tr>
+    <tr>
+      <th>58</th>
+      <td>6</td>
+      <td>KO</td>
+      <td>25000</td>
+      <td>32</td>
+      <td>21</td>
+      <td>7</td>
+      <td>0</td>
+      <td>33.333333</td>
+    </tr>
+    <tr>
+      <th>59</th>
+      <td>6</td>
+      <td>KO</td>
+      <td>30000</td>
+      <td>27</td>
+      <td>18</td>
+      <td>9</td>
+      <td>0</td>
+      <td>50.000000</td>
+    </tr>
+    <tr>
+      <th>60</th>
+      <td>6</td>
+      <td>KO</td>
+      <td>35000</td>
+      <td>25</td>
+      <td>15</td>
+      <td>5</td>
+      <td>0</td>
+      <td>33.333333</td>
+    </tr>
+    <tr>
+      <th>61</th>
+      <td>6</td>
+      <td>KO</td>
+      <td>40000</td>
+      <td>40</td>
+      <td>25</td>
+      <td>6</td>
+      <td>0</td>
+      <td>24.000000</td>
+    </tr>
+    <tr>
+      <th>62</th>
+      <td>6</td>
+      <td>KO</td>
+      <td>45000</td>
+      <td>60</td>
+      <td>29</td>
+      <td>6</td>
+      <td>0</td>
+      <td>20.689655</td>
+    </tr>
+    <tr>
+      <th>63</th>
+      <td>6</td>
+      <td>KO</td>
+      <td>50000</td>
+      <td>55</td>
+      <td>32</td>
+      <td>5</td>
+      <td>0</td>
+      <td>15.625000</td>
+    </tr>
+    <tr>
+      <th>64</th>
+      <td>6</td>
+      <td>KO</td>
+      <td>55000</td>
+      <td>44</td>
+      <td>20</td>
+      <td>4</td>
+      <td>0</td>
+      <td>20.000000</td>
+    </tr>
+    <tr>
+      <th>72</th>
+      <td>7</td>
+      <td>KO</td>
+      <td>5000</td>
+      <td>29</td>
+      <td>19</td>
+      <td>1</td>
+      <td>0</td>
+      <td>5.263158</td>
+    </tr>
+    <tr>
+      <th>73</th>
+      <td>7</td>
+      <td>KO</td>
+      <td>10000</td>
+      <td>11</td>
+      <td>10</td>
+      <td>5</td>
+      <td>0</td>
+      <td>50.000000</td>
+    </tr>
+    <tr>
+      <th>74</th>
+      <td>7</td>
+      <td>KO</td>
+      <td>15000</td>
+      <td>14</td>
+      <td>12</td>
+      <td>5</td>
+      <td>0</td>
+      <td>41.666667</td>
+    </tr>
+    <tr>
+      <th>75</th>
+      <td>7</td>
+      <td>KO</td>
+      <td>20000</td>
+      <td>13</td>
+      <td>10</td>
+      <td>4</td>
+      <td>0</td>
+      <td>40.000000</td>
+    </tr>
+    <tr>
+      <th>76</th>
+      <td>7</td>
+      <td>KO</td>
+      <td>25000</td>
+      <td>14</td>
+      <td>11</td>
+      <td>5</td>
+      <td>0</td>
+      <td>45.454545</td>
+    </tr>
+    <tr>
+      <th>77</th>
+      <td>7</td>
+      <td>KO</td>
+      <td>30000</td>
+      <td>8</td>
+      <td>6</td>
+      <td>4</td>
+      <td>0</td>
+      <td>66.666667</td>
+    </tr>
+    <tr>
+      <th>78</th>
+      <td>7</td>
+      <td>KO</td>
+      <td>35000</td>
+      <td>12</td>
+      <td>10</td>
+      <td>7</td>
+      <td>0</td>
+      <td>70.000000</td>
+    </tr>
+    <tr>
+      <th>79</th>
+      <td>7</td>
+      <td>KO</td>
+      <td>40000</td>
+      <td>15</td>
+      <td>9</td>
+      <td>5</td>
+      <td>0</td>
+      <td>55.555556</td>
+    </tr>
+    <tr>
+      <th>80</th>
+      <td>7</td>
+      <td>KO</td>
+      <td>45000</td>
+      <td>8</td>
+      <td>6</td>
+      <td>1</td>
+      <td>0</td>
+      <td>16.666667</td>
+    </tr>
+    <tr>
+      <th>81</th>
+      <td>7</td>
+      <td>KO</td>
+      <td>50000</td>
+      <td>7</td>
+      <td>7</td>
+      <td>4</td>
+      <td>0</td>
+      <td>57.142857</td>
+    </tr>
+    <tr>
+      <th>82</th>
+      <td>7</td>
+      <td>KO</td>
+      <td>55000</td>
+      <td>6</td>
+      <td>5</td>
+      <td>2</td>
+      <td>0</td>
+      <td>40.000000</td>
+    </tr>
+    <tr>
+      <th>83</th>
+      <td>7</td>
+      <td>KO</td>
+      <td>60000</td>
+      <td>16</td>
+      <td>10</td>
+      <td>3</td>
+      <td>0</td>
+      <td>30.000000</td>
+    </tr>
+    <tr>
+      <th>84</th>
+      <td>7</td>
+      <td>KO</td>
+      <td>65000</td>
+      <td>9</td>
+      <td>7</td>
+      <td>3</td>
+      <td>0</td>
+      <td>42.857143</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_binned_success</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="c1"># Visualize the percentage of successful bouts within each time bin</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="n">plot_binned_success</span><span class="p">(</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>    <span class="n">summary_df</span><span class="o">=</span><span class="n">summary_df</span><span class="p">,</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/time_based_successful_bouts.pdf
+</code></pre></div>
+<p><img alt="png" src="../02_task_performance_analysis_files/02_task_performance_analysis_39_1.png" /></p>
+<h3 id="statistical-tests-time-based">Statistical tests - time-based<a class="headerlink" href="#statistical-tests-time-based" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>    <span class="n">run_mixedlm_with_nans</span><span class="p">,</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>    <span class="n">run_repeated_measures_anova</span><span class="p">,</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>    <span class="n">run_pairwise_comparisons</span><span class="p">,</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="p">)</span>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="c1"># Run Mixed Linear Model (preserves NaNs)</span>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="c1">#run_mixedlm_with_nans(summary_df)</span>
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>
+</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="c1"># Run Repeated Measures ANOVA (NaNs filled with 0)</span>
+</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="n">run_repeated_measures_anova</span><span class="p">(</span><span class="n">summary_df</span><span class="p">)</span>
+</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a>
+</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="c1"># Run Pairwise Comparisons (with FDR correction)</span>
+</span><span id="__span-20-15"><a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a><span class="n">run_pairwise_comparisons</span><span class="p">(</span><span class="n">summary_df</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Running Repeated Measures ANOVA (NaNs filled with 0)...
+ANOVA failed: Between subject effect not yet supported!
+
+Running Pairwise Comparisons with Tukey HSD + FDR...
+   group1 group2  meandiff   p-adj     lower     upper  reject  Bout_num  \
+0      KO     WT   -8.9215  0.5198  -47.9720   30.1291   False      5000   
+1      KO     WT    5.5556  0.7905  -55.3494   66.4606   False     10000   
+2      KO     WT   21.2821  0.0609   -1.8243   44.3884   False     15000   
+3      KO     WT   14.1346  0.1157   -6.3535   34.6227   False     20000   
+4      KO     WT   -4.3939  0.5394  -24.6389   15.8510   False     25000   
+5      KO     WT   -6.9444  0.7282  -64.8568   50.9680   False     30000   
+6      KO     WT   -5.8333  0.7857  -86.7269   75.0602   False     35000   
+7      KO     WT   13.5836  0.6283  -89.6230  116.7901   False     40000   
+8      KO     WT   23.6295  0.0321    4.9543   42.3047    True     45000   
+9      KO     WT   -8.0506  0.7675 -110.5083   94.4071   False     50000   
+10     KO     WT  -10.9091  0.3908  -54.1130   32.2949   False     55000   
+11     KO     WT  -30.0000     NaN       NaN       NaN   False     60000   
+12     KO     WT  -28.5714     NaN       NaN       NaN   False     65000
+
+    FDR_p  Significant  
+0     NaN        False  
+1     NaN        False  
+2     NaN        False  
+3     NaN        False  
+4     NaN        False  
+5     NaN        False  
+6     NaN        False  
+7     NaN        False  
+8     NaN        False  
+9     NaN        False  
+10    NaN        False  
+11    NaN        False  
+12    NaN        False
+</code></pre></div>
+<h1 id="plot-7-deviation-from-reward-path-and-velocity">Plot 7: Deviation from Reward Path and Velocity<a class="headerlink" href="#plot-7-deviation-from-reward-path-and-velocity" title="Permanent link">&para;</a></h1>
+<p>This function filters, normalizes, and smooths deviation and velocity values for the specified genotype, and fits exponential curves to the processed data.</p>
+<h3 id="recommended-use_6">Recommended Use:<a class="headerlink" href="#recommended-use_6" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Ensure <code>df_deviation</code> includes 'Ind_no', 'Genotype', 'Deviation', and 'Velocity' columns.</li>
+<li>Set <code>genotype</code> to filter the group of interest (e.g., 'WT-WT').</li>
+</ol>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>    <span class="n">ensure_velocity_column</span><span class="p">,</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>    <span class="n">ensure_bout_indices</span><span class="p">,</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>    <span class="n">compute_deviation_velocity</span><span class="p">,</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>    <span class="n">process_deviation_velocity</span><span class="p">,</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="p">)</span>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="n">GENOTYPE</span> <span class="o">=</span> <span class="s1">&#39;WT&#39;</span>
+</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a>
+</span><span id="__span-21-11"><a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a><span class="c1"># Ensures velocity column exists</span>
+</span><span id="__span-21-12"><a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a><span class="n">df_all_csv_wvelocity</span> <span class="o">=</span> <span class="n">ensure_velocity_column</span><span class="p">(</span>
+</span><span id="__span-21-13"><a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a>    <span class="n">df</span><span class="o">=</span><span class="n">df_all_csv</span><span class="p">,</span>
+</span><span id="__span-21-14"><a id="__codelineno-21-14" name="__codelineno-21-14" href="#__codelineno-21-14"></a>    <span class="n">frame_rate</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+</span><span id="__span-21-15"><a id="__codelineno-21-15" name="__codelineno-21-15" href="#__codelineno-21-15"></a><span class="p">)</span>
+</span><span id="__span-21-16"><a id="__codelineno-21-16" name="__codelineno-21-16" href="#__codelineno-21-16"></a>
+</span><span id="__span-21-17"><a id="__codelineno-21-17" name="__codelineno-21-17" href="#__codelineno-21-17"></a><span class="c1"># Ensure Bout Index column Bout_ID exists</span>
+</span><span id="__span-21-18"><a id="__codelineno-21-18" name="__codelineno-21-18" href="#__codelineno-21-18"></a><span class="n">df_all_csv_wbouts</span> <span class="o">=</span> <span class="n">ensure_bout_indices</span><span class="p">(</span>
+</span><span id="__span-21-19"><a id="__codelineno-21-19" name="__codelineno-21-19" href="#__codelineno-21-19"></a>    <span class="n">df</span><span class="o">=</span><span class="n">df_all_csv_wvelocity</span><span class="p">,</span>
+</span><span id="__span-21-20"><a id="__codelineno-21-20" name="__codelineno-21-20" href="#__codelineno-21-20"></a>    <span class="n">delimiter_node</span><span class="o">=</span><span class="mi">47</span><span class="p">,</span>
+</span><span id="__span-21-21"><a id="__codelineno-21-21" name="__codelineno-21-21" href="#__codelineno-21-21"></a><span class="p">)</span>
+</span><span id="__span-21-22"><a id="__codelineno-21-22" name="__codelineno-21-22" href="#__codelineno-21-22"></a>
+</span><span id="__span-21-23"><a id="__codelineno-21-23" name="__codelineno-21-23" href="#__codelineno-21-23"></a><span class="c1"># Compute deviation and velocity per bout</span>
+</span><span id="__span-21-24"><a id="__codelineno-21-24" name="__codelineno-21-24" href="#__codelineno-21-24"></a><span class="n">df_deviation</span> <span class="o">=</span> <span class="n">compute_deviation_velocity</span><span class="p">(</span><span class="n">df_all_csv_wbouts</span><span class="p">)</span>
+</span><span id="__span-21-25"><a id="__codelineno-21-25" name="__codelineno-21-25" href="#__codelineno-21-25"></a>
+</span><span id="__span-21-26"><a id="__codelineno-21-26" name="__codelineno-21-26" href="#__codelineno-21-26"></a><span class="c1"># Process deviation and velocity (normalize, smooth, fit curves)</span>
+</span><span id="__span-21-27"><a id="__codelineno-21-27" name="__codelineno-21-27" href="#__codelineno-21-27"></a><span class="n">df_processed</span><span class="p">,</span> <span class="n">params_dev</span><span class="p">,</span> <span class="n">params_vel</span> <span class="o">=</span> <span class="n">process_deviation_velocity</span><span class="p">(</span>
+</span><span id="__span-21-28"><a id="__codelineno-21-28" name="__codelineno-21-28" href="#__codelineno-21-28"></a>    <span class="n">index_df</span><span class="o">=</span><span class="n">df_deviation</span><span class="p">,</span>
+</span><span id="__span-21-29"><a id="__codelineno-21-29" name="__codelineno-21-29" href="#__codelineno-21-29"></a>    <span class="n">genotype</span><span class="o">=</span><span class="n">GENOTYPE</span><span class="p">,</span>
+</span><span id="__span-21-30"><a id="__codelineno-21-30" name="__codelineno-21-30" href="#__codelineno-21-30"></a><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_deviation_velocity_fit</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1"># Plots smoothed deviation and normalized velocity trajectories across bouts, overlaid with exponential fit curves</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="n">plot_deviation_velocity_fit</span><span class="p">(</span>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a>    <span class="n">df</span><span class="o">=</span><span class="n">df_processed</span><span class="p">,</span>
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a>    <span class="n">params_dev</span><span class="o">=</span><span class="n">params_dev</span><span class="p">,</span>
+</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a>    <span class="n">params_vel</span><span class="o">=</span><span class="n">params_vel</span><span class="p">,</span>
+</span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a>    <span class="n">genotype</span><span class="o">=</span><span class="n">GENOTYPE</span><span class="p">,</span>
+</span><span id="__span-22-11"><a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a>    <span class="n">max_bouts</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+</span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/WT_deviation_velocity_metric.pdf
+</code></pre></div>
+<p><img alt="png" src="../02_task_performance_analysis_files/02_task_performance_analysis_44_1.png" /></p>
+<h3 id="deviation-from-reward-path-and-velocity-for-all-genotypes">Deviation from Reward Path and Velocity for all Genotypes<a class="headerlink" href="#deviation-from-reward-path-and-velocity-for-all-genotypes" title="Permanent link">&para;</a></h3>
+<p>Plot Deviation-Velocity plots for all genotypes</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth.behavior.behavior_metrics.task_performance_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_deviation_velocity_all</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="n">plot_deviation_velocity_all</span><span class="p">(</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>    <span class="n">index_df</span><span class="o">=</span><span class="n">df_deviation</span><span class="p">,</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>    <span class="n">max_bouts</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/all_genotypes_deviation_velocity_metric.pdf
+</code></pre></div>
+<p><img alt="png" src="../02_task_performance_analysis_files/02_task_performance_analysis_46_1.png" /></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CoMPASS-Framework/CoMPASS-Labyrinth" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
