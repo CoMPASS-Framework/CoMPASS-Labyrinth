@@ -113,9 +113,6 @@ plugins:
             show_symbol_type_heading: true
             show_symbol_type_toc: true
             filters: ["!^_"]
-  - mkdocs-jupyter:
-      include_source: true
-      execute: false
 
 markdown_extensions:
   - admonition

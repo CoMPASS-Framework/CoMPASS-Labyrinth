@@ -64,7 +64,6 @@ docs = [
     "mkdocs",
     "mkdocs-material",
     "mkdocstrings[python]",
-    "mkdocs-jupyter",
     "click==8.2.1",
 ]
 
