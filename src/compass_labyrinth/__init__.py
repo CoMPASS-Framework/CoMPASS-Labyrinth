@@ -4,6 +4,7 @@ import datetime
 import yaml
 import shutil
 import os
+from movement.io import load_poses
 
 from .utils import load_project, load_cohort_metadata
 from .behavior.pose_estimation.dlc_utils import (
@@ -20,8 +21,9 @@ def init_project(
     source_data_path: Path | str,
     user_metadata_file_path: Path | str,
     trial_type: str = "Labyrinth_DSI",
-    file_ext: str = ".csv",
+    file_ext: str = ".h5",
     video_type: str = ".mp4",
+    sampling_rate: int = 30,
     dlc_scorer: str = "DLC_resnet50_LabyrinthMar13shuffle1_1000000",
     experimental_groups: list = ["A", "B", "C", "D"],
     palette: str = "grey",
@@ -45,9 +47,11 @@ def init_project(
     trial_type : str, optional
         Type of trial. Default is "Labyrinth_DSI".
     file_ext : str, optional
-        File extension for data files. Default is ".csv".
+        File extension for data files. Default is ".h5".
     video_type : str, optional
         Video file extension. Default is ".mp4".
+    sampling_rate : int, optional
+        Sampling rate of the videos. Default is 30.
     dlc_scorer : str, optional
         DeepLabCut scorer identifier. Default is "DLC_resnet50_LabyrinthMar13shuffle1_1000000".
     experimental_groups : list, optional
@@ -114,18 +118,32 @@ def init_project(
     for _, dir_path in all_dirs.items():
         dir_path.mkdir(parents=True, exist_ok=True)
 
-    # Copy pose estimation outputs to project path
+    # Read pose estimation files as movement datasets and save as .nc files to project path
     pose_est_csv_path = project_path_full / "data" / "dlc_results"
     pe_files = [f.resolve() for f in source_data_path.glob(f"*{dlc_scorer}*{file_ext}")]
     pe_files = sorted(pe_files, key=lambda f: f.name)
+    bodyparts = []
     for file in pe_files:
-        dest_file = pose_est_csv_path / file.name
+        dest_file = (pose_est_csv_path / file.name).with_suffix(".nc")
         if not dest_file.exists():
-            shutil.copy2(file, dest_file)
+            ds = load_poses.from_dlc_file(
+                file_path=file,
+                fps=sampling_rate,
+            )
+            ds.to_netcdf(dest_file)
+
+            # Extract keypoints / bodyparts names
+            if len(bodyparts) == 0:
+                bodyparts = ds.keypoints.values.tolist()
+            else:
+                if ds.keypoints.values.tolist() != bodyparts:
+                    raise ValueError(
+                        f"Bodyparts in file {file} do not match previously read bodyparts."
+                    )
 
     # ------ temporary - to be removed later ------
     # COPY withGrids.csv files as well
-    with_grid_files = [f.resolve() for f in source_data_path.glob(f"*withGrids*{file_ext}")]
+    with_grid_files = [f.resolve() for f in source_data_path.glob(f"*withGrids*.csv")]
     for file in with_grid_files:
         dest_file = pose_est_csv_path / file.name
         if not dest_file.exists():
@@ -137,11 +155,6 @@ def init_project(
 
     # Extract session names from pose estimation files
     session_names = [f.stem.replace(f"{dlc_scorer}", "") for f in pe_files]
-
-    # Extract bodyparts names
-    df = pd.read_csv(pe_files[0], header=[0, 1, 2], skipinitialspace=True)
-    bodyparts = df.columns.get_level_values(1).unique().tolist()
-    bodyparts = [bp for bp in bodyparts if bp.lower() != "bodyparts"]
 
     # Link videos to central video location
     video_dest_path = project_path_full / "videos" / "original_videos"
@@ -183,8 +196,8 @@ def init_project(
 
     # Copy all shape files (.dbf, .shp, .shx) from source data path to project grid_files folder
     grid_files_dest = project_path_full / "data" / "grid_files"
-    for file_ext in [".shp", ".dbf", ".shx"]:
-        grid_files = [f.resolve() for f in source_data_path.glob(f"*{file_ext}")]
+    for ext in [".shp", ".dbf", ".shx"]:
+        grid_files = [f.resolve() for f in source_data_path.glob(f"*{ext}")]
         for file in grid_files:
             dest_file = grid_files_dest / file.name
             if not dest_file.exists():
