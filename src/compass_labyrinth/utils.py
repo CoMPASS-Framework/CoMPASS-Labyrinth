@@ -2,6 +2,10 @@ from pathlib import Path
 import yaml
 import os
 import pandas as pd
+import numpy as np
+import xarray as xr
+from shapely.geometry import Point
+import geopandas as gpd
 
 
 def load_project(project_path: Path | str) -> tuple[dict, pd.DataFrame]:
@@ -93,3 +97,101 @@ def save_figure(
     save_path = os.path.join(base_path, subdir, f"{fig_name}.{ext}")
     plt.savefig(save_path, bbox_inches="tight", dpi=dpi)
     print(f"Saved: {save_path}")
+
+
+def load_grid_positions(
+    ds: xr.Dataset,
+    session: str,
+    grid_files_path: Path | str,
+) -> xr.Dataset:
+    """
+    Add grid position numbers to an xarray Dataset containing pose estimation data.
+    This function performs spatial joins between tracked body positions and a grid
+    shapefile to determine which grid cell each position falls within at each time point.
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        xarray Dataset containing pose estimation data.
+    session : str
+        Session name (e.g., 'Session0001') to identify the correct grid file
+    grid_files_path : Path | str
+        Path to directory containing grid shapefiles (e.g., '{session}_grid.shp')
+
+    Returns
+    -------
+    xr.Dataset
+        Input dataset with added 'grid_number' data variable indicating grid cell numbers.
+    """        
+    # Load the Grid shapefile
+    grid_files_path = Path(grid_files_path)
+    grid_file = grid_files_path / f"{session}_grid.shp"
+    if not grid_file.exists():
+        raise FileNotFoundError(f"Grid file not found at {grid_file}")
+    grid = gpd.read_file(str(grid_file))
+    
+    # Initialize grid numbers array with NaNs
+    n_time = len(ds.time)
+    n_keypoints = len(ds.keypoints)
+    n_individuals = 1  # Assuming single individual 'individual_0'
+    grid_numbers_array = np.full((n_time, n_keypoints, n_individuals), np.nan)
+    
+    # Get keypoint names
+    keypoints = ds.keypoints.values
+    
+    # Process each keypoint
+    for kp_idx, keypoint in enumerate(keypoints):
+        # Extract x,y positions for this keypoint
+        # position has shape (time, space, keypoints, individuals)
+        xy = ds.sel(individuals='individual_0', keypoints=keypoint).position.values
+        
+        # Create Point geometries for each time point
+        points = []
+        for x, y in xy:
+            if pd.notna(x) and pd.notna(y):
+                points.append(Point(x, y))
+            else:
+                points.append(None)
+        
+        # Create GeoDataFrame of points
+        pnt_gpd = gpd.GeoDataFrame(
+            geometry=points,
+            index=np.arange(len(points)),
+            crs=grid.crs,
+        )
+        
+        # Find which polygon each point is in
+        pointInPolys = gpd.tools.sjoin(
+            pnt_gpd,
+            grid,
+            predicate="within",
+            how="left",
+        )
+        
+        # Extract grid numbers
+        # Use 'FID' column from grid or index_right if FID doesn't exist
+        if "FID" in pointInPolys.columns:
+            grid_nums = pointInPolys["FID"].values
+        else:
+            grid_nums = pointInPolys["index_right"].values
+        
+        # Store in the array
+        grid_numbers_array[:, kp_idx, 0] = grid_nums
+    
+    # Add grid_number as a new data variable to the dataset
+    ds['grid_number'] = xr.DataArray(
+        grid_numbers_array,
+        dims=['time', 'keypoints', 'individuals'],
+        coords={
+            'time': ds.time,
+            'keypoints': ds.keypoints,
+            'individuals': ds.individuals
+        },
+        attrs={
+            'description': 'Grid cell number for each tracked position',
+            'grid_file': str(grid_file),
+            'session': session
+        }
+    )
+    
+    return ds
