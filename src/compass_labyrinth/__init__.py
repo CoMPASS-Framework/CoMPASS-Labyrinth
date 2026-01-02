@@ -2,11 +2,10 @@ from pathlib import Path
 import pandas as pd
 import datetime
 import yaml
-import shutil
 import os
 from movement.io import load_poses
 
-from .utils import load_project, load_cohort_metadata
+from .utils import load_project, update_dataset_with_grid_positions
 from .behavior.pose_estimation.dlc_utils import (
     import_cohort_metadata,
     validate_metadata,
@@ -75,7 +74,8 @@ def init_project(
     if not source_data_path.exists():
         raise ValueError(f"Source data path {source_data_path} does not exist.")
 
-    check_preprocessing_status(source_data_path)
+    # TODO - Commenting out for now, to be re-enabled later
+    #check_preprocessing_status(source_data_path)
 
     # Set up project's base path
     project_path = Path(project_path).resolve()
@@ -118,18 +118,39 @@ def init_project(
     for _, dir_path in all_dirs.items():
         dir_path.mkdir(parents=True, exist_ok=True)
 
-    # Read pose estimation files as movement datasets and save as .nc files to project path
-    pose_est_csv_path = project_path_full / "data" / "dlc_results"
+    # List of pose estimation files
+    pose_est_dest_path = project_path_full / "data" / "dlc_results"
     pe_files = [f.resolve() for f in source_data_path.glob(f"*{dlc_scorer}*{file_ext}")]
     pe_files = sorted(pe_files, key=lambda f: f.name)
+
+    # Extract session names from pose estimation files
+    session_names = [f.stem.replace(f"{dlc_scorer}", "") for f in pe_files]
+
+    # Read pose estimation files as movement datasets and save as .nc files to project path
     bodyparts = []
     for file in pe_files:
-        dest_file = (pose_est_csv_path / file.name).with_suffix(".nc")
+        session_name = file.stem.replace(f"{dlc_scorer}", "")
+        dest_file = pose_est_dest_path / f"{session_name}.nc"
         if not dest_file.exists():
             ds = load_poses.from_dlc_file(
                 file_path=file,
                 fps=sampling_rate,
             )
+
+            # Load the grid file (.shp) and update the datasets with grid positions
+            grid_file_aux = [f for f in source_data_path.glob(f"{session_name}*.shp")]
+            if len(grid_file_aux) == 0:
+                raise FileNotFoundError(
+                    f"Grid shapefile for session {session_name} not found.",
+                    f"Expected at {source_data_path} with pattern {session_name}*.shp",
+                )
+            grid_file_path = grid_file_aux[0].resolve()
+            ds = update_dataset_with_grid_positions(
+                ds=ds,
+                grid_file_path=grid_file_path,
+            )
+
+            # Save as .nc file
             ds.to_netcdf(dest_file)
 
             # Extract keypoints / bodyparts names
@@ -141,20 +162,27 @@ def init_project(
                         f"Bodyparts in file {file} do not match previously read bodyparts."
                     )
 
-    # ------ temporary - to be removed later ------
-    # COPY withGrids.csv files as well
-    with_grid_files = [f.resolve() for f in source_data_path.glob(f"*withGrids*.csv")]
-    for file in with_grid_files:
-        dest_file = pose_est_csv_path / file.name
-        if not dest_file.exists():
-            shutil.copy2(file, dest_file)
 
-    if len(pe_files) == 0:
-        pe_files = with_grid_files
-    # ------------------------------------------------------
+    # # ------ temporary - to be removed later ------
+    # # COPY withGrids.csv files as well
+    # with_grid_files = [f.resolve() for f in source_data_path.glob(f"*withGrids*.csv")]
+    # for file in with_grid_files:
+    #     dest_file = pose_est_csv_path / file.name
+    #     if not dest_file.exists():
+    #         shutil.copy2(file, dest_file)
 
-    # Extract session names from pose estimation files
-    session_names = [f.stem.replace(f"{dlc_scorer}", "") for f in pe_files]
+    # if len(pe_files) == 0:
+    #     pe_files = with_grid_files
+    # # ------------------------------------------------------
+
+    # # Copy all shape files (.dbf, .shp, .shx) from source data path to project grid_files folder
+    # grid_files_dest = project_path_full / "data" / "grid_files"
+    # for ext in [".shp", ".dbf", ".shx"]:
+    #     grid_files = [f.resolve() for f in source_data_path.glob(f"*{ext}")]
+    #     for file in grid_files:
+    #         dest_file = grid_files_dest / file.name
+    #         if not dest_file.exists():
+    #             shutil.copy2(file, dest_file)
 
     # Link videos to central video location
     video_dest_path = project_path_full / "videos" / "original_videos"
@@ -193,15 +221,6 @@ def init_project(
     # Save cohort metadata as CSV
     metadata_df = pd.DataFrame(cohort_metadata)
     metadata_df.to_csv(project_path_full / "cohort_metadata.csv", index=False)
-
-    # Copy all shape files (.dbf, .shp, .shx) from source data path to project grid_files folder
-    grid_files_dest = project_path_full / "data" / "grid_files"
-    for ext in [".shp", ".dbf", ".shx"]:
-        grid_files = [f.resolve() for f in source_data_path.glob(f"*{ext}")]
-        for file in grid_files:
-            dest_file = grid_files_dest / file.name
-            if not dest_file.exists():
-                shutil.copy2(file, dest_file)
 
     # Create config dictionary and save config.yaml in project path
     config = {

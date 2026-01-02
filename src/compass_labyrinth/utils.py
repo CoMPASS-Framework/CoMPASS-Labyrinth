@@ -66,6 +66,33 @@ def load_cohort_metadata(config: dict) -> pd.DataFrame:
     return metadata_df
 
 
+def load_session_dataset(config: dict, session_name: str) -> xr.Dataset:
+    """
+    Loads the xarray Dataset for a specific session.
+
+    Parameters
+    ----------
+    config: dict
+        The project configuration dictionary.
+    session_name: str
+        The name of the session to load.
+
+    Returns
+    -------
+    ds: xr.Dataset
+        The xarray Dataset for the specified session.
+    """
+    if session_name not in config["session_names"]:
+        raise ValueError(f"Session name {session_name} not found in project configuration.")
+    project_path = Path(config["project_path_full"]).resolve()
+    nc_file_path = project_path / "data" / "dlc_results" / f"{session_name}.nc"
+    if not nc_file_path.exists():
+        raise FileNotFoundError(f"Dataset file not found at {nc_file_path}")
+
+    ds = xr.load_dataset(nc_file_path)
+    return ds
+
+
 def save_figure(
     config: dict,
     fig_name: str,
@@ -99,10 +126,9 @@ def save_figure(
     print(f"Saved: {save_path}")
 
 
-def load_grid_positions(
+def update_dataset_with_grid_positions(
     ds: xr.Dataset,
-    session: str,
-    grid_files_path: Path | str,
+    grid_file_path: Path | str,
 ) -> xr.Dataset:
     """
     Add grid position numbers to an xarray Dataset containing pose estimation data.
@@ -113,22 +139,20 @@ def load_grid_positions(
     ----------
     ds : xr.Dataset
         xarray Dataset containing pose estimation data.
-    session : str
-        Session name (e.g., 'Session0001') to identify the correct grid file
-    grid_files_path : Path | str
-        Path to directory containing grid shapefiles (e.g., '{session}_grid.shp')
+    grid_file_path : Path | str
+        Path to the grid shapefile (e.g., '{session}_grid.shp')
 
     Returns
     -------
     xr.Dataset
-        Input dataset with added 'grid_number' data variable indicating grid cell numbers.
+        Updated xarray Dataset with an additional data variable 'grid_number'
+        indicating the grid cell number for each tracked position.
     """        
     # Load the Grid shapefile
-    grid_files_path = Path(grid_files_path)
-    grid_file = grid_files_path / f"{session}_grid.shp"
-    if not grid_file.exists():
-        raise FileNotFoundError(f"Grid file not found at {grid_file}")
-    grid = gpd.read_file(str(grid_file))
+    grid_file_path = Path(grid_file_path)
+    if not grid_file_path.exists():
+        raise FileNotFoundError(f"Grid file not found at {grid_file_path}")
+    grid = gpd.read_file(str(grid_file_path))
     
     # Initialize grid numbers array with NaNs
     n_time = len(ds.time)
@@ -161,19 +185,19 @@ def load_grid_positions(
         )
         
         # Find which polygon each point is in
-        pointInPolys = gpd.tools.sjoin(
-            pnt_gpd,
-            grid,
+        point_in_polys = gpd.tools.sjoin(
+            left_df=pnt_gpd,
+            right_df=grid,
             predicate="within",
             how="left",
         )
         
         # Extract grid numbers
         # Use 'FID' column from grid or index_right if FID doesn't exist
-        if "FID" in pointInPolys.columns:
-            grid_nums = pointInPolys["FID"].values
+        if "FID" in point_in_polys.columns:
+            grid_nums = point_in_polys["FID"].values
         else:
-            grid_nums = pointInPolys["index_right"].values
+            grid_nums = point_in_polys["index_right"].values
         
         # Store in the array
         grid_numbers_array[:, kp_idx, 0] = grid_nums
@@ -189,9 +213,8 @@ def load_grid_positions(
         },
         attrs={
             'description': 'Grid cell number for each tracked position',
-            'grid_file': str(grid_file),
-            'session': session
+            'grid_file': str(grid_file_path),
         }
     )
-    
+
     return ds
