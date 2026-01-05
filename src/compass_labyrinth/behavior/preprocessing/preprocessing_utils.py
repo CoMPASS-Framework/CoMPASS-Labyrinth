@@ -234,8 +234,10 @@ def compile_mouse_sessions_old(
 # Preprocessing
 ###################################################################
 
-
-def remove_until_initial_node(df: pd.DataFrame, initial_nodes: list = [47, 46, 34, 22]) -> pd.DataFrame:
+def remove_until_initial_node(
+    df: pd.DataFrame,
+    initial_nodes: list = [47, 46, 34, 22],
+) -> pd.DataFrame:
     """
     Removes all rows in the dataframe until the first occurrence of a grid node
     in the provided initial_nodes list.
@@ -252,10 +254,10 @@ def remove_until_initial_node(df: pd.DataFrame, initial_nodes: list = [47, 46, 3
     pd.DataFrame
         Truncated dataframe starting from the first initial node.
     """
-    if df.iloc[0]["Grid Number"] in initial_nodes:
+    if df.iloc[0]["grid_number"] in initial_nodes:
         return df.copy()
 
-    first_valid_index = df[df["Grid Number"].isin(initial_nodes)].index.min()
+    first_valid_index = df[df["grid_number"].isin(initial_nodes)].index.min()
     if pd.notna(first_valid_index):
         return df.iloc[first_valid_index:].reset_index(drop=True)
 
@@ -263,7 +265,8 @@ def remove_until_initial_node(df: pd.DataFrame, initial_nodes: list = [47, 46, 3
 
 
 def remove_invalid_grid_transitions(
-    df: pd.DataFrame, adjacency_matrix: pd.DataFrame = ADJACENCY_MATRIX
+    df: pd.DataFrame, 
+    adjacency_matrix: pd.DataFrame = ADJACENCY_MATRIX,
 ) -> pd.DataFrame:
     """
     Removes rows from the dataframe where the transition between consecutive
@@ -281,7 +284,7 @@ def remove_invalid_grid_transitions(
     pd.DataFrame
         Cleaned dataframe with only valid grid transitions.
     """
-    grid_numbers = list(df["Grid Number"])
+    grid_numbers = list(df["grid_number"])
     drop_indices = []
     x = 0
     num = 0
@@ -311,7 +314,7 @@ def preprocess_sessions(
     Full preprocessing pipeline for all sessions: trims to initial nodes and removes invalid transitions.
 
     Parameters
-    -----------
+    ----------
     df_comb: pd.DataFrame
         Combined dataframe with all sessions.
     adjacency_matrix: pd.DataFrame
@@ -320,21 +323,21 @@ def preprocess_sessions(
         Nodes that mark the true session start.
 
     Returns
-    --------
+    -------
     pd.DataFrame
         Fully cleaned and combined dataframe across all sessions.
     """
     preprocessed_sessions = []
 
-    for _, session_df in df_comb.groupby("Session"):
+    for _, session_df in df_comb.groupby("session"):
         session_df = session_df.reset_index(drop=True)
         session_df = remove_until_initial_node(session_df, initial_nodes)
         session_df = remove_invalid_grid_transitions(session_df, adjacency_matrix)
         preprocessed_sessions.append(session_df)
 
     df_all_cleaned = pd.concat(preprocessed_sessions, ignore_index=True)
-    df_all_cleaned["Session"] = df_all_cleaned["Session"].astype(int)
-    df_all_cleaned["Grid Number"] = df_all_cleaned["Grid Number"].astype(int)
+    df_all_cleaned["session"] = df_all_cleaned["session"].astype(int)
+    df_all_cleaned["grid_number"] = df_all_cleaned["grid_number"].astype(int)
 
     # Mapping of variable names to NodeType labels
     # key : value pair, key = list name (as in Initializations) & value = column value name decided by user
@@ -348,13 +351,13 @@ def preprocess_sessions(
         "entry_zone": "Entry Nodes",
         "target_zone": "Target Nodes",
     }
-    df_all_cleaned["NodeType"] = "Unlabeled"
+    df_all_cleaned["node_type"] = "Unlabeled"
 
     # Apply mapping to access the list by name
     # Creates the column NodeType based on Grid Numbers
     for var_name, label in label_mapping.items():
         node_list = NODE_TYPE_MAPPING[var_name]
-        df_all_cleaned.loc[df_all_cleaned["Grid Number"].isin(node_list), "NodeType"] = label
+        df_all_cleaned.loc[df_all_cleaned["grid_number"].isin(node_list), "node_type"] = label
 
     return df_all_cleaned
 
@@ -363,12 +366,11 @@ def preprocess_sessions(
 # Velocity column creation
 #######################################################
 
-
 def ensure_velocity_column(
     df: pd.DataFrame,
     x_col: str = "x",
     y_col: str = "y",
-    velocity_col: str = "Velocity",
+    velocity_col: str = "velocity",
     fps: float = 5,
 ) -> pd.DataFrame:
     """
@@ -402,10 +404,10 @@ def ensure_velocity_column(
 
     df = df.copy()
 
-    if "Session" in df.columns:
-        coords = df[[x_col, y_col, "Session"]]
+    if "session" in df.columns:
+        coords = df[[x_col, y_col, "session"]]
         velocity = (
-            coords.groupby("Session", group_keys=False)[[x_col, y_col]]
+            coords.groupby("session", group_keys=False)[[x_col, y_col]]
             .apply(lambda g: np.sqrt(g[x_col].diff() ** 2 + g[y_col].diff() ** 2) * fps)
             .fillna(0)
         )
@@ -419,7 +421,10 @@ def ensure_velocity_column(
 #########################################################
 # Save dataframes to CSV files
 #########################################################
-def save_preprocessed_to_csv(config: dict, df: pd.DataFrame) -> None:
+def save_preprocessed_to_csv(
+    config: dict,
+    df: pd.DataFrame,
+) -> None:
     """
     Saves Preprocessed data to CSV files
 
@@ -449,8 +454,8 @@ def save_preprocessed_to_csv(config: dict, df: pd.DataFrame) -> None:
     print(f"Saved combined file: {combined_path}")
 
     # Save per-session individual files
-    for session_id, df_session in df.groupby("Session"):
+    for session_id, df_session in df.groupby("session"):
         file_name = f"Session-{session_id}_preprocessed.csv"
         file_path = individual_dir / file_name
         df_session.to_csv(file_path, index=False)
-    print(f"Saved {df['Session'].nunique()} individual session CSVs to: {individual_dir}")
+    print(f"Saved {df['session'].nunique()} individual session CSVs to: {individual_dir}")
