@@ -120,7 +120,7 @@ def compile_mouse_sessions(
     df_comb["grid_number"] = df_comb["grid_number"].astype(int)
 
     # Map Genotype and Sex
-    session_to_genotype = {k: g["Session #"].tolist() for k, g in cohort_metadata.groupby("genotype")}
+    session_to_genotype = {k: g["Session #"].tolist() for k, g in cohort_metadata.groupby("Genotype")}
     inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
     df_comb["genotype"] = df_comb["session"].map(inverse_mapping)
 
