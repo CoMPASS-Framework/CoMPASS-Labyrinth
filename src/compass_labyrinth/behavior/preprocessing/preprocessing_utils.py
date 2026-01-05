@@ -8,6 +8,7 @@ Goal:
 
 import pandas as pd
 import numpy as np
+import xarray as xr
 from pathlib import Path
 import os
 
@@ -27,11 +28,120 @@ from compass_labyrinth.constants import (
 def load_and_preprocess_session_data(
     filename: str,
     bp: str,
+    region_mapping: dict = REGION_MAPPING,
+) -> pd.DataFrame:
+    """
+    Loads pose estimation data from NetCDF and assigns spatial regions based on grid numbers.
+
+    Parameters
+    -----------
+    filename : str
+        NetCDF file path for a session.
+    bp : str
+        Body part name (e.g., 'sternum').
+    region_mapping : dict
+        Dictionary mapping region names to grid number lists.
+
+    Returns
+    --------
+    pd.DataFrame
+        Cleaned and region-labeled DataFrame for the session.
+    """
+    # Load NetCDF file
+    ds = xr.open_dataset(filename)
+    
+    # Extract data for specific bodypart from individual_0
+    # position has shape (time, space) where space contains [x, y]
+    position = ds.sel(individuals='individual_0', keypoints=bp).position.values
+    confidence = ds.sel(individuals='individual_0', keypoints=bp).confidence.values
+    grid_numbers = ds.sel(individuals='individual_0', keypoints=bp).grid_number.values
+    
+    # Close dataset to free memory
+    ds.close()
+    
+    # Create DataFrame
+    dflin = pd.DataFrame({
+        'x': position[:, 0],  # x coordinates (first spatial dimension)
+        'y': position[:, 1],  # y coordinates (second spatial dimension)
+        'grid_number': grid_numbers,
+        'likelihood': confidence
+    })
+    dflin["s_no"] = np.arange(1, len(dflin) + 1)
+
+    # Filter: tracking likelihood and grid presence
+    dflin = dflin.fillna(-1)
+    dflin = dflin[(dflin["likelihood"] > 0.6) & (dflin["grid_number"] != -1)].copy()
+    dflin.reset_index(drop=True, inplace=True)
+
+    # Assign regions from dictionary
+    dflin["region"] = "Unknown"
+    for region_name, grid_list in region_mapping.items():
+        dflin.loc[dflin["grid_number"].isin(grid_list), "region"] = region_name
+
+    return dflin
+
+
+def compile_mouse_sessions(
+    config: dict,
+    bp: str,
+    region_mapping: dict = REGION_MAPPING,
+) -> pd.DataFrame:
+    """
+    Compiles all sessions from NetCDF files into a single DataFrame.
+
+    Parameters
+    -----------
+    config : dict
+        Project configuration dictionary.
+    bp : str
+        Body part name (e.g., 'sternum').
+    region_mapping : dict
+        Region name → grid number list.
+
+    Returns
+    --------
+    pd.DataFrame
+        Combined session dataframe with region, Genotype, Sex.
+    """
+    pose_est_filepath = Path(config["project_path_full"]) / "data" / "dlc_results"
+    cohort_metadata = load_cohort_metadata(config)
+
+    li_group = []
+    for sess in cohort_metadata["Session #"].unique():
+        session_name = f"Session-{int(sess)}"
+        filename = pose_est_filepath / f"{session_name}.nc"
+        df = load_and_preprocess_session_data(str(filename), bp, region_mapping)
+        df["session"] = sess
+        li_group.append(df)
+
+    df_comb = pd.concat(li_group, axis=0, ignore_index=True)
+    df_comb["grid_number"] = df_comb["grid_number"].astype(int)
+    
+    # Map Genotype and Sex
+    session_to_genotype = {k: g["Session #"].tolist() for k, g in cohort_metadata.groupby("Genotype")}
+    inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
+    df_comb["genotype"] = df_comb["session"].map(inverse_mapping)
+
+    session_to_sex = dict(cohort_metadata[["Session #", "Sex"]].values)
+    df_comb["sex"] = df_comb["session"].map(session_to_sex)
+
+    return df_comb
+
+
+##################################################################
+# OLD CSV-BASED FUNCTIONS - DEPRECATED
+##################################################################
+
+# TODO - to be removed
+def load_and_preprocess_session_data_old(
+    filename: str,
+    bp: str,
     DLCscorer: str,
     region_mapping: dict = REGION_MAPPING,
 ) -> pd.DataFrame:
     """
-    Loads DLC-tracked session data and assigns spatial regions based on grid numbers.
+    [DEPRECATED] Loads DLC-tracked session data from CSV and assigns spatial regions.
+    Use load_and_preprocess_session_data() for NetCDF files instead.
 
     Parameters
     -----------
@@ -71,13 +181,15 @@ def load_and_preprocess_session_data(
     return dflin
 
 
-def compile_mouse_sessions(
+# TODO - to be removed
+def compile_mouse_sessions_old(
     config: dict,
     bp: str,
     region_mapping: dict = REGION_MAPPING,
 ) -> pd.DataFrame:
     """
-    Compiles all sessions into a single DataFrame.
+    [DEPRECATED] Compiles all sessions from CSV files into a single DataFrame.
+    Use compile_mouse_sessions() for NetCDF files instead.
 
     Parameters
     -----------
@@ -101,7 +213,7 @@ def compile_mouse_sessions(
     for sess in cohort_metadata["Session #"].unique():
         session_name = f"Session-{int(sess)}"
         filename = os.path.join(pose_est_csv_filepath, f"{session_name}withGrids.csv")
-        df = load_and_preprocess_session_data(filename, bp, dlc_scorer, region_mapping)
+        df = load_and_preprocess_session_data_old(filename, bp, dlc_scorer, region_mapping)
         df["Session"] = sess
         li_group.append(df)
 
