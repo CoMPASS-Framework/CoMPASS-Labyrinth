@@ -12,8 +12,8 @@ from scipy.ndimage import gaussian_filter
 # KDE Plot per Session
 # ----------------------------
 def plot_kde_per_session(df, best_sigma, kde_col="KDE"):
-    for session in df["Session"].unique():
-        sess_df = df[df["Session"] == session]
+    for session in df["session"].unique():
+        sess_df = df[df["session"] == session]
         if len(sess_df) < 5:
             continue
 
@@ -184,7 +184,7 @@ def compute_detailed_bout_summary(
         boutnum = 1
         prob_list = []
         for bout in bouts:
-            subset = bout[bout["NodeType"] == node_filter]
+            subset = bout[bout["node_type"] == node_filter]
             row = {
                 "session": session_df["session"].iloc[0],
                 "genotype": session_df["genotype"].iloc[0],

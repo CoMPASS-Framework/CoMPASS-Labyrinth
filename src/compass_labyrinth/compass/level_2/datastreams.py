@@ -18,7 +18,7 @@ from compass_labyrinth.constants import (
 # KDE Computation
 # ============================================================
 def loso_kde_cv(df: pd.DataFrame, smoothing_factors: list) -> float:
-    sessions = shuffle(df["Session"].unique(), random_state=42)
+    sessions = shuffle(df["session"].unique(), random_state=42)
     loo = LeaveOneOut()
     cv_results = []
 
@@ -30,8 +30,8 @@ def loso_kde_cv(df: pd.DataFrame, smoothing_factors: list) -> float:
             train_sessions = sessions[train_idx]
             test_sessions = sessions[test_idx]
 
-            train_df = df[df["Session"].isin(train_sessions)]
-            test_df = df[df["Session"].isin(test_sessions)]
+            train_df = df[df["session"].isin(train_sessions)]
+            test_df = df[df["session"].isin(test_sessions)]
 
             if len(train_df) < 5 or len(test_df) < 5:
                 continue
@@ -61,9 +61,9 @@ def compute_kde_scaled(df, best_sigma, kde_col="KDE"):
     scaler = MinMaxScaler((0, 3))
     print("Best Sigma = ", best_sigma)
 
-    for session in df["Session"].unique():
-        print(f"Computing KDE for Session {session}...")
-        sess_df = df[df["Session"] == session]
+    for session in df["session"].unique():
+        print(f"Computing KDE for session {session}...")
+        sess_df = df[df["session"] == session]
 
         if len(sess_df) < 5:
             continue
@@ -79,8 +79,8 @@ def compute_kde_scaled(df, best_sigma, kde_col="KDE"):
 
 
 def plot_kde_per_session(df: pd.DataFrame, best_sigma: float, kde_col: str = "KDE") -> None:
-    for session in df["Session"].unique():
-        sess_df = df[df["Session"] == session]
+    for session in df["session"].unique():
+        sess_df = df[df["session"] == session]
         if len(sess_df) < 5:
             continue
 
@@ -151,8 +151,8 @@ def calculate_deviation(row):
 # ------------------ Main Processing ------------------ #
 def compute_angle_deviation(df: pd.DataFrame, rolling_window: int) -> pd.DataFrame:
     li_sess = []
-    for sess in df["Session"].unique():
-        df_sess = df[df["Session"] == sess].copy().reset_index(drop=True)
+    for sess in df["session"].unique():
+        df_sess = df[df["session"] == sess].copy().reset_index(drop=True)
         # Unsmoothed angle deviation
         df_sess["dx"] = df_sess["x"].diff()
         df_sess["dy"] = df_sess["y"].diff()
@@ -174,10 +174,10 @@ def assign_reference_info(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     close_ref_dict = CLOSE_REF
     xy_mapping = X_Y_MAPPING
-    df["Closest_Node"] = df["Grid Number"].apply(lambda x: map_category(x, close_ref_dict))
+    df["Closest_Node"] = df["grid_number"].apply(lambda x: map_category(x, close_ref_dict))
     df["x_mean"] = df.groupby("Closest_Node")["x"].transform("mean")
     df["y_mean"] = df.groupby("Closest_Node")["y"].transform("mean")
-    df["Reference_axis"] = df["Grid Number"].apply(lambda x: map_category(x, xy_mapping))
+    df["Reference_axis"] = df["grid_number"].apply(lambda x: map_category(x, xy_mapping))
     return df
 
 
@@ -207,10 +207,10 @@ def merge_value_map(df: pd.DataFrame, value_map: pd.DataFrame) -> pd.DataFrame:
     value_map = value_map.rename(columns=colmap)
 
     # Force Grid Number to int in both
-    df["Grid Number"] = df["Grid Number"].astype(int)
-    value_map["Grid Number"] = value_map["Grid Number"].astype(int)
+    df["grid_number"] = df["grid_number"].astype(int)
+    value_map["grid_number"] = value_map["grid_number"].astype(int)
 
-    df = pd.merge(df, value_map, on="Grid Number", how="left")
+    df = pd.merge(df, value_map, on="grid_number", how="left")
 
     if "Value" not in df.columns:
         raise KeyError(f"'Value' column missing after merge. Columns: {df.columns.tolist()}")

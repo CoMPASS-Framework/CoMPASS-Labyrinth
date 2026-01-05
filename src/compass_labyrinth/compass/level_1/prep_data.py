@@ -111,9 +111,9 @@ def prep_data(
     if xcol not in data.columns or ycol not in data.columns:
         raise ValueError("coordNames not found in data")
 
-    # Sort data by ID, Session, and S_no, and remove rows with missing values
-    data["ID"] = data["Session"].astype("category")
-    data = data.sort_values(by=["ID", "Session", "S_no"]).dropna().reset_index(drop=True)
+    # Sort data by ID, session, and S_no, and remove rows with missing values
+    data["ID"] = data["session"].astype("category")
+    data = data.sort_values(by=["ID", "session", "s_no"]).dropna().reset_index(drop=True)
 
     # ID handling
     if "ID" in data.columns:

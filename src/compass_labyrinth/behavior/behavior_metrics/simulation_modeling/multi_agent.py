@@ -37,7 +37,7 @@ def split_into_epochs_multi(df: pd.DataFrame, epoch_size: int) -> list:
         A list of tuples containing (session, epoch index, chunk DataFrame).
     """
     epochs = []
-    for session, sess_df in df.groupby("Session"):
+    for session, sess_df in df.groupby("session"):
         for i in range(0, len(sess_df), epoch_size):
             chunk = sess_df.iloc[i : i + epoch_size]
             if not chunk.empty:
@@ -73,15 +73,15 @@ def track_valid_transitions_multi(
     session_valid = {}
     session_optimal = {}
 
-    for session, group in df.groupby("Session"):
+    for session, group in df.groupby("session"):
         valid_dict = {}
         optimal_dict = {}
 
         for i in range(len(group) - 1):
-            if group.iloc[i]["NodeType"] == decision_label:
-                curr_grid = group.iloc[i]["Grid Number"]
-                next_grid = group.iloc[i + 1]["Grid Number"]
-                next_region = group.iloc[i + 1]["Region"]
+            if group.iloc[i]["node_type"] == decision_label:
+                curr_grid = group.iloc[i]["grid_number"]
+                next_grid = group.iloc[i + 1]["grid_number"]
+                next_region = group.iloc[i + 1]["region"]
 
                 valid_dict.setdefault(curr_grid, set()).add(next_grid)
 
@@ -128,9 +128,9 @@ def simulate_random_agent_multi(
     actual, random_perf = [], []
 
     for i in range(len(chunk) - 1):
-        if chunk.iloc[i]["NodeType"] == decision_label:
-            curr = chunk.iloc[i]["Grid Number"]
-            next_actual = chunk.iloc[i + 1]["Grid Number"]
+        if chunk.iloc[i]["node_type"] == decision_label:
+            curr = chunk.iloc[i]["grid_number"]
+            next_actual = chunk.iloc[i + 1]["grid_number"]
 
             is_opt = next_actual in optimal_dict.get(curr, set())
             actual.append(1 if is_opt else 0)
@@ -177,8 +177,8 @@ def simulate_binary_agent_multi(
     binary_perf = []
 
     for i in range(len(chunk) - 1):
-        if chunk.iloc[i]["NodeType"] == decision_label:
-            curr = chunk.iloc[i]["Grid Number"]
+        if chunk.iloc[i]["node_type"] == decision_label:
+            curr = chunk.iloc[i]["grid_number"]
             choices = list(valid_dict.get(curr, []))
 
             opt = [x for x in choices if x in optimal_dict.get(curr, set())]
@@ -227,8 +227,8 @@ def simulate_multiway_agent_multi(
     """
     perf = []
     for i in range(len(chunk) - 1):
-        if chunk.iloc[i]["NodeType"] == decision_label:
-            curr = chunk.iloc[i]["Grid Number"]
+        if chunk.iloc[i]["node_type"] == decision_label:
+            curr = chunk.iloc[i]["grid_number"]
             prob = None
             if curr in three_nodes:
                 prob = 1 / 3
@@ -282,7 +282,7 @@ def evaluate_epoch_multi(
     pd.Series
         Series containing performance metrics for the epoch.
     """
-    if chunk.empty or decision_label not in chunk["NodeType"].values:
+    if chunk.empty or decision_label not in chunk["node_type"].values:
         return pd.Series(dtype="float64")  # Empty metrics
 
     actual, random_perf = simulate_random_agent_multi(
@@ -406,8 +406,8 @@ def evaluate_agent_performance_multi(
             n_bootstrap=n_bootstrap,
             n_simulations=n_simulations,
         )
-        metrics["Session"] = int(session)
-        metrics["Epoch Number"] = int(idx)
+        metrics["session"] = int(session)
+        metrics["epoch_number"] = int(idx)
         all_results.append(metrics)
 
     results = pd.DataFrame(all_results)

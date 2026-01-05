@@ -187,7 +187,7 @@ def plot_node_state_median_curve(
 
 def get_max_session_row_bracket(
     df_combined: pd.DataFrame,
-    session_col: str = "Session",
+    session_col: str = "session",
 ) -> int:
     """
     Finds the session with the maximum number of rows and returns the largest lower multiple of 10,000.
@@ -211,7 +211,7 @@ def get_max_session_row_bracket(
 
 def get_min_session_row_bracket(
     df_combined: pd.DataFrame,
-    session_col: str = "Session",
+    session_col: str = "session",
 ) -> int:
     """
     Finds the session with the minimum number of rows and returns the largest lower multiple of 10,000.

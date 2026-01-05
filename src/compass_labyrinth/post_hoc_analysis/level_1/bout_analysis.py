@@ -37,24 +37,24 @@ def assign_bout_indices(
     Parameters
     -----------
     df : pd.DataFrame
-        Dataframe with 'Session' and 'Grid Number' columns.
+        Dataframe with 'session' and 'grid_number' columns.
     delimiter_node : int
         Grid Number that indicates the start of a new bout.
     """
     df = df.copy()
     updated = []
 
-    for _, sess_df in df.groupby("Session"):
+    for _, sess_df in df.groupby("session"):
         sess_df = sess_df.reset_index(drop=True)
         bout_id = 1
         bout_indices = []
 
         for _, row in sess_df.iterrows():
-            if row["Grid Number"] == delimiter_node:
+            if row["grid_number"] == delimiter_node:
                 bout_id += 1
             bout_indices.append(bout_id)
 
-        sess_df["Bout_Index"] = bout_indices
+        sess_df["bout_index"] = bout_indices
         updated.append(sess_df)
 
     return pd.concat(updated, ignore_index=True)
@@ -286,7 +286,7 @@ def run_within_genotype_mixedlm_with_fdr(median_df: pd.DataFrame) -> pd.DataFram
             coef = np.nan
             pval = np.nan
 
-        results.append({"Genotype": genotype, "Effect: Successful vs Unsuccessful": coef, "P-value": pval})
+        results.append({"genotype": genotype, "Effect: Successful vs Unsuccessful": coef, "P-value": pval})
 
     result_df = pd.DataFrame(results)
 

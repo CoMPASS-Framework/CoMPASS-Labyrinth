@@ -8,7 +8,7 @@ import numpy as np
 def assign_bouts_per_session(
     df: pd.DataFrame,
     terminal_values=[47],
-    bout_col="Bout_ID",
+    bout_col="bout_id",
 ) -> pd.DataFrame:
     """
     Assigns bout numbers to a DataFrame based on terminal grid node values,
@@ -17,7 +17,7 @@ def assign_bouts_per_session(
     Parameters
     -----------
     df : pd.DataFrame
-        Input DataFrame with 'Grid Number' column.
+        Input DataFrame with 'grid_number' column.
     terminal_values : list
         List of grid numbers that signify end-of-bout events.
     bout_col : str
@@ -37,7 +37,7 @@ def assign_bouts_per_session(
     bout_nums = []
 
     for i in range(len(df)):
-        current = df.iloc[i]["Grid Number"]
+        current = df.iloc[i]["grid_number"]
 
         if current not in terminal_values:
             in_non_terminal_phase = True
@@ -49,11 +49,11 @@ def assign_bouts_per_session(
 
         if current in terminal_values and not in_non_terminal_phase:
             if i > 0:
-                prev_vals = df.iloc[:i]["Grid Number"]
+                prev_vals = df.iloc[:i]["grid_number"]
                 last_terminal_idx = prev_vals[prev_vals.isin(terminal_values)].last_valid_index()
 
                 if last_terminal_idx is not None and any(
-                    ~df.iloc[last_terminal_idx + 1 : i]["Grid Number"].isin(terminal_values)
+                    ~df.iloc[last_terminal_idx + 1 : i]["grid_number"].isin(terminal_values)
                 ):
                     if i + 1 < len(df):
                         bout_num += 1
@@ -70,10 +70,10 @@ def build_phase_map(
     n_phases: int,
 ) -> dict:
     phase_map = {}
-    sessions = df.Session.unique()
+    sessions = df.session.unique()
     for sess in sessions:
-        df_sess = df[df.Session == sess]
-        unique_bouts = df_sess["Bout_ID"].dropna().unique()
+        df_sess = df[df.session == sess]
+        unique_bouts = df_sess["bout_id"].dropna().unique()
         unique_bouts.sort()
         phase_chunks = np.array_split(unique_bouts, n_phases)
         for i, chunk in enumerate(phase_chunks):

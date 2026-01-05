@@ -77,15 +77,15 @@ def assign_bout_indices_from_entry_node(df: pd.DataFrame, delimiter_node: int = 
     """
     df = df.copy()
     all_sessions = []
-    for _, session_data in df.groupby("Session"):
+    for _, session_data in df.groupby("session"):
         session_data = session_data.reset_index(drop=True).copy()
-        session_data["Bout_ID"] = 0
+        session_data["bout_id"] = 0
         bout_counter = 1
         for row_idx in range(len(session_data)):
-            if session_data.loc[row_idx, "Grid Number"] != delimiter_node:
-                session_data.loc[row_idx, "Bout_ID"] = bout_counter
+            if session_data.loc[row_idx, "grid_number"] != delimiter_node:
+                session_data.loc[row_idx, "bout_id"] = bout_counter
             else:
-                session_data.loc[row_idx, "Bout_ID"] = 0
+                session_data.loc[row_idx, "bout_id"] = 0
                 bout_counter += 1
         all_sessions.append(session_data)
     return pd.concat(all_sessions, ignore_index=True)
