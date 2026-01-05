@@ -260,7 +260,7 @@ def task_performance(create_project_fixture, create_time_binned_dict):
     )
 
     # Step 6: Replot the target usage v/s frames plot with the excluded sessions 'X' out
-    sessions_to_exclude = region_summary.loc[~region_summary["Session"].isin(df_all_csv["Session"])]["Session"].tolist()
+    sessions_to_exclude = region_summary.loc[~region_summary["session"].isin(df_all_csv["session"])]["session"].tolist()
 
     plot_target_usage_with_exclusions(
         config=config,

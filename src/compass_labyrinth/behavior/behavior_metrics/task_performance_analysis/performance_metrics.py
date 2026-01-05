@@ -800,7 +800,7 @@ def compute_shannon_entropy_per_bin(
     Returns
     --------
     pd.DataFrame
-        DataFrame with columns: 'session', 'Bin', 'Entropy', 'genotype'.
+        DataFrame with columns: 'session', 'bin', 'entropy', 'genotype'.
     """
     entropy_records = []
 
@@ -1037,7 +1037,7 @@ def run_mixed_model_per_genotype_pair(entropy_df: pd.DataFrame) -> tuple[dict, p
         df_pair["genotype"] = df_pair["genotype"].cat.remove_unused_categories()
 
         try:
-            model = mixedlm("Entropy ~ Bin * genotype", df_pair, groups=df_pair["session"])
+            model = mixedlm("entropy ~ bin * genotype", df_pair, groups=df_pair["session"])
             result = model.fit()
             result_dict[(g1, g2)] = result
 
@@ -1151,7 +1151,7 @@ def plot_region_usage_over_bins(
         The figure object if return_fig is True, otherwise None.
     """
     ax = sns.catplot(
-        x="Bin",
+        x="bin",
         y=region_name,
         hue="genotype",
         data=region_data,
@@ -1302,7 +1302,7 @@ def run_region_usage_stats_mixedlm(
     region_col: str = "target_zone",
 ) -> None:
     """
-    Mixed Effects Model (Bin x Genotype) with missing bins dropped.
+    Mixed Effects Model (bin x genotype) with missing bins dropped.
 
     Parameters
     -----------
@@ -1320,13 +1320,13 @@ def run_region_usage_stats_mixedlm(
     reg_binned = reg_binned.rename(columns={region_col: safe_col})
 
     # MixedLM (drop NaNs)
-    df_nan = reg_binned[["session", "Bin", "genotype", safe_col]].dropna()
-    df_nan["Bin"] = df_nan["Bin"].astype(float)
+    df_nan = reg_binned[["session", "bin", "genotype", safe_col]].dropna()
+    df_nan["bin"] = df_nan["bin"].astype(float)
     df_nan["genotype"] = df_nan["genotype"].astype("category")
 
     print("\n=== Mixed Effects Model (missing values preserved) ===")
     try:
-        model = mixedlm(f"{safe_col} ~ Bin * genotype", data=df_nan, groups=df_nan["session"])
+        model = mixedlm(f"{safe_col} ~ bin * genotype", data=df_nan, groups=df_nan["session"])
         result = model.fit()
         print(result.summary())
     except Exception as e:
@@ -1358,20 +1358,20 @@ def run_region_usage_stats_fdr(
     reg_binned = reg_binned.rename(columns={region_col: safe_col})
 
     # ------------ Pairwise t-tests at each bin (fillna(0)) -------------
-    df_zero = reg_binned[["session", "Bin", "genotype", safe_col]].copy()
+    df_zero = reg_binned[["session", "bin", "genotype", safe_col]].copy()
     df_zero[safe_col] = df_zero[safe_col].fillna(0)
 
-    print("\n=== Pairwise t-tests between genotypes at each Bin (FDR corrected) ===")
+    print("\n=== Pairwise t-tests between genotypes at each bin (FDR corrected) ===")
     try:
         bin_results = []
-        for b in sorted(df_zero["Bin"].unique()):
-            df_bin = df_zero[df_zero["Bin"] == b]
+        for b in sorted(df_zero["bin"].unique()):
+            df_bin = df_zero[df_zero["bin"] == b]
             genotypes = df_bin["genotype"].unique()
             for g1, g2 in combinations(genotypes, 2):
                 vals1 = df_bin[df_bin["genotype"] == g1][safe_col]
                 vals2 = df_bin[df_bin["genotype"] == g2][safe_col]
                 stat, pval = ttest_ind(vals1, vals2, equal_var=False)
-                bin_results.append({"Bin": b, "Group1": g1, "Group2": g2, "pval": pval})
+                bin_results.append({"bin": b, "group1": g1, "group2": g2, "pval": pval})
 
         df_stats = pd.DataFrame(bin_results)
         reject, pvals_corrected, _, _ = multipletests(df_stats["pval"], method="fdr_bh")
