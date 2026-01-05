@@ -75,7 +75,7 @@ def init_project(
         raise ValueError(f"Source data path {source_data_path} does not exist.")
 
     # TODO - Commenting out for now, to be re-enabled later
-    #check_preprocessing_status(source_data_path)
+    # check_preprocessing_status(source_data_path)
 
     # Set up project's base path
     project_path = Path(project_path).resolve()
@@ -158,10 +158,7 @@ def init_project(
                 bodyparts = ds.keypoints.values.tolist()
             else:
                 if ds.keypoints.values.tolist() != bodyparts:
-                    raise ValueError(
-                        f"Bodyparts in file {file} do not match previously read bodyparts."
-                    )
-
+                    raise ValueError(f"Bodyparts in file {file} do not match previously read bodyparts.")
 
     # # ------ temporary - to be removed later ------
     # # COPY withGrids.csv files as well

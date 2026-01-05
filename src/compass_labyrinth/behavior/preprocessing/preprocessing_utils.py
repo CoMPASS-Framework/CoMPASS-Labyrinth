@@ -49,23 +49,25 @@ def load_and_preprocess_session_data(
     """
     # Load NetCDF file
     ds = xr.open_dataset(filename)
-    
+
     # Extract data for specific bodypart from individual_0
     # position has shape (time, space) where space contains [x, y]
-    position = ds.sel(individuals='individual_0', keypoints=bp).position.values
-    confidence = ds.sel(individuals='individual_0', keypoints=bp).confidence.values
-    grid_numbers = ds.sel(individuals='individual_0', keypoints=bp).grid_number.values
-    
+    position = ds.sel(individuals="individual_0", keypoints=bp).position.values
+    confidence = ds.sel(individuals="individual_0", keypoints=bp).confidence.values
+    grid_numbers = ds.sel(individuals="individual_0", keypoints=bp).grid_number.values
+
     # Close dataset to free memory
     ds.close()
-    
+
     # Create DataFrame
-    dflin = pd.DataFrame({
-        'x': position[:, 0],  # x coordinates (first spatial dimension)
-        'y': position[:, 1],  # y coordinates (second spatial dimension)
-        'grid_number': grid_numbers,
-        'likelihood': confidence
-    })
+    dflin = pd.DataFrame(
+        {
+            "x": position[:, 0],  # x coordinates (first spatial dimension)
+            "y": position[:, 1],  # y coordinates (second spatial dimension)
+            "grid_number": grid_numbers,
+            "likelihood": confidence,
+        }
+    )
     dflin["s_no"] = np.arange(1, len(dflin) + 1)
 
     # Filter: tracking likelihood and grid presence
@@ -101,7 +103,7 @@ def compile_mouse_sessions(
     Returns
     --------
     pd.DataFrame
-        Combined session dataframe with region, Genotype, Sex.
+        Combined session dataframe with region, genotype, sex.
     """
     pose_est_filepath = Path(config["project_path_full"]) / "data" / "dlc_results"
     cohort_metadata = load_cohort_metadata(config)
@@ -116,9 +118,9 @@ def compile_mouse_sessions(
 
     df_comb = pd.concat(li_group, axis=0, ignore_index=True)
     df_comb["grid_number"] = df_comb["grid_number"].astype(int)
-    
+
     # Map Genotype and Sex
-    session_to_genotype = {k: g["Session #"].tolist() for k, g in cohort_metadata.groupby("Genotype")}
+    session_to_genotype = {k: g["Session #"].tolist() for k, g in cohort_metadata.groupby("genotype")}
     inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
     df_comb["genotype"] = df_comb["session"].map(inverse_mapping)
 
@@ -131,6 +133,7 @@ def compile_mouse_sessions(
 ##################################################################
 # OLD CSV-BASED FUNCTIONS - DEPRECATED
 ##################################################################
+
 
 # TODO - to be removed
 def load_and_preprocess_session_data_old(
@@ -203,7 +206,7 @@ def compile_mouse_sessions_old(
     Returns
     --------
     pd.DataFrame
-        Combined session dataframe with Region, Genotype, Sex.
+        Combined session dataframe with region, genotype, sex.
     """
     pose_est_csv_filepath = Path(config["project_path_full"]) / "data" / "dlc_results"
     dlc_scorer = config["dlc_scorer"]
@@ -214,25 +217,25 @@ def compile_mouse_sessions_old(
         session_name = f"Session-{int(sess)}"
         filename = os.path.join(pose_est_csv_filepath, f"{session_name}withGrids.csv")
         df = load_and_preprocess_session_data_old(filename, bp, dlc_scorer, region_mapping)
-        df["Session"] = sess
+        df["session"] = sess
         li_group.append(df)
 
     df_comb = pd.concat(li_group, axis=0, ignore_index=True)
-    df_comb["Grid Number"] = df_comb["Grid Number"].astype(int)
-    # Map Genotype and Sex
-    session_to_genotype = {k: g["Session #"].tolist() for k, g in cohort_metadata.groupby("Genotype")}
+    df_comb["grid_number"] = df_comb["grid_number"].astype(int)
+    # Map genotype and sex
+    session_to_genotype = {k: g["Session #"].tolist() for k, g in cohort_metadata.groupby("genotype")}
     inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
-    df_comb["Genotype"] = df_comb["Session"].map(inverse_mapping)
+    df_comb["genotype"] = df_comb["session"].map(inverse_mapping)
 
     session_to_sex = dict(cohort_metadata[["Session #", "Sex"]].values)
-    df_comb["Sex"] = df_comb["Session"].map(session_to_sex)
-
+    df_comb["sex"] = df_comb["session"].map(session_to_sex)
     return df_comb
 
 
 ##################################################################
 # Preprocessing
 ###################################################################
+
 
 def remove_until_initial_node(
     df: pd.DataFrame,
@@ -265,7 +268,7 @@ def remove_until_initial_node(
 
 
 def remove_invalid_grid_transitions(
-    df: pd.DataFrame, 
+    df: pd.DataFrame,
     adjacency_matrix: pd.DataFrame = ADJACENCY_MATRIX,
 ) -> pd.DataFrame:
     """
@@ -365,6 +368,7 @@ def preprocess_sessions(
 #######################################################
 # Velocity column creation
 #######################################################
+
 
 def ensure_velocity_column(
     df: pd.DataFrame,

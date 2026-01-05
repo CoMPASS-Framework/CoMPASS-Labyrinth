@@ -236,7 +236,7 @@ def segment_data_by_epoch(
         Each tuple contains (session, epoch_number, epoch_dataframe).
     """
     epochs = []
-    for (genotype, session), group in df.groupby(["Genotype", "Session"]):
+    for (genotype, session), group in df.groupby(["genotype", "session"]):
         for i in range(0, len(group), epoch_size):
             segment = group.iloc[i : i + epoch_size]
             if not segment.empty:
@@ -323,15 +323,15 @@ def evaluate_agent_performance(
 
     # Filter by genotype if specified
     if genotype is not None:
-        if genotype not in df["Genotype"].unique():
-            raise ValueError(f"Genotype '{genotype}' not found in DataFrame.")
+        if genotype not in df["genotype"].unique():
+            raise ValueError(f"genotype '{genotype}' not found in DataFrame.")
         genotypes = [genotype]
     else:
-        genotypes = df["Genotype"].unique()
+        genotypes = df["genotype"].unique()
 
     results = dict()
     for i, genotype in enumerate(genotypes):
-        df_genotype = df.loc[df["Genotype"] == genotype]
+        df_genotype = df.loc[df["genotype"] == genotype]
 
         valid_dict, optimal_dict = get_valid_and_optimal_transitions(df_genotype, decision_label, reward_label)
         epochs = segment_data_by_epoch(df_genotype, epoch_size)
@@ -611,7 +611,7 @@ def reshape_for_mixedlm(df_results: pd.DataFrame) -> pd.DataFrame:
     -----------
     df_results : pd.DataFrame
         DataFrame with columns 'Actual Reward Path %', 'Simulated Agent Reward Path %',
-        'Session', 'Epoch Number' and 'Genotype'.
+        'session', 'epoch_number' and 'genotype'.
 
     Returns
     --------
@@ -620,13 +620,13 @@ def reshape_for_mixedlm(df_results: pd.DataFrame) -> pd.DataFrame:
     """
     df_long = pd.melt(
         df_results,
-        id_vars=["Session", "Epoch Number", "Genotype"],
+        id_vars=["session", "epoch_number", "genotype"],
         value_vars=["Actual Reward Path %", "Simulated Agent Reward Path %"],
         var_name="AgentType",
         value_name="Performance",
     )
     df_long = df_long.dropna(subset=["Performance"])
-    df_long["Session"] = df_long["Session"].astype(str)
+    df_long["session"] = df_long["session"].astype(str)
     return df_long.reset_index(drop=True)
 
 
@@ -740,7 +740,7 @@ def run_mixedlm_for_all_genotypes(
 
     for i, genotype in enumerate(genotypes):
         df_eval = evaluation_results[genotype]
-        df_eval["Genotype"] = genotype
+        df_eval["genotype"] = genotype
 
         df_long = reshape_for_mixedlm(df_eval)
         result, p_val = fit_mixed_effects_model(df_long)
@@ -855,7 +855,7 @@ def run_chi_square_analysis(
     results = dict()
     for genotype in genotypes:
         df_result = evaluation_results[genotype].copy()
-        df_result["Genotype"] = genotype
+        df_result["genotype"] = genotype
         df_chisq = compute_chi_square_statistic(df=df_result)
         df_chisq = compute_rolling_chi_square(df=df_chisq, window=rolling_window)
         df_chisq = compute_cumulative_chi_square(df=df_chisq)

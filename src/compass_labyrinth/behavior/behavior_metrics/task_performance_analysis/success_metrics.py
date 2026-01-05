@@ -74,7 +74,7 @@ def summarize_bout_success_by_session(
     Parameters
     -----------
     navigation_df : pd.DataFrame
-        DataFrame with 'Session', 'Genotype', 'Region', and 'Bout_Index'.
+        DataFrame with 'session', 'genotype', 'region', and 'bout_index'.
     optimal_regions : list
         Ordered list of region labels that define a perfect bout.
     target_region_label : list
@@ -89,13 +89,13 @@ def summarize_bout_success_by_session(
     """
     summary_records = []
 
-    for session_id, session_data in navigation_df.groupby("Session"):
-        genotype = session_data["Genotype"].iloc[0]
-        session_bouts = [b for _, b in session_data.groupby("Bout_ID") if b["Bout_ID"].iloc[0] != 0]
+    for session_id, session_data in navigation_df.groupby("session"):
+        genotype = session_data["genotype"].iloc[0]
+        session_bouts = [b for _, b in session_data.groupby("bout_index") if b["bout_index"].iloc[0] != 0]
 
         valid_bouts = [b for b in session_bouts if len(b) > min_bout_length]
-        successful_bouts = [b for b in valid_bouts if any(r in target_region_label for r in b["Region"])]
-        perfect_bouts = [b for b in successful_bouts if set(optimal_regions) == set(b["Region"].unique())]
+        successful_bouts = [b for b in valid_bouts if any(r in target_region_label for r in b["region"])]
+        perfect_bouts = [b for b in successful_bouts if set(optimal_regions) == set(b["region"].unique())]
 
         summary_records.append(
             {
@@ -167,8 +167,8 @@ def plot_success_rate(
 
     sns.stripplot(x="genotype", y="success_rate", data=summary_table, dodge=True, color="black", size=4)
 
-    ax.set_title("Percentage of Successful Bouts by Genotype", fontsize=15)
-    ax.set_xlabel("Genotype", fontsize=13)
+    ax.set_title("Percentage of Successful Bouts by genotype", fontsize=15)
+    ax.set_xlabel("genotype", fontsize=13)
     ax.set_ylabel("% of Successful Bouts", fontsize=13)
     ax.set(ylim=(0, 100))
 
@@ -254,7 +254,7 @@ def compute_binned_success_summary(
     Parameters
     -----------
     df_all_csv : pd.DataFrame
-        DataFrame with 'Session', 'Genotype', 'Region', 'Bout_ID', and 'Frame' columns.
+        DataFrame with 'session', 'genotype', 'region', 'Bout_ID', and 'Frame' columns.
     lower_succ_lim : int
         Lower limit of frames to start binning.
     upper_succ_lim : int
@@ -296,8 +296,8 @@ def compute_binned_success_summary(
 
             summary_records.append(
                 {
-                    "Session": session_subset.Session.unique()[0],
-                    "Genotype": session_subset["Genotype"].unique()[0],
+                    "session": session_subset.session.unique()[0],
+                    "genotype": session_subset["genotype"].unique()[0],
                     "Bout_num": k + diff_succ,
                     "No_of_Bouts": len(bouts_in_session),
                     "No_Valid_bouts": sum_valid_bouts,
@@ -347,13 +347,13 @@ def plot_binned_success(
     sns.set_style("ticks")
 
     summary_df["Bout_num"] = pd.Categorical(summary_df["Bout_num"])
-    summary_df["Genotype"] = pd.Categorical(summary_df["Genotype"])
+    summary_df["genotype"] = pd.Categorical(summary_df["genotype"])
     summary_df["Succ_bout_perc"] = pd.to_numeric(summary_df["Succ_bout_perc"])
 
     ax = sns.catplot(
         x="Bout_num",
         y="Succ_bout_perc",
-        hue="Genotype",
+        hue="genotype",
         data=summary_df,
         errorbar="se",
         kind="point",
@@ -387,7 +387,7 @@ def run_mixedlm_with_nans(summary_df: pd.DataFrame) -> None:
     print("\nRunning MixedLM with NaNs preserved...")
     model_df = summary_df.copy()
     model_df = model_df.dropna(subset=["Succ_bout_perc"])
-    model = mixedlm("Succ_bout_perc ~ C(Bout_num) * C(Genotype)", model_df, groups=model_df["Session"])
+    model = mixedlm("Succ_bout_perc ~ C(Bout_num) * C(genotype)", model_df, groups=model_df["session"])
     result = model.fit()
     print(result.summary())
 
@@ -398,7 +398,7 @@ def run_repeated_measures_anova(summary_df: pd.DataFrame) -> None:
     anova_df = summary_df.copy()
     anova_df["Succ_bout_perc"] = anova_df["Succ_bout_perc"].fillna(0)
     try:
-        aovrm = AnovaRM(anova_df, depvar="Succ_bout_perc", subject="Session", within=["Bout_num"], between=["Genotype"])
+        aovrm = AnovaRM(anova_df, depvar="Succ_bout_perc", subject="session", within=["Bout_num"], between=["genotype"])
         anova_res = aovrm.fit()
         print(anova_res)
     except Exception as e:
@@ -413,10 +413,10 @@ def run_pairwise_comparisons(summary_df: pd.DataFrame) -> None:
     results = []
     for bout in tukey_df["Bout_num"].unique():
         sub = tukey_df[tukey_df["Bout_num"] == bout]
-        if sub["Genotype"].nunique() > 1:
+        if sub["genotype"].nunique() > 1:
             tukey = pairwise_tukeyhsd(
                 endog=sub["Succ_bout_perc"],
-                groups=sub["Genotype"],
+                groups=sub["genotype"],
                 alpha=0.05,
             )
             df_tukey = pd.DataFrame(data=tukey._results_table.data[1:], columns=tukey._results_table.data[0])

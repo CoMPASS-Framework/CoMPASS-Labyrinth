@@ -179,7 +179,7 @@ class TestCompasPosthocAnalysis:
         )
         assert isinstance(median_df, pd.DataFrame)
         assert not median_df.empty
-        for col in ["Genotype", "Session", "Successful_bout", "Probability_1"]:
+        for col in ["genotype", "session", "successful_bout", "probability_1"]:
             assert col in median_df.columns
 
         # Barplot to depict the above with ttest-ind pvalue

@@ -129,7 +129,7 @@ def compute_deviation_velocity(
     Parameters
     -----------
     df : pd.DataFrame
-        Input DataFrame with 'Session', 'Genotype', 'Region', 'Grid Number', and 'Velocity' columns.
+        Input DataFrame with 'session', 'genotype', 'region', 'Grid Number', and 'Velocity' columns.
     key_regions : list
         List of key regions to consider for deviation calculation.
 
@@ -138,11 +138,11 @@ def compute_deviation_velocity(
     pd.DataFrame
         DataFrame with computed deviation and velocity per bout.
     """
-    sessioncluster = [x for _, x in df.groupby("Session")]
+    sessioncluster = [x for _, x in df.groupby("session")]
     records = []
     for session_df in sessioncluster:
         ind = 1
-        bouts_in_session = [x for _, x in session_df.groupby("Bout_ID")]
+        bouts_in_session = [x for _, x in session_df.groupby("bout_id")]
         if bouts_in_session:
             bouts_in_session.pop(0)
         for bout in bouts_in_session:
@@ -150,10 +150,10 @@ def compute_deviation_velocity(
                 records.append(
                     {
                         "ind_no": ind,
-                        "session": session_df["Session"].iloc[0],
-                        "genotype": session_df["Genotype"].iloc[0],
-                        "deviation": len(bout.loc[~bout.Region.isin(key_regions), "Grid Number"]) / len(bout),
-                        "velocity": bout["Velocity"].mean(),
+                        "session": session_df["session"].iloc[0],
+                        "genotype": session_df["genotype"].iloc[0],
+                        "deviation": len(bout.loc[~bout.region.isin(key_regions), "grid_number"]) / len(bout),
+                        "velocity": bout["velocity"].mean(),
                     }
                 )
                 ind += 1
@@ -318,7 +318,7 @@ def plot_deviation_velocity_all(
     config : dict
         Project configuration dictionary.
     index_df : pd.DataFrame
-        DataFrame with 'Deviation_smooth', 'Velocity_smooth_normalized', 'Genotype', and 'Ind_no' columns.
+        DataFrame with 'deviation_smooth', 'velocity_smooth_normalized', 'genotype', and 'ind_no' columns.
     max_bouts : int or None
         Maximum number of bouts to display on the x-axis.
     save_fig : bool, default True

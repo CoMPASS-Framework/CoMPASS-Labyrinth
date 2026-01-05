@@ -357,12 +357,12 @@ def plot_state_sequences(
     return_fig: bool = False,
 ) -> None | list[plt.Figure]:
     """Plot state sequences for specified sessions and genotype."""
-    df_geno = df[df["Genotype"] == genotype]
+    df_geno = df[df["genotype"] == genotype]
     unique_states = get_unique_states(df_geno, state_col=state_col)
     color_map = generate_state_color_map(unique_states)
 
     # Determine which sessions to plot
-    all_sessions = df_geno["Session"].unique()
+    all_sessions = df_geno["session"].unique()
     if isinstance(sessions_to_plot, int):
         selected_sessions = all_sessions[:sessions_to_plot]
     elif isinstance(sessions_to_plot, list):
@@ -373,7 +373,7 @@ def plot_state_sequences(
     # Plot each selected session
     all_figs = []
     for sess_id in selected_sessions:
-        df_sess = df_geno[df_geno["Session"] == sess_id][[state_col, "Session"]]
+        df_sess = df_geno[df_geno["session"] == sess_id][[state_col, "session"]]
         fig = plot_state_sequence_for_session(
             df_sess,
             state_col=state_col,
@@ -406,7 +406,7 @@ def assign_reward_orientation(
     df: pd.DataFrame,
     angle_col: str = "Targeted_Angle_smooth_abs",
     level_2_state_col: str = "Level_2_States",
-    session_col: str = "Session",
+    session_col: str = "session",
 ) -> pd.DataFrame:
     """
     Assigns reward orientation labels ('Reward Oriented' or 'Non-Reward Oriented') to Level 2 states per session,
@@ -521,7 +521,7 @@ def assign_hhmm_state(
 def plot_hhmm_state_sequence(
     config: dict,
     df: pd.DataFrame,
-    session_col: str = "Session",
+    session_col: str = "session",
     state_col: str = "HHMM State",
     session_id: None | int = None,
     title_prefix: str = "State Sequence",

@@ -147,28 +147,28 @@ def update_dataset_with_grid_positions(
     xr.Dataset
         Updated xarray Dataset with an additional data variable 'grid_number'
         indicating the grid cell number for each tracked position.
-    """        
+    """
     # Load the Grid shapefile
     grid_file_path = Path(grid_file_path)
     if not grid_file_path.exists():
         raise FileNotFoundError(f"Grid file not found at {grid_file_path}")
     grid = gpd.read_file(str(grid_file_path))
-    
+
     # Initialize grid numbers array with NaNs
     n_time = len(ds.time)
     n_keypoints = len(ds.keypoints)
     n_individuals = 1  # Assuming single individual 'individual_0'
     grid_numbers_array = np.full((n_time, n_keypoints, n_individuals), np.nan)
-    
+
     # Get keypoint names
     keypoints = ds.keypoints.values
-    
+
     # Process each keypoint
     for kp_idx, keypoint in enumerate(keypoints):
         # Extract x,y positions for this keypoint
         # position has shape (time, space, keypoints, individuals)
-        xy = ds.sel(individuals='individual_0', keypoints=keypoint).position.values
-        
+        xy = ds.sel(individuals="individual_0", keypoints=keypoint).position.values
+
         # Create Point geometries for each time point
         points = []
         for x, y in xy:
@@ -176,14 +176,14 @@ def update_dataset_with_grid_positions(
                 points.append(Point(x, y))
             else:
                 points.append(None)
-        
+
         # Create GeoDataFrame of points
         pnt_gpd = gpd.GeoDataFrame(
             geometry=points,
             index=np.arange(len(points)),
             crs=grid.crs,
         )
-        
+
         # Find which polygon each point is in
         point_in_polys = gpd.tools.sjoin(
             left_df=pnt_gpd,
@@ -191,30 +191,26 @@ def update_dataset_with_grid_positions(
             predicate="within",
             how="left",
         )
-        
+
         # Extract grid numbers
         # Use 'FID' column from grid or index_right if FID doesn't exist
         if "FID" in point_in_polys.columns:
             grid_nums = point_in_polys["FID"].values
         else:
             grid_nums = point_in_polys["index_right"].values
-        
+
         # Store in the array
         grid_numbers_array[:, kp_idx, 0] = grid_nums
-    
+
     # Add grid_number as a new data variable to the dataset
-    ds['grid_number'] = xr.DataArray(
+    ds["grid_number"] = xr.DataArray(
         grid_numbers_array,
-        dims=['time', 'keypoints', 'individuals'],
-        coords={
-            'time': ds.time,
-            'keypoints': ds.keypoints,
-            'individuals': ds.individuals
-        },
+        dims=["time", "keypoints", "individuals"],
+        coords={"time": ds.time, "keypoints": ds.keypoints, "individuals": ds.individuals},
         attrs={
-            'description': 'Grid cell number for each tracked position',
-            'grid_file': str(grid_file_path),
-        }
+            "description": "Grid cell number for each tracked position",
+            "grid_file": str(grid_file_path),
+        },
     )
 
     return ds
