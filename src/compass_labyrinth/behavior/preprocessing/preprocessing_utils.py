@@ -357,7 +357,7 @@ def preprocess_sessions(
     df_all_cleaned["node_type"] = "Unlabeled"
 
     # Apply mapping to access the list by name
-    # Creates the column node_type based on Grid Numbers
+    # Creates the column node_type based on grid_number
     for var_name, label in label_mapping.items():
         node_list = NODE_TYPE_MAPPING[var_name]
         df_all_cleaned.loc[df_all_cleaned["grid_number"].isin(node_list), "node_type"] = label

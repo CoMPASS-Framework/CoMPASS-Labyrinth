@@ -2012,7 +2012,7 @@ def append_grid_numbers_to_csv(
                 grid_numbers = pointInPolys["index_right"].values
 
             # Add grid number column to the original dataframe
-            df[dlc_scorer, bp, "Grid Number"] = grid_numbers
+            df[dlc_scorer, bp, "grid_number"] = grid_numbers
 
         except Exception as e:
             print(f"Error processing {bp}: {e}")

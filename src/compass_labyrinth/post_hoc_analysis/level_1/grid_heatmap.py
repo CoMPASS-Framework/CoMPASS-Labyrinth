@@ -82,12 +82,12 @@ def merge_state_proportions_to_grid(
     df_props: pd.DataFrame,
 ) -> gpd.GeoDataFrame:
     """Merge state proportions to shapefile grid polygons."""
-    prop_by_grid = df_props[["Grid Number", "prop"]].copy()
+    prop_by_grid = df_props[["grid_number", "prop"]].copy()
     prop_by_grid = prop_by_grid.rename(columns={"prop": "State1_Proportion"})
     return grid.merge(
         prop_by_grid,
         left_on="FID",
-        right_on="Grid Number",
+        right_on="grid_number",
         how="left",
     )
 
@@ -440,9 +440,9 @@ def plot_interactive_heatmap(
         )
 
     # Highlight decision nodes in black
-    for fid in NODE_TYPE_MAPPING.get(decision_grids, []):
-        if fid in grid_mapped["FID"].values:
-            poly = grid_mapped.loc[grid_mapped["FID"] == fid, "geometry"].values[0]
+    for FID in NODE_TYPE_MAPPING.get(decision_grids, []):
+        if FID in grid_mapped["FID"].values:
+            poly = grid_mapped.loc[grid_mapped["FID"] == FID, "geometry"].values[0]
             x = list(poly.exterior.xy[0])
             y = list(poly.exterior.xy[1])
             fig.add_trace(
@@ -474,9 +474,9 @@ def plot_interactive_heatmap(
             )
 
     # Highlight target nodes in yellow
-    for fid in NODE_TYPE_MAPPING.get(target_grids, []):
-        if fid in grid_mapped["FID"].values:
-            poly = grid_mapped.loc[grid_mapped["FID"] == fid, "geometry"].values[0]
+    for FID in NODE_TYPE_MAPPING.get(target_grids, []):
+        if FID in grid_mapped["FID"].values:
+            poly = grid_mapped.loc[grid_mapped["FID"] == FID, "geometry"].values[0]
             x = list(poly.exterior.xy[0])
             y = list(poly.exterior.xy[1])
             fig.add_trace(
@@ -499,9 +499,9 @@ def plot_interactive_heatmap(
     )
 
     # Add annotations above Grid Number 47 and below 84
-    for fid, label, valign in [(47, "entry_zone", "top"), (84, "target_zone", "bottom")]:
-        if fid in grid_mapped["FID"].values:
-            poly = grid_mapped.loc[grid_mapped["FID"] == fid, "geometry"].values[0]
+    for FID, label, valign in [(47, "entry_zone", "top"), (84, "target_zone", "bottom")]:
+        if FID in grid_mapped["FID"].values:
+            poly = grid_mapped.loc[grid_mapped["FID"] == FID, "geometry"].values[0]
             centroid_x = poly.centroid.x
             centroid_y = poly.centroid.y
 

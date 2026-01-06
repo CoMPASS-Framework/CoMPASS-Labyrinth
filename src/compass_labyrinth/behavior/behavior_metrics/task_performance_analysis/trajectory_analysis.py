@@ -129,7 +129,7 @@ def compute_deviation_velocity(
     Parameters
     -----------
     df : pd.DataFrame
-        Input DataFrame with 'session', 'genotype', 'region', 'Grid Number', and 'Velocity' columns.
+        Input DataFrame with 'session', 'genotype', 'region', 'grid_number', and 'velocity' columns.
     key_regions : list
         List of key regions to consider for deviation calculation.
 

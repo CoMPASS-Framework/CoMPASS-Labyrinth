@@ -188,8 +188,8 @@ def compute_center_coordinates(df: pd.DataFrame, grid_nodes: list) -> tuple:
     """
     Compute the mean (x, y) position of specified grid nodes.
     """
-    x_mean = df[df["Grid Number"].isin(grid_nodes)]["x"].mean()
-    y_mean = df[df["Grid Number"].isin(grid_nodes)]["y"].mean()
+    x_mean = df[df["grid_number"].isin(grid_nodes)]["x"].mean()
+    y_mean = df[df["grid_number"].isin(grid_nodes)]["y"].mean()
     return x_mean, y_mean
 
 
@@ -206,7 +206,7 @@ def merge_value_map(df: pd.DataFrame, value_map: pd.DataFrame) -> pd.DataFrame:
     colmap = {c: "Value" for c in value_map.columns if c.lower().startswith("value")}
     value_map = value_map.rename(columns=colmap)
 
-    # Force Grid Number to int in both
+    # Force grid_number to int in both
     df["grid_number"] = df["grid_number"].astype(int)
     value_map["grid_number"] = value_map["grid_number"].astype(int)
 

@@ -1,6 +1,7 @@
 from pathlib import Path
 import pandas as pd
 import datetime
+import shutil
 import yaml
 import os
 from movement.io import load_poses
@@ -172,14 +173,14 @@ def init_project(
     #     pe_files = with_grid_files
     # # ------------------------------------------------------
 
-    # # Copy all shape files (.dbf, .shp, .shx) from source data path to project grid_files folder
-    # grid_files_dest = project_path_full / "data" / "grid_files"
-    # for ext in [".shp", ".dbf", ".shx"]:
-    #     grid_files = [f.resolve() for f in source_data_path.glob(f"*{ext}")]
-    #     for file in grid_files:
-    #         dest_file = grid_files_dest / file.name
-    #         if not dest_file.exists():
-    #             shutil.copy2(file, dest_file)
+    # Copy all shape files (.dbf, .shp, .shx) from source data path to project grid_files folder
+    grid_files_dest = project_path_full / "data" / "grid_files"
+    for ext in [".shp", ".dbf", ".shx"]:
+        grid_files = [f.resolve() for f in source_data_path.glob(f"*{ext}")]
+        for file in grid_files:
+            dest_file = grid_files_dest / file.name
+            if not dest_file.exists():
+                shutil.copy2(file, dest_file)
 
     # Link videos to central video location
     video_dest_path = project_path_full / "videos" / "original_videos"
