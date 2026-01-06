@@ -217,7 +217,7 @@ def summarize_target_usage(
         DataFrame containing the summary of target zone usage.
     """
     session_frames = dict(frames_df.values)
-    session_sex = dict(cohort_metadata[["Session #", "Sex"]].values)
+    session_sex = dict(cohort_metadata[["session", "sex"]].values)
     summary = region_target.groupby(["genotype", "session"])["target_usage"].mean().reset_index()
     summary["no_of_frames"] = summary["session"].map(session_frames)
     summary["sex"] = summary["session"].map(session_sex)

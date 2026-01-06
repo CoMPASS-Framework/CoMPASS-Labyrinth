@@ -109,7 +109,7 @@ def compile_mouse_sessions(
     cohort_metadata = load_cohort_metadata(config)
 
     li_group = []
-    for sess in cohort_metadata["Session #"].unique():
+    for sess in cohort_metadata["session"].unique():
         session_name = f"Session-{int(sess)}"
         filename = pose_est_filepath / f"{session_name}.nc"
         df = load_and_preprocess_session_data(str(filename), bp, region_mapping)
@@ -119,12 +119,12 @@ def compile_mouse_sessions(
     df_comb = pd.concat(li_group, axis=0, ignore_index=True)
     df_comb["grid_number"] = df_comb["grid_number"].astype(int)
 
-    # Map Genotype and Sex
-    session_to_genotype = {k: g["Session #"].tolist() for k, g in cohort_metadata.groupby("Genotype")}
+    # Map genotype and sex
+    session_to_genotype = {k: g["session"].tolist() for k, g in cohort_metadata.groupby("genotype")}
     inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
     df_comb["genotype"] = df_comb["session"].map(inverse_mapping)
 
-    session_to_sex = dict(cohort_metadata[["Session #", "Sex"]].values)
+    session_to_sex = dict(cohort_metadata[["session", "sex"]].values)
     df_comb["sex"] = df_comb["session"].map(session_to_sex)
 
     return df_comb
@@ -166,20 +166,20 @@ def load_and_preprocess_session_data_old(
 
     # Extract relevant columns
     dflin = dflin.loc[
-        :, [(DLCscorer, bp, "x"), (DLCscorer, bp, "y"), (DLCscorer, bp, "Grid Number"), (DLCscorer, bp, "likelihood")]
+        :, [(DLCscorer, bp, "x"), (DLCscorer, bp, "y"), (DLCscorer, bp, "grid_number"), (DLCscorer, bp, "likelihood")]
     ]
-    dflin.columns = ["x", "y", "Grid Number", "likelihood"]
-    dflin["S_no"] = np.arange(1, len(dflin) + 1)
+    dflin.columns = ["x", "y", "grid_number", "likelihood"]
+    dflin["s_no"] = np.arange(1, len(dflin) + 1)
 
     # Filter: tracking likelihood and grid presence
     dflin = dflin.fillna(-1)
-    dflin = dflin[(dflin["likelihood"] > 0.6) & (dflin["Grid Number"] != -1)].copy()
+    dflin = dflin[(dflin["likelihood"] > 0.6) & (dflin["grid_number"] != -1)].copy()
     dflin.reset_index(drop=True, inplace=True)
 
     # Assign regions from dictionary
-    dflin["Region"] = "Unknown"
+    dflin["region"] = "Unknown"
     for region_name, grid_list in region_mapping.items():
-        dflin.loc[dflin["Grid Number"].isin(grid_list), "Region"] = region_name
+        dflin.loc[dflin["grid_number"].isin(grid_list), "region"] = region_name
 
     return dflin
 
@@ -213,7 +213,7 @@ def compile_mouse_sessions_old(
     cohort_metadata = load_cohort_metadata(config)
 
     li_group = []
-    for sess in cohort_metadata["Session #"].unique():
+    for sess in cohort_metadata["session"].unique():
         session_name = f"Session-{int(sess)}"
         filename = os.path.join(pose_est_csv_filepath, f"{session_name}withGrids.csv")
         df = load_and_preprocess_session_data_old(filename, bp, dlc_scorer, region_mapping)
@@ -223,11 +223,11 @@ def compile_mouse_sessions_old(
     df_comb = pd.concat(li_group, axis=0, ignore_index=True)
     df_comb["grid_number"] = df_comb["grid_number"].astype(int)
     # Map genotype and sex
-    session_to_genotype = {k: g["Session #"].tolist() for k, g in cohort_metadata.groupby("genotype")}
+    session_to_genotype = {k: g["session"].tolist() for k, g in cohort_metadata.groupby("genotype")}
     inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
     df_comb["genotype"] = df_comb["session"].map(inverse_mapping)
 
-    session_to_sex = dict(cohort_metadata[["Session #", "Sex"]].values)
+    session_to_sex = dict(cohort_metadata[["session", "sex"]].values)
     df_comb["sex"] = df_comb["session"].map(session_to_sex)
     return df_comb
 

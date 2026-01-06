@@ -466,7 +466,7 @@ def plot_agent_vs_mouse_performance_multi(
     title = "Mouse vs. Agent Reward Path Transition Proportion"
 
     # --- Filter sessions by genotype ---
-    sessions_reqd = cohort_metadata.loc[cohort_metadata.genotype == genotype, "Session #"].unique()
+    sessions_reqd = cohort_metadata.loc[cohort_metadata.genotype == genotype, "session"].unique()
     df_filtered = df_metrics[df_metrics["session"].isin(sessions_reqd)].copy()
 
     # --- Plot ---
@@ -582,7 +582,7 @@ def plot_cumulative_agent_comparison_boxplot_multi(
     }
 
     # --- Filter sessions for the genotype ---
-    sessions_reqd = cohort_metadata.loc[cohort_metadata.genotype == genotype, "Session #"].unique()
+    sessions_reqd = cohort_metadata.loc[cohort_metadata.genotype == genotype, "session"].unique()
     df_filtered = df_metrics[df_metrics["session"].isin(sessions_reqd)].copy()
 
     # --- Aggregate to session level (mean across epochs) ---
