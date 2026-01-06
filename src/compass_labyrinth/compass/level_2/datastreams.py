@@ -202,8 +202,8 @@ def compute_euclidean_distance(df, center_x, center_y, out_col="Targeted_Distanc
 
 
 def merge_value_map(df: pd.DataFrame, value_map: pd.DataFrame) -> pd.DataFrame:
-    # Normalize "Value" column name
-    colmap = {c: "Value" for c in value_map.columns if c.lower().startswith("value")}
+    # Normalize "value" column name
+    colmap = {c: "value" for c in value_map.columns if c.lower().startswith("value")}
     value_map = value_map.rename(columns=colmap)
 
     # Force grid_number to int in both
@@ -212,8 +212,8 @@ def merge_value_map(df: pd.DataFrame, value_map: pd.DataFrame) -> pd.DataFrame:
 
     df = pd.merge(df, value_map, on="grid_number", how="left")
 
-    if "Value" not in df.columns:
-        raise KeyError(f"'Value' column missing after merge. Columns: {df.columns.tolist()}")
+    if "value" not in df.columns:
+        raise KeyError(f"'value' column missing after merge. Columns: {df.columns.tolist()}")
 
     return df
 
@@ -221,7 +221,7 @@ def merge_value_map(df: pd.DataFrame, value_map: pd.DataFrame) -> pd.DataFrame:
 def compute_weighted_and_normalized_distance(
     df: pd.DataFrame,
     distance_col: str = "Targeted_Distance",
-    value_col: str = "Value",
+    value_col: str = "value",
     out_col: str = "VB_Distance",
     norm_range: tuple = (0, 3),
 ) -> pd.DataFrame:

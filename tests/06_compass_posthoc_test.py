@@ -170,7 +170,7 @@ class TestCompasPosthocAnalysis:
         )
         assert isinstance(df_hmm, pd.DataFrame)
         assert not df_hmm.empty
-        assert "Bout_Index" in df_hmm.columns
+        assert "bout_id" in df_hmm.columns
 
         # Compute surveillance probability at Decision nodes by Bout type
         index_df, median_df = compute_surveillance_probabilities(

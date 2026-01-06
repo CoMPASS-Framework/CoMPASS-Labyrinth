@@ -47,7 +47,7 @@ def plot_kde_per_session(df, best_sigma, kde_col="KDE"):
 # ----------------------------
 def compute_spatial_embedding(df: pd.DataFrame, sigma: float = 2) -> pd.DataFrame:
     df = df.copy()
-    df["spatial_value_raw"] = 1 - (df["Value"] / df["Value"].max())
+    df["spatial_value_raw"] = 1 - (df["value"] / df["value"].max())
 
     x_max = int(df["x"].max()) + 1
     y_max = int(df["y"].max()) + 1

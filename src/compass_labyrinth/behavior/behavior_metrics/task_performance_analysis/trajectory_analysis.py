@@ -107,7 +107,7 @@ def ensure_bout_indices(df: pd.DataFrame, delimiter_node: int = 47) -> pd.DataFr
     pd.DataFrame
         DataFrame with ensured bout indices.
     """
-    if "Bout_ID" not in df.columns:
+    if "bout_id" not in df.columns:
         return assign_bout_indices_from_entry_node(df, delimiter_node)
     return df.copy()
 
