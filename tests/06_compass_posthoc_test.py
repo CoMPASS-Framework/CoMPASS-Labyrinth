@@ -17,7 +17,7 @@ class TestCompasPosthocAnalysis:
         project_path = Path(config["project_path_full"])
         df_hmm = pd.read_csv(project_path / "results" / "compass_level_1" / "data_with_states.csv")
 
-        grid_filename = "Session-3 grid.shp"
+        grid_filename = "Session-3_grid.shp"
 
         fig = plot_all_genotype_heatmaps(
             config=config,
