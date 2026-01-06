@@ -56,12 +56,16 @@ def create_project_fixture(tmp_path_factory):
     shape_files = [
         "Session-3_grid.shp",
         "Session-3_grid.shx",
+        "Session-3_grid.dbf",
         "Session-4_grid.shp",
         "Session-4_grid.shx",
+        "Session-4_grid.dbf",
         "Session-5_grid.shp",
         "Session-5_grid.shx",
+        "Session-5_grid.dbf",
         "Session-6_grid.shp",
         "Session-6_grid.shx",
+        "Session-6_grid.dbf",
     ]
 
     all_files = pes_files + shape_files
