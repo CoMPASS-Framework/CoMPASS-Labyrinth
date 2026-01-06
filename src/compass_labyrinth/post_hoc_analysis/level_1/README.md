@@ -15,8 +15,8 @@ This module contains post-hoc analysis and visualization tools for interpreting 
   - Tracks **probability of being in a chosen HMM state** over **time bins** per genotype and session-averaged plots.
 
 
-- **State Distributions by Region and NodeType** (`spatial_analysis.py`)
-  - Comparison of proportion of time spent in a state across Maze regions and Node types.
+- **State Distributions by region and node_type** (`spatial_analysis.py`)
+  - Comparison of proportion of time spent in a state across Maze regions and node types.
   - Allows genotype level comparisons behavioral states.
 
 

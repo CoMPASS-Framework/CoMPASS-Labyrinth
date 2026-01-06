@@ -311,14 +311,14 @@ class TestPerformanceMetrics:
         assert not df_all_csv_wvelocity.empty
         assert "Velocity" in df_all_csv_wvelocity.columns
 
-        # Ensure Bout Index column Bout_ID exists
+        # Ensure Bout Index column bout_id exists
         df_all_csv_wbouts = ensure_bout_indices(
             df=df_all_csv_wvelocity,
             delimiter_node=47,
         )
         assert isinstance(df_all_csv_wbouts, pd.DataFrame)
         assert not df_all_csv_wbouts.empty
-        assert "Bout_ID" in df_all_csv_wbouts.columns
+        assert "bout_id" in df_all_csv_wbouts.columns
 
         # Compute deviation and velocity per bout
         df_deviation = compute_deviation_velocity(df=df_all_csv_wbouts)

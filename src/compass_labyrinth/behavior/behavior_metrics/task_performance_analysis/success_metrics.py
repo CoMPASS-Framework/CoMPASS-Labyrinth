@@ -74,7 +74,7 @@ def summarize_bout_success_by_session(
     Parameters
     -----------
     navigation_df : pd.DataFrame
-        DataFrame with 'session', 'genotype', 'region', and 'bout_index'.
+        DataFrame with 'session', 'genotype', 'region', and 'bout_id'.
     optimal_regions : list
         Ordered list of region labels that define a perfect bout.
     target_region_label : list
@@ -91,7 +91,7 @@ def summarize_bout_success_by_session(
 
     for session_id, session_data in navigation_df.groupby("session"):
         genotype = session_data["genotype"].iloc[0]
-        session_bouts = [b for _, b in session_data.groupby("bout_index") if b["bout_index"].iloc[0] != 0]
+        session_bouts = [b for _, b in session_data.groupby("bout_id") if b["bout_id"].iloc[0] != 0]
 
         valid_bouts = [b for b in session_bouts if len(b) > min_bout_length]
         successful_bouts = [b for b in valid_bouts if any(r in target_region_label for r in b["region"])]

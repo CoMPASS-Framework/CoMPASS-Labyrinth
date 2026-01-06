@@ -458,7 +458,7 @@ def plot_agent_vs_mouse_performance_multi(
         The figure object if return_fig is True, otherwise None.
     """
     # --- Constants ---
-    x_col = "Epoch Number"
+    x_col = "epoch_number"
     y_col_actual = "Actual Reward Path %"
     y_col_random = "Random Agent Reward Path %"
     y_col_binary = "Binary Agent Reward Path %"

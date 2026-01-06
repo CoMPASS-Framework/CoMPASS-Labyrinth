@@ -164,7 +164,7 @@ def compute_epoch_metrics(
     pd.Series
         Series with computed metrics.
     """
-    if df_slice.empty or decision_label not in df_slice["NodeType"].values:
+    if df_slice.empty or decision_label not in df_slice["node_type"].values:
         return pd.Series(
             {
                 k: np.nan
@@ -866,7 +866,7 @@ def run_chi_square_analysis(
 def plot_chi_square_and_rolling(
     config: dict,
     chisquare_results: dict,
-    epoch_col: str = "Epoch Number",
+    epoch_col: str = "epoch_number",
     chi_col: str = "Chi Square Statistic",
     rolling_col: str = "Rolling Chi Square",
     save_fig: bool = True,
@@ -958,7 +958,7 @@ def plot_chi_square_and_rolling(
 def plot_rolling_mean(
     config: dict,
     chisquare_results: dict,
-    epoch_col: str = "Epoch Number",
+    epoch_col: str = "epoch_number",
     rolling_col: str = "Rolling Chi Square",
     save_fig: bool = True,
     show_fig: bool = True,
@@ -1037,7 +1037,7 @@ def plot_rolling_mean(
 def plot_cumulative_chi_square(
     config: dict,
     chisquare_results: dict,
-    epoch_col: str = "Epoch Number",
+    epoch_col: str = "epoch_number",
     cum_col: str = "Cumulative Chi Square",
     save_fig: bool = True,
     show_fig: bool = True,

@@ -90,7 +90,7 @@ class TestCompassLevel2:
             k_options=[2],
             reg_options=[1e-4],
             terminal_values=[47],
-            bout_col="Bout_ID",
+            bout_col="bout_id",
             patience=None,
         )
         assert isinstance(df_hier, pd.DataFrame)

@@ -54,7 +54,7 @@ def assign_bout_indices(
                 bout_id += 1
             bout_indices.append(bout_id)
 
-        sess_df["bout_index"] = bout_indices
+        sess_df["bout_id"] = bout_indices
         updated.append(sess_df)
 
     return pd.concat(updated, ignore_index=True)
@@ -72,7 +72,7 @@ def compute_surveillance_probabilities(
     Parameters
     -----------
     df_hmm : pd.DataFrame
-        Dataframe with 'genotype', 'session', 'HMM_State', 'grid_number', 'region', and 'bout_index'.
+        Dataframe with 'genotype', 'session', 'HMM_State', 'grid_number', 'region', and 'bout_id'.
     decision_nodes : str
         Type of decision node to consider for surveillance probability.
 
@@ -86,7 +86,7 @@ def compute_surveillance_probabilities(
 
     for session_id, sess_df in df_hmm.groupby("session"):
         genotype = sess_df["genotype"].unique()[0]
-        bouts = list(sess_df.groupby("bout_index"))[1:]  # skip incomplete first bout
+        bouts = list(sess_df.groupby("bout_id"))[1:]  # skip incomplete first bout
 
         for bout_num, (_, bout_df) in enumerate(bouts, 1):
             success = "Successful" if "Target Zone" in bout_df["region"].values else "Unsuccessful"

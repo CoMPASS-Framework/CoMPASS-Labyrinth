@@ -52,7 +52,7 @@ def compute_state_probability(
 
     df_plot = df_hmm.copy()
 
-    # Optional reassignment of NodeType for 3-way / 4-way decisions
+    # Optional reassignment of node_type for 3-way / 4-way decisions
     decision_3way_grids = NODE_TYPE_MAPPING.get("decision_3way", [])
     decision_4way_grids = NODE_TYPE_MAPPING.get("decision_4way", [])
     if column_of_interest == "node_type" and decision_3way_grids and decision_4way_grids:
@@ -152,7 +152,7 @@ def plot_state_probability_boxplot(
 ###################################################################
 def run_pairwise_ttests(
     state_count_df: pd.DataFrame,
-    column_of_interest: str = "NodeType",
+    column_of_interest: str = "node_type",
 ) -> pd.DataFrame:
     """
     Perform pairwise t-tests between genotypes within each level of the column_of_interest.

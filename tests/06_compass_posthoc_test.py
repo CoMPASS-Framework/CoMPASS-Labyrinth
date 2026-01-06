@@ -62,7 +62,7 @@ class TestCompasPosthocAnalysis:
         project_path = Path(config["project_path_full"])
         df_hmm = pd.read_csv(project_path / "results" / "compass_level_1" / "data_with_states.csv")
 
-        column_of_interest = "NodeType"
+        column_of_interest = "node_type"
         values_displayed = [
             "3-way Decision (Reward)",
             "4-way Decision (Reward)",
