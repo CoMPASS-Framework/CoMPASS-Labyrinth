@@ -135,101 +135,101 @@ def compile_mouse_sessions(
 ##################################################################
 
 
-# TODO - to be removed
-def load_and_preprocess_session_data_old(
-    filename: str,
-    bp: str,
-    DLCscorer: str,
-    region_mapping: dict = REGION_MAPPING,
-) -> pd.DataFrame:
-    """
-    [DEPRECATED] Loads DLC-tracked session data from CSV and assigns spatial regions.
-    Use load_and_preprocess_session_data() for NetCDF files instead.
+# # TODO - to be removed
+# def load_and_preprocess_session_data_old(
+#     filename: str,
+#     bp: str,
+#     DLCscorer: str,
+#     region_mapping: dict = REGION_MAPPING,
+# ) -> pd.DataFrame:
+#     """
+#     [DEPRECATED] Loads DLC-tracked session data from CSV and assigns spatial regions.
+#     Use load_and_preprocess_session_data() for NetCDF files instead.
 
-    Parameters
-    -----------
-    filename : str
-        CSV file path for a session.
-    bp : str
-        Body part name (e.g., 'sternum').
-    DLCscorer : str
-        DLC scorer name from the CSV header.
-    region_mapping : dict
-        Dictionary mapping region names to grid number lists.
+#     Parameters
+#     -----------
+#     filename : str
+#         CSV file path for a session.
+#     bp : str
+#         Body part name (e.g., 'sternum').
+#     DLCscorer : str
+#         DLC scorer name from the CSV header.
+#     region_mapping : dict
+#         Dictionary mapping region names to grid number lists.
 
-    Returns
-    --------
-    pd.DataFrame
-        Cleaned and region-labeled DataFrame for the session.
-    """
-    dflin = pd.read_csv(filename, index_col=None, header=[0, 1, 2], skipinitialspace=True)
+#     Returns
+#     --------
+#     pd.DataFrame
+#         Cleaned and region-labeled DataFrame for the session.
+#     """
+#     dflin = pd.read_csv(filename, index_col=None, header=[0, 1, 2], skipinitialspace=True)
 
-    # Extract relevant columns
-    dflin = dflin.loc[
-        :, [(DLCscorer, bp, "x"), (DLCscorer, bp, "y"), (DLCscorer, bp, "grid_number"), (DLCscorer, bp, "likelihood")]
-    ]
-    dflin.columns = ["x", "y", "grid_number", "likelihood"]
-    dflin["s_no"] = np.arange(1, len(dflin) + 1)
+#     # Extract relevant columns
+#     dflin = dflin.loc[
+#         :, [(DLCscorer, bp, "x"), (DLCscorer, bp, "y"), (DLCscorer, bp, "grid_number"), (DLCscorer, bp, "likelihood")]
+#     ]
+#     dflin.columns = ["x", "y", "grid_number", "likelihood"]
+#     dflin["s_no"] = np.arange(1, len(dflin) + 1)
 
-    # Filter: tracking likelihood and grid presence
-    dflin = dflin.fillna(-1)
-    dflin = dflin[(dflin["likelihood"] > 0.6) & (dflin["grid_number"] != -1)].copy()
-    dflin.reset_index(drop=True, inplace=True)
+#     # Filter: tracking likelihood and grid presence
+#     dflin = dflin.fillna(-1)
+#     dflin = dflin[(dflin["likelihood"] > 0.6) & (dflin["grid_number"] != -1)].copy()
+#     dflin.reset_index(drop=True, inplace=True)
 
-    # Assign regions from dictionary
-    dflin["region"] = "Unknown"
-    for region_name, grid_list in region_mapping.items():
-        dflin.loc[dflin["grid_number"].isin(grid_list), "region"] = region_name
+#     # Assign regions from dictionary
+#     dflin["region"] = "Unknown"
+#     for region_name, grid_list in region_mapping.items():
+#         dflin.loc[dflin["grid_number"].isin(grid_list), "region"] = region_name
 
-    return dflin
+#     return dflin
 
 
-# TODO - to be removed
-def compile_mouse_sessions_old(
-    config: dict,
-    bp: str,
-    region_mapping: dict = REGION_MAPPING,
-) -> pd.DataFrame:
-    """
-    [DEPRECATED] Compiles all sessions from CSV files into a single DataFrame.
-    Use compile_mouse_sessions() for NetCDF files instead.
+# # TODO - to be removed
+# def compile_mouse_sessions_old(
+#     config: dict,
+#     bp: str,
+#     region_mapping: dict = REGION_MAPPING,
+# ) -> pd.DataFrame:
+#     """
+#     [DEPRECATED] Compiles all sessions from CSV files into a single DataFrame.
+#     Use compile_mouse_sessions() for NetCDF files instead.
 
-    Parameters
-    -----------
-    config : dict
-        Project configuration dictionary.
-    bp : str
-        Body part name (e.g., 'sternum').
-    region_mapping : dict
-        Region name → grid number list.
+#     Parameters
+#     -----------
+#     config : dict
+#         Project configuration dictionary.
+#     bp : str
+#         Body part name (e.g., 'sternum').
+#     region_mapping : dict
+#         Region name → grid number list.
 
-    Returns
-    --------
-    pd.DataFrame
-        Combined session dataframe with region, genotype, sex.
-    """
-    pose_est_csv_filepath = Path(config["project_path_full"]) / "data" / "dlc_results"
-    dlc_scorer = config["dlc_scorer"]
-    cohort_metadata = load_cohort_metadata(config)
+#     Returns
+#     --------
+#     pd.DataFrame
+#         Combined session dataframe with region, genotype, sex.
+#     """
+#     pose_est_csv_filepath = Path(config["project_path_full"]) / "data" / "dlc_results"
+#     dlc_scorer = config["dlc_scorer"]
+#     cohort_metadata = load_cohort_metadata(config)
 
-    li_group = []
-    for sess in cohort_metadata["session"].unique():
-        session_name = f"Session-{int(sess)}"
-        filename = os.path.join(pose_est_csv_filepath, f"{session_name}withGrids.csv")
-        df = load_and_preprocess_session_data_old(filename, bp, dlc_scorer, region_mapping)
-        df["session"] = sess
-        li_group.append(df)
+#     li_group = []
+#     for sess in cohort_metadata["session"].unique():
+#         session_name = f"Session-{int(sess)}"
+#         filename = os.path.join(pose_est_csv_filepath, f"{session_name}withGrids.csv")
+#         df = load_and_preprocess_session_data_old(filename, bp, dlc_scorer, region_mapping)
+#         df["session"] = sess
+#         li_group.append(df)
 
-    df_comb = pd.concat(li_group, axis=0, ignore_index=True)
-    df_comb["grid_number"] = df_comb["grid_number"].astype(int)
-    # Map genotype and sex
-    session_to_genotype = {k: g["session"].tolist() for k, g in cohort_metadata.groupby("genotype")}
-    inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
-    df_comb["genotype"] = df_comb["session"].map(inverse_mapping)
+#     df_comb = pd.concat(li_group, axis=0, ignore_index=True)
+#     df_comb["grid_number"] = df_comb["grid_number"].astype(int)
+#     # Map genotype and sex
+#     session_to_genotype = {k: g["session"].tolist() for k, g in cohort_metadata.groupby("genotype")}
+#     inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
+#     df_comb["genotype"] = df_comb["session"].map(inverse_mapping)
 
-    session_to_sex = dict(cohort_metadata[["session", "sex"]].values)
-    df_comb["sex"] = df_comb["session"].map(session_to_sex)
-    return df_comb
+#     session_to_sex = dict(cohort_metadata[["session", "sex"]].values)
+#     df_comb["sex"] = df_comb["session"].map(session_to_sex)
+#     return df_comb
 
 
 ##################################################################
