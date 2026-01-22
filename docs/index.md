@@ -39,11 +39,11 @@ CoMPASS-Labyrinth is a unified computational and behavioral framework for analyz
 The CoMPASS-Labyrinth workflow includes:
 
 1. **Data Preprocessing** - DLC pose estimation and grid processing
-2. **Task Performance Analysis** - Behavioral metrics and success rates
-3. **Simulated Agent Modeling** - Computational models of behavior
+2. **Task Performance Analysis** - Behavioral metrics and spatial–temporal–bout-wise analysis
+3. **Simulated Agent Modeling** - Behaviorally constrained agent with random selection over an empirical decision set
 4. **CoMPASS Level 1** - Fine-grained motor state inference (HMM)
 5. **CoMPASS Level 2** - Goal-directed cognitive state inference (BGMM + GMM-HMM)
-6. **Post-hoc Analysis** - Spatial, temporal, and bout-wise analysis
+6. **Post-hoc Analysis** - Model-based post-hoc analysis
 
 ## Citation
 
