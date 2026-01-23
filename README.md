@@ -100,6 +100,11 @@ conda activate compass-labyrinth
 5. Go through **src/compass_labyrinth/compass/level_1/README.md** and **src/compass_labyrinth/compass/level_2/README.md** for instructions on optimal model parameters. NOTE: Please test all and input all parameters to get optimal results.
 
 
+## Documentation 
+
+Documentation and package details can be found here: [CoMPASS-Labyrinth](https://compass-framework.github.io/CoMPASS-Labyrinth/)
+
+
 ## Citation
 If you use this framework, please cite the below manuscript:
 
