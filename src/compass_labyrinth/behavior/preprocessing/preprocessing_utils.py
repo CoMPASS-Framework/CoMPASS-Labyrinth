@@ -92,28 +92,82 @@ def compile_mouse_sessions(
     --------
     pd.DataFrame
         Combined session dataframe with Region, Genotype, Sex.
+        (Sessions with missing files are skipped and reported.)
     """
     pose_est_csv_filepath = Path(config["project_path_full"]) / "data" / "dlc_results"
     dlc_scorer = config["dlc_scorer"]
     cohort_metadata = load_cohort_metadata(config)
 
     li_group = []
+    missing_sessions = []
+
     for sess in cohort_metadata["Session #"].unique():
-        session_name = f"Session-{int(sess)}"
-        filename = os.path.join(pose_est_csv_filepath, f"{session_name}withGrids.csv")
-        df = load_and_preprocess_session_data(filename, bp, dlc_scorer, region_mapping)
+        session_id = f"Session{int(sess):04d}"
+
+        # Support both: Session0001_withGrids.csv  and  Session0001 withGrids.csv
+        filename_underscore = pose_est_csv_filepath / f"{session_id}_withGrids.csv"
+        filename_space = pose_est_csv_filepath / f"{session_id} withGrids.csv"
+
+        if filename_underscore.exists():
+            filename = filename_underscore
+        elif filename_space.exists():
+            filename = filename_space
+        else:
+            # ---- Skip + record missing ----
+            missing_sessions.append(sess)
+            print(
+                f"[WARN] Skipping Session {sess}: "
+                f"no withGrids file found "
+                f"(tried '{filename_underscore.name}', '{filename_space.name}')"
+            )
+            continue
+
+        df = load_and_preprocess_session_data(
+            filename,
+            bp,
+            dlc_scorer,
+            region_mapping,
+        )
+
         df["Session"] = sess
         li_group.append(df)
 
+    if not li_group:
+        raise RuntimeError(
+            "No session files were loaded. "
+            "All sessions were missing withGrids files."
+        )
+
     df_comb = pd.concat(li_group, axis=0, ignore_index=True)
     df_comb["Grid Number"] = df_comb["Grid Number"].astype(int)
-    # Map Genotype and Sex
-    session_to_genotype = {k: g["Session #"].tolist() for k, g in cohort_metadata.groupby("Genotype")}
-    inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
+
+    # ---- Map Genotype ----
+    session_to_genotype = {
+        k: g["Session #"].tolist()
+        for k, g in cohort_metadata.groupby("Genotype")
+    }
+
+    inverse_mapping = {
+        session: genotype
+        for genotype, sessions in session_to_genotype.items()
+        for session in sessions
+    }
+
     df_comb["Genotype"] = df_comb["Session"].map(inverse_mapping)
 
+    # ---- Map Sex ----
     session_to_sex = dict(cohort_metadata[["Session #", "Sex"]].values)
     df_comb["Sex"] = df_comb["Session"].map(session_to_sex)
+
+    # ---- Final report ----
+    if missing_sessions:
+        missing_sessions_sorted = sorted(missing_sessions)
+        print(
+            "\n[SUMMARY] The following sessions were skipped "
+            "because their withGrids files were not found:\n"
+            f"{missing_sessions_sorted}\n"
+            f"Total skipped: {len(missing_sessions_sorted)}"
+        )
 
     return df_comb
 
