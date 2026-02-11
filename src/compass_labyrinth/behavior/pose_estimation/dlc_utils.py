@@ -21,7 +21,97 @@ from shapely.geometry import Polygon, Point
 import geopandas as gpd
 from matplotlib.collections import LineCollection
 from typing import Optional
+import re
 
+# Add to dlc_utils.py after imports (around line 25)
+
+# Add to dlc_utils.py after imports (around line 25)
+
+def standardize_legacy_filenames(
+    source_data_path: Path | str,
+    dry_run: bool = True
+) -> None:
+    """
+    Convert legacy session files (Session-1) to current format (Session0001).
+    Also converts spaces to underscores and renames PosList -> Boundary_Points.
+    Creates _DLC_Cropping_Bounds.npy from Boundary_Points if missing.
+    
+    Example:
+    --------
+    dlc_utils.standardize_legacy_filenames(source_data_path)  # Preview outputs first
+    dlc_utils.standardize_legacy_filenames(source_data_path, dry_run=False)  # Then rename
+
+    """    
+    source_data_path = Path(source_data_path)
+    renames = []
+    
+    for f in source_data_path.iterdir():
+        if not f.is_file():
+            continue
+        
+        name = f.name
+        new_name = name
+        
+        # Match Session-{num}
+        match = re.match(r'Session-(\d+)', name)
+        if not match:
+            continue
+        
+        session_num = int(match.group(1))
+        
+        # Replace Session-{num} with Session{num:04d}
+        new_name = re.sub(r'Session-(\d+)', f'Session{session_num:04d}', new_name)
+        
+        # Replace spaces with underscores
+        new_name = new_name.replace(' ', '_')
+        
+        # Rename PosList -> Boundary_Points
+        new_name = new_name.replace('PosList', 'Boundary_Points')
+        
+        # Add underscore before withGrids
+        new_name = re.sub(r'(\d{4})(withGrids)', r'\1_\2', new_name)
+        
+        if name != new_name:
+            renames.append((f, source_data_path / new_name))
+    
+    if renames:
+        print(f"Found {len(renames)} files to rename:")
+        for old, new in renames:
+            print(f"  {old.name} -> {new.name}")
+    else:
+        print("✓ No legacy files found.")
+    
+    # Check for missing cropping bounds files
+    missing_cropping = []
+    for f in source_data_path.glob("*_Boundary_Points.npy"):
+        cropping_file = f.parent / f.name.replace("_Boundary_Points", "_DLC_Cropping_Bounds")
+        if not cropping_file.exists():
+            missing_cropping.append(f)
+    
+    if missing_cropping:
+        print(f"\nFound {len(missing_cropping)} missing _DLC_Cropping_Bounds.npy files to create.")
+    
+    if dry_run:
+        print("\nDry run. Set dry_run=False to apply changes.")
+        return
+    
+    # Perform renames
+    if renames:
+        for old, new in renames:
+            if not new.exists():
+                old.rename(new)
+        print(f"\n✓ Renamed {len(renames)} files.")
+    
+    # Create DLC_Cropping_Bounds.npy from Boundary_Points.npy
+    for f in source_data_path.glob("*_Boundary_Points.npy"):
+        cropping_file = f.parent / f.name.replace("_Boundary_Points", "_DLC_Cropping_Bounds")
+        if not cropping_file.exists():
+            boundary_points = np.load(f)
+            x_coords, y_coords = boundary_points[:, 0], boundary_points[:, 1]
+            cropping_bounds = np.array([int(min(x_coords)), int(max(x_coords)), 
+                                        int(min(y_coords)), int(max(y_coords))])
+            np.save(cropping_file, cropping_bounds)
+            print(f"✓ Created {cropping_file.name}")
 
 def import_cohort_metadata(
     metadata_path: Path | str,
@@ -63,7 +153,7 @@ def import_cohort_metadata(
                 print("Processed cropping bounds for Probe Trial")
 
         # Stringify timestamps
-        mouseinfo = mouseinfo.applymap(
+        mouseinfo = mouseinfo.map(
             lambda x: (
                 x.isoformat()
                 if isinstance(x, (pd.Timestamp, datetime, date))
@@ -160,7 +250,6 @@ def display_metadata_summary(df: pd.DataFrame) -> None:
             print(f"  {col}: {count} missing values")
 
     print("=" * 50)
-
 
 def save_first_frame(
     video_path: Path | str,
@@ -717,11 +806,6 @@ def batch_get_boundary_and_cropping(
         else:
             results_dict["failed_sessions"].append(session_name)
             print(f"✗ Skipped {session_name}")
-
-            # Ask if user wants to continue
-            continue_choice = input("Continue with next session? (y/n): ").strip().lower()
-            if continue_choice == "n":
-                break
 
     # Print summary
     print(f"\n{'='*60}")
@@ -2132,7 +2216,6 @@ def batch_append_grid_numbers(
     print("=" * 60)
 
     return annotation_summary
-
 
 def run_grid_preprocessing(
     source_data_path: Path | str,

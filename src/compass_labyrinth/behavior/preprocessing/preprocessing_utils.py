@@ -110,8 +110,14 @@ def compile_mouse_sessions(
 
     li_group = []
     for sess in cohort_metadata["session"].unique():
-        session_name = f"Session-{int(sess)}"
+        # Handle different filename conventions
+        session_name = f"Session{int(sess):04d}"
         filename = pose_est_filepath / f"{session_name}.nc"
+        
+        if not filename.exists():
+            session_name = f"Session-{int(sess)}"
+            filename = pose_est_filepath / f"{session_name}.nc"
+        
         df = load_and_preprocess_session_data(str(filename), bp, region_mapping)
         df["session"] = sess
         li_group.append(df)
