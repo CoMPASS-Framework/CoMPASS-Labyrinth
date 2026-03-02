@@ -8,6 +8,7 @@ Goal:
 
 import pandas as pd
 import numpy as np
+import xarray as xr
 from pathlib import Path
 import os
 
@@ -27,20 +28,17 @@ from compass_labyrinth.constants import (
 def load_and_preprocess_session_data(
     filename: str,
     bp: str,
-    DLCscorer: str,
     region_mapping: dict = REGION_MAPPING,
 ) -> pd.DataFrame:
     """
-    Loads DLC-tracked session data and assigns spatial regions based on grid numbers.
+    Loads pose estimation data from NetCDF and assigns spatial regions based on grid numbers.
 
     Parameters
     -----------
     filename : str
-        CSV file path for a session.
+        NetCDF file path for a session.
     bp : str
         Body part name (e.g., 'sternum').
-    DLCscorer : str
-        DLC scorer name from the CSV header.
     region_mapping : dict
         Dictionary mapping region names to grid number lists.
 
@@ -49,24 +47,38 @@ def load_and_preprocess_session_data(
     pd.DataFrame
         Cleaned and region-labeled DataFrame for the session.
     """
-    dflin = pd.read_csv(filename, index_col=None, header=[0, 1, 2], skipinitialspace=True)
+    # Load NetCDF file
+    ds = xr.open_dataset(filename)
 
-    # Extract relevant columns
-    dflin = dflin.loc[
-        :, [(DLCscorer, bp, "x"), (DLCscorer, bp, "y"), (DLCscorer, bp, "Grid Number"), (DLCscorer, bp, "likelihood")]
-    ]
-    dflin.columns = ["x", "y", "Grid Number", "likelihood"]
-    dflin["S_no"] = np.arange(1, len(dflin) + 1)
+    # Extract data for specific bodypart from individual_0
+    # position has shape (time, space) where space contains [x, y]
+    position = ds.sel(individuals="individual_0", keypoints=bp).position.values
+    confidence = ds.sel(individuals="individual_0", keypoints=bp).confidence.values
+    grid_numbers = ds.sel(individuals="individual_0", keypoints=bp).grid_number.values
+
+    # Close dataset to free memory
+    ds.close()
+
+    # Create DataFrame
+    dflin = pd.DataFrame(
+        {
+            "x": position[:, 0],  # x coordinates (first spatial dimension)
+            "y": position[:, 1],  # y coordinates (second spatial dimension)
+            "grid_number": grid_numbers,
+            "likelihood": confidence,
+        }
+    )
+    dflin["s_no"] = np.arange(1, len(dflin) + 1)
 
     # Filter: tracking likelihood and grid presence
     dflin = dflin.fillna(-1)
-    dflin = dflin[(dflin["likelihood"] > 0.6) & (dflin["Grid Number"] != -1)].copy()
+    dflin = dflin[(dflin["likelihood"] > 0.6) & (dflin["grid_number"] != -1)].copy()
     dflin.reset_index(drop=True, inplace=True)
 
     # Assign regions from dictionary
-    dflin["Region"] = "Unknown"
+    dflin["region"] = "Unknown"
     for region_name, grid_list in region_mapping.items():
-        dflin.loc[dflin["Grid Number"].isin(grid_list), "Region"] = region_name
+        dflin.loc[dflin["grid_number"].isin(grid_list), "region"] = region_name
 
     return dflin
 
@@ -77,7 +89,7 @@ def compile_mouse_sessions(
     region_mapping: dict = REGION_MAPPING,
 ) -> pd.DataFrame:
     """
-    Compiles all sessions into a single DataFrame.
+    Compiles all sessions from NetCDF files into a single DataFrame.
 
     Parameters
     -----------
@@ -91,31 +103,133 @@ def compile_mouse_sessions(
     Returns
     --------
     pd.DataFrame
-        Combined session dataframe with Region, Genotype, Sex.
+        Combined session dataframe with region, genotype, sex.
     """
-    pose_est_csv_filepath = Path(config["project_path_full"]) / "data" / "dlc_results"
-    dlc_scorer = config["dlc_scorer"]
+    pose_est_filepath = Path(config["project_path_full"]) / "data" / "dlc_results"
     cohort_metadata = load_cohort_metadata(config)
 
     li_group = []
-    for sess in cohort_metadata["Session #"].unique():
+    for sess in cohort_metadata["session"].unique():
         session_name = f"Session-{int(sess)}"
-        filename = os.path.join(pose_est_csv_filepath, f"{session_name}withGrids.csv")
-        df = load_and_preprocess_session_data(filename, bp, dlc_scorer, region_mapping)
-        df["Session"] = sess
+        filename = pose_est_filepath / f"{session_name}.nc"
+        df = load_and_preprocess_session_data(str(filename), bp, region_mapping)
+        df["session"] = sess
         li_group.append(df)
 
     df_comb = pd.concat(li_group, axis=0, ignore_index=True)
-    df_comb["Grid Number"] = df_comb["Grid Number"].astype(int)
-    # Map Genotype and Sex
-    session_to_genotype = {k: g["Session #"].tolist() for k, g in cohort_metadata.groupby("Genotype")}
-    inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
-    df_comb["Genotype"] = df_comb["Session"].map(inverse_mapping)
+    df_comb["grid_number"] = df_comb["grid_number"].astype(int)
 
-    session_to_sex = dict(cohort_metadata[["Session #", "Sex"]].values)
-    df_comb["Sex"] = df_comb["Session"].map(session_to_sex)
+    # Map genotype and sex
+    session_to_genotype = {k: g["session"].tolist() for k, g in cohort_metadata.groupby("genotype")}
+    inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
+    df_comb["genotype"] = df_comb["session"].map(inverse_mapping)
+
+    session_to_sex = dict(cohort_metadata[["session", "sex"]].values)
+    df_comb["sex"] = df_comb["session"].map(session_to_sex)
 
     return df_comb
+
+
+##################################################################
+# OLD CSV-BASED FUNCTIONS - DEPRECATED
+##################################################################
+
+
+# # TODO - to be removed
+# def load_and_preprocess_session_data_old(
+#     filename: str,
+#     bp: str,
+#     DLCscorer: str,
+#     region_mapping: dict = REGION_MAPPING,
+# ) -> pd.DataFrame:
+#     """
+#     [DEPRECATED] Loads DLC-tracked session data from CSV and assigns spatial regions.
+#     Use load_and_preprocess_session_data() for NetCDF files instead.
+
+#     Parameters
+#     -----------
+#     filename : str
+#         CSV file path for a session.
+#     bp : str
+#         Body part name (e.g., 'sternum').
+#     DLCscorer : str
+#         DLC scorer name from the CSV header.
+#     region_mapping : dict
+#         Dictionary mapping region names to grid number lists.
+
+#     Returns
+#     --------
+#     pd.DataFrame
+#         Cleaned and region-labeled DataFrame for the session.
+#     """
+#     dflin = pd.read_csv(filename, index_col=None, header=[0, 1, 2], skipinitialspace=True)
+
+#     # Extract relevant columns
+#     dflin = dflin.loc[
+#         :, [(DLCscorer, bp, "x"), (DLCscorer, bp, "y"), (DLCscorer, bp, "grid_number"), (DLCscorer, bp, "likelihood")]
+#     ]
+#     dflin.columns = ["x", "y", "grid_number", "likelihood"]
+#     dflin["s_no"] = np.arange(1, len(dflin) + 1)
+
+#     # Filter: tracking likelihood and grid presence
+#     dflin = dflin.fillna(-1)
+#     dflin = dflin[(dflin["likelihood"] > 0.6) & (dflin["grid_number"] != -1)].copy()
+#     dflin.reset_index(drop=True, inplace=True)
+
+#     # Assign regions from dictionary
+#     dflin["region"] = "Unknown"
+#     for region_name, grid_list in region_mapping.items():
+#         dflin.loc[dflin["grid_number"].isin(grid_list), "region"] = region_name
+
+#     return dflin
+
+
+# # TODO - to be removed
+# def compile_mouse_sessions_old(
+#     config: dict,
+#     bp: str,
+#     region_mapping: dict = REGION_MAPPING,
+# ) -> pd.DataFrame:
+#     """
+#     [DEPRECATED] Compiles all sessions from CSV files into a single DataFrame.
+#     Use compile_mouse_sessions() for NetCDF files instead.
+
+#     Parameters
+#     -----------
+#     config : dict
+#         Project configuration dictionary.
+#     bp : str
+#         Body part name (e.g., 'sternum').
+#     region_mapping : dict
+#         Region name → grid number list.
+
+#     Returns
+#     --------
+#     pd.DataFrame
+#         Combined session dataframe with region, genotype, sex.
+#     """
+#     pose_est_csv_filepath = Path(config["project_path_full"]) / "data" / "dlc_results"
+#     dlc_scorer = config["dlc_scorer"]
+#     cohort_metadata = load_cohort_metadata(config)
+
+#     li_group = []
+#     for sess in cohort_metadata["session"].unique():
+#         session_name = f"Session-{int(sess)}"
+#         filename = os.path.join(pose_est_csv_filepath, f"{session_name}withGrids.csv")
+#         df = load_and_preprocess_session_data_old(filename, bp, dlc_scorer, region_mapping)
+#         df["session"] = sess
+#         li_group.append(df)
+
+#     df_comb = pd.concat(li_group, axis=0, ignore_index=True)
+#     df_comb["grid_number"] = df_comb["grid_number"].astype(int)
+#     # Map genotype and sex
+#     session_to_genotype = {k: g["session"].tolist() for k, g in cohort_metadata.groupby("genotype")}
+#     inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
+#     df_comb["genotype"] = df_comb["session"].map(inverse_mapping)
+
+#     session_to_sex = dict(cohort_metadata[["session", "sex"]].values)
+#     df_comb["sex"] = df_comb["session"].map(session_to_sex)
+#     return df_comb
 
 
 ##################################################################
@@ -123,7 +237,10 @@ def compile_mouse_sessions(
 ###################################################################
 
 
-def remove_until_initial_node(df: pd.DataFrame, initial_nodes: list = [47, 46, 34, 22]) -> pd.DataFrame:
+def remove_until_initial_node(
+    df: pd.DataFrame,
+    initial_nodes: list = [47, 46, 34, 22],
+) -> pd.DataFrame:
     """
     Removes all rows in the dataframe until the first occurrence of a grid node
     in the provided initial_nodes list.
@@ -140,10 +257,10 @@ def remove_until_initial_node(df: pd.DataFrame, initial_nodes: list = [47, 46, 3
     pd.DataFrame
         Truncated dataframe starting from the first initial node.
     """
-    if df.iloc[0]["Grid Number"] in initial_nodes:
+    if df.iloc[0]["grid_number"] in initial_nodes:
         return df.copy()
 
-    first_valid_index = df[df["Grid Number"].isin(initial_nodes)].index.min()
+    first_valid_index = df[df["grid_number"].isin(initial_nodes)].index.min()
     if pd.notna(first_valid_index):
         return df.iloc[first_valid_index:].reset_index(drop=True)
 
@@ -151,7 +268,8 @@ def remove_until_initial_node(df: pd.DataFrame, initial_nodes: list = [47, 46, 3
 
 
 def remove_invalid_grid_transitions(
-    df: pd.DataFrame, adjacency_matrix: pd.DataFrame = ADJACENCY_MATRIX
+    df: pd.DataFrame,
+    adjacency_matrix: pd.DataFrame = ADJACENCY_MATRIX,
 ) -> pd.DataFrame:
     """
     Removes rows from the dataframe where the transition between consecutive
@@ -169,7 +287,7 @@ def remove_invalid_grid_transitions(
     pd.DataFrame
         Cleaned dataframe with only valid grid transitions.
     """
-    grid_numbers = list(df["Grid Number"])
+    grid_numbers = list(df["grid_number"])
     drop_indices = []
     x = 0
     num = 0
@@ -199,7 +317,7 @@ def preprocess_sessions(
     Full preprocessing pipeline for all sessions: trims to initial nodes and removes invalid transitions.
 
     Parameters
-    -----------
+    ----------
     df_comb: pd.DataFrame
         Combined dataframe with all sessions.
     adjacency_matrix: pd.DataFrame
@@ -208,23 +326,23 @@ def preprocess_sessions(
         Nodes that mark the true session start.
 
     Returns
-    --------
+    -------
     pd.DataFrame
         Fully cleaned and combined dataframe across all sessions.
     """
     preprocessed_sessions = []
 
-    for _, session_df in df_comb.groupby("Session"):
+    for _, session_df in df_comb.groupby("session"):
         session_df = session_df.reset_index(drop=True)
         session_df = remove_until_initial_node(session_df, initial_nodes)
         session_df = remove_invalid_grid_transitions(session_df, adjacency_matrix)
         preprocessed_sessions.append(session_df)
 
     df_all_cleaned = pd.concat(preprocessed_sessions, ignore_index=True)
-    df_all_cleaned["Session"] = df_all_cleaned["Session"].astype(int)
-    df_all_cleaned["Grid Number"] = df_all_cleaned["Grid Number"].astype(int)
+    df_all_cleaned["session"] = df_all_cleaned["session"].astype(int)
+    df_all_cleaned["grid_number"] = df_all_cleaned["grid_number"].astype(int)
 
-    # Mapping of variable names to NodeType labels
+    # Mapping of variable names to node_type labels
     # key : value pair, key = list name (as in Initializations) & value = column value name decided by user
     label_mapping = {
         "decision_reward": "Decision (Reward)",
@@ -236,13 +354,13 @@ def preprocess_sessions(
         "entry_zone": "Entry Nodes",
         "target_zone": "Target Nodes",
     }
-    df_all_cleaned["NodeType"] = "Unlabeled"
+    df_all_cleaned["node_type"] = "Unlabeled"
 
     # Apply mapping to access the list by name
-    # Creates the column NodeType based on Grid Numbers
+    # Creates the column node_type based on grid_number
     for var_name, label in label_mapping.items():
         node_list = NODE_TYPE_MAPPING[var_name]
-        df_all_cleaned.loc[df_all_cleaned["Grid Number"].isin(node_list), "NodeType"] = label
+        df_all_cleaned.loc[df_all_cleaned["grid_number"].isin(node_list), "node_type"] = label
 
     return df_all_cleaned
 
@@ -256,7 +374,7 @@ def ensure_velocity_column(
     df: pd.DataFrame,
     x_col: str = "x",
     y_col: str = "y",
-    velocity_col: str = "Velocity",
+    velocity_col: str = "velocity",
     fps: float = 5,
 ) -> pd.DataFrame:
     """
@@ -290,10 +408,10 @@ def ensure_velocity_column(
 
     df = df.copy()
 
-    if "Session" in df.columns:
-        coords = df[[x_col, y_col, "Session"]]
+    if "session" in df.columns:
+        coords = df[[x_col, y_col, "session"]]
         velocity = (
-            coords.groupby("Session", group_keys=False)[[x_col, y_col]]
+            coords.groupby("session", group_keys=False)[[x_col, y_col]]
             .apply(lambda g: np.sqrt(g[x_col].diff() ** 2 + g[y_col].diff() ** 2) * fps)
             .fillna(0)
         )
@@ -307,7 +425,10 @@ def ensure_velocity_column(
 #########################################################
 # Save dataframes to CSV files
 #########################################################
-def save_preprocessed_to_csv(config: dict, df: pd.DataFrame) -> None:
+def save_preprocessed_to_csv(
+    config: dict,
+    df: pd.DataFrame,
+) -> None:
     """
     Saves Preprocessed data to CSV files
 
@@ -337,8 +458,8 @@ def save_preprocessed_to_csv(config: dict, df: pd.DataFrame) -> None:
     print(f"Saved combined file: {combined_path}")
 
     # Save per-session individual files
-    for session_id, df_session in df.groupby("Session"):
+    for session_id, df_session in df.groupby("session"):
         file_name = f"Session-{session_id}_preprocessed.csv"
         file_path = individual_dir / file_name
         df_session.to_csv(file_path, index=False)
-    print(f"Saved {df['Session'].nunique()} individual session CSVs to: {individual_dir}")
+    print(f"Saved {df['session'].nunique()} individual session CSVs to: {individual_dir}")

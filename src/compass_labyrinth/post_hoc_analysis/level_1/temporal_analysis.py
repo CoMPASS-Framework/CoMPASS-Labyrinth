@@ -35,7 +35,7 @@ def compute_node_state_medians_over_time(
     Parameters
     -----------
     df_hmm : pd.DataFrame
-        Dataframe with 'Genotype', 'Session', 'HMM_State', and 'Grid Number'.
+        Dataframe with 'genotype', 'session', 'HMM_State', and 'grid_number'.
     state_types : list
         List of HMM states to compute proportions for (e.g., [2])
     lower_lim : int
@@ -57,13 +57,13 @@ def compute_node_state_medians_over_time(
     li_node_genotype = []
     decision_nodes_ids = NODE_TYPE_MAPPING.get(decision_nodes, [])
     nondecision_nodes_ids = NODE_TYPE_MAPPING.get(nondecision_nodes, [])
-    for genotype in df_hmm["Genotype"].unique():
-        sess_li = [x for _, x in df_hmm[df_hmm["Genotype"] == genotype].groupby("Session")]
+    for genotype in df_hmm["genotype"].unique():
+        sess_li = [x for _, x in df_hmm[df_hmm["genotype"] == genotype].groupby("session")]
 
         for node_type_list, node_type_label in zip(
             [decision_nodes_ids, nondecision_nodes_ids], ["Decision node", "Non-Decision node"]
         ):
-            med_df = pd.DataFrame(columns=["Time_Bins", "Session", "Median_Probability"])
+            med_df = pd.DataFrame(columns=["Time_Bins", "session", "Median_Probability"])
 
             row_index = 1
             for k in range(lower_lim, upper_lim, bin_size):
@@ -72,16 +72,15 @@ def compute_node_state_medians_over_time(
                     df_subset = session_df.iloc[k : k + bin_size, :]
 
                     # Count by HMM state
-                    st_cnt = df_subset.groupby(["Grid Number", "HMM_State"]).size().rename("cnt").reset_index()
-                    gn_cnt = df_subset.groupby(["Grid Number"]).size().rename("tot").reset_index()
-                    x_y = df_subset.groupby(["Grid Number"]).agg({"x": "mean", "y": "mean"}).reset_index()
+                    st_cnt = df_subset.groupby(["grid_number", "HMM_State"]).size().rename("cnt").reset_index()
+                    gn_cnt = df_subset.groupby(["grid_number"]).size().rename("tot").reset_index()
+                    x_y = df_subset.groupby(["grid_number"]).agg({"x": "mean", "y": "mean"}).reset_index()
 
-                    state_count = st_cnt.merge(gn_cnt, on="Grid Number", how="left")
+                    state_count = st_cnt.merge(gn_cnt, on="grid_number", how="left")
                     state_count["prop"] = state_count["cnt"] / state_count["tot"]
-                    state_count = state_count.merge(x_y, on="Grid Number", how="left")
-
+                    state_count = state_count.merge(x_y, on="grid_number", how="left")
                     subset = state_count[
-                        (state_count["HMM_State"].isin(state_types)) & (state_count["Grid Number"].isin(node_type_list))
+                        (state_count["HMM_State"].isin(state_types)) & (state_count["grid_number"].isin(node_type_list))
                     ]
 
                     if not subset.empty:
@@ -90,17 +89,17 @@ def compute_node_state_medians_over_time(
                         med_val = 0
 
                     med_df.loc[row_index, "Median_Probability"] = med_val
-                    med_df.loc[row_index, "Session"] = session_df["Session"].unique()[0]
+                    med_df.loc[row_index, "session"] = session_df["session"].unique()[0]
                     med_df.loc[row_index, "Time_Bins"] = k + bin_size
                     row_index += 1
 
             med_df = med_df[med_df["Median_Probability"] != 0]
-            med_df["Node Type"] = node_type_label
-            med_df["Genotype"] = genotype
+            med_df["node_type"] = node_type_label
+            med_df["genotype"] = genotype
             li_node_genotype.append(med_df)
 
     deci_df = pd.concat(li_node_genotype).reset_index(drop=True)
-    deci_df["Genotype + Node Type"] = deci_df["Genotype"] + " , " + deci_df["Node Type"]
+    deci_df["Genotype + Node Type"] = deci_df["genotype"] + " , " + deci_df["node_type"]
     deci_df["Time_Bins"] = deci_df["Time_Bins"].astype(int)
 
     return deci_df
@@ -188,7 +187,7 @@ def plot_node_state_median_curve(
 
 def get_max_session_row_bracket(
     df_combined: pd.DataFrame,
-    session_col: str = "Session",
+    session_col: str = "session",
 ) -> int:
     """
     Finds the session with the maximum number of rows and returns the largest lower multiple of 10,000.
@@ -212,7 +211,7 @@ def get_max_session_row_bracket(
 
 def get_min_session_row_bracket(
     df_combined: pd.DataFrame,
-    session_col: str = "Session",
+    session_col: str = "session",
 ) -> int:
     """
     Finds the session with the minimum number of rows and returns the largest lower multiple of 10,000.

@@ -30,15 +30,15 @@ def compute_state_probability(
     state: int = 1,
 ) -> pd.DataFrame:
     """
-    Computes HMM state proportions by category (e.g., NodeType or Region).
+    Computes HMM state proportions by category (e.g., node_type or region).
     Optionally reassigns decision node labels for 3-way and 4-way decisions.
 
     Parameters
     -----------
     df_hmm: pd.DataFrame
-        Dataframe with 'Genotype', 'Session', 'HMM_State', and category column.
+        Dataframe with 'genotype', 'session', 'HMM_State', and category column.
     column_of_interest: str
-        'NodeType' or 'Region'
+        'node_type' or 'region'.
     values_displayed: Optional[List[str]]
         Categories to include and order
     state: int
@@ -52,20 +52,20 @@ def compute_state_probability(
 
     df_plot = df_hmm.copy()
 
-    # Optional reassignment of NodeType for 3-way / 4-way decisions
+    # Optional reassignment of node_type for 3-way / 4-way decisions
     decision_3way_grids = NODE_TYPE_MAPPING.get("decision_3way", [])
     decision_4way_grids = NODE_TYPE_MAPPING.get("decision_4way", [])
-    if column_of_interest == "NodeType" and decision_3way_grids and decision_4way_grids:
-        df_plot.loc[df_plot["Grid Number"].isin(decision_3way_grids), "NodeType"] = "3-way Decision (Reward)"
-        df_plot.loc[df_plot["Grid Number"].isin(decision_4way_grids), "NodeType"] = "4-way Decision (Reward)"
-        df_plot = df_plot.loc[~df_plot["NodeType"].isin(["Entry Nodes", "Target Nodes"])]
+    if column_of_interest == "node_type" and decision_3way_grids and decision_4way_grids:
+        df_plot.loc[df_plot["grid_number"].isin(decision_3way_grids), "node_type"] = "3-way Decision (Reward)"
+        df_plot.loc[df_plot["grid_number"].isin(decision_4way_grids), "node_type"] = "4-way Decision (Reward)"
+        df_plot = df_plot.loc[~df_plot["node_type"].isin(["Entry Nodes", "Target Nodes"])]
 
     # Compute state occurrence counts
     st_cnt = (
-        df_plot.groupby(["Genotype", column_of_interest, "Session", "HMM_State"]).size().rename("cnt").reset_index()
+        df_plot.groupby(["genotype", column_of_interest, "session", "HMM_State"]).size().rename("cnt").reset_index()
     )
-    gn_cnt = df_plot.groupby(["Genotype", column_of_interest, "Session"]).size().rename("tot").reset_index()
-    state_count = st_cnt.merge(gn_cnt, on=[column_of_interest, "Genotype", "Session"], how="left")
+    gn_cnt = df_plot.groupby(["genotype", column_of_interest, "session"]).size().rename("tot").reset_index()
+    state_count = st_cnt.merge(gn_cnt, on=[column_of_interest, "genotype", "session"], how="left")
     state_count["prop"] = state_count["cnt"] / state_count["tot"]
 
     # Filter for target HMM state and reorder
@@ -120,7 +120,7 @@ def plot_state_probability_boxplot(
     ax = sns.boxplot(
         x=column_of_interest,
         y="prop",
-        hue="Genotype",
+        hue="genotype",
         data=state_count_df,
         palette=palette,
     )
@@ -152,7 +152,7 @@ def plot_state_probability_boxplot(
 ###################################################################
 def run_pairwise_ttests(
     state_count_df: pd.DataFrame,
-    column_of_interest: str = "NodeType",
+    column_of_interest: str = "node_type",
 ) -> pd.DataFrame:
     """
     Perform pairwise t-tests between genotypes within each level of the column_of_interest.
@@ -167,21 +167,20 @@ def run_pairwise_ttests(
     Returns
     --------
     pd.DataFrame
-        Dataframe with columns: [Group, Genotype1, Genotype2, t-stat, p-value]
+        Dataframe with columns: [Group, genotype1, genotype2, t-stat, p-value]
     """
     results = []
     groups = state_count_df[column_of_interest].dropna().unique()
 
     for group in groups:
         subset = state_count_df[state_count_df[column_of_interest] == group]
-        genotypes = subset["Genotype"].unique()
+        genotypes = subset["genotype"].unique()
 
         for g1, g2 in combinations(genotypes, 2):
-            values1 = subset[subset["Genotype"] == g1]["prop"].dropna()
-            values2 = subset[subset["Genotype"] == g2]["prop"].dropna()
-
+            values1 = subset[subset["genotype"] == g1]["prop"].dropna()
+            values2 = subset[subset["genotype"] == g2]["prop"].dropna()
             if len(values1) >= 2 and len(values2) >= 2:
                 t_stat, p_val = ttest_ind(values1, values2, equal_var=False)
-                results.append({"Group": group, "Genotype1": g1, "Genotype2": g2, "T-stat": t_stat, "P-value": p_val})
+                results.append({"Group": group, "genotype1": g1, "genotype2": g2, "T-stat": t_stat, "P-value": p_val})
 
     return pd.DataFrame(results)

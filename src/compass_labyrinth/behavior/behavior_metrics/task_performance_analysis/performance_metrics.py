@@ -31,7 +31,7 @@ warnings.filterwarnings("ignore")
 ###################################################################
 def get_max_session_row_bracket(
     df_combined: pd.DataFrame,
-    session_col: str = "Session",
+    session_col: str = "session",
 ) -> int:
     """
     Finds the session with the maximum number of rows and returns the largest
@@ -68,7 +68,7 @@ def generate_region_heatmap_pivots(
     Parameters
     -----------
     df : pd.DataFrame
-        Input DataFrame containing 'Session', 'Genotype', and 'Region' columns.
+        Input DataFrame containing 'session', 'genotype', and 'region' columns.
     lower_lim : int
         Start index for binning.
     upper_lim : int
@@ -83,15 +83,15 @@ def generate_region_heatmap_pivots(
     Returns
     -----------
     pivot_dict : dict
-        Dictionary with Genotype as keys and list of pivot DataFrames as values.
+        Dictionary with genotype as keys and list of pivot DataFrames as values.
     """
     pivot_dict = {}
     thresh_val = int((upper_lim - lower_lim) / difference)
 
-    for genotype in df.Genotype.unique():
+    for genotype in df.genotype.unique():
         li_pivot_geno = []
-        df_geno = df[df.Genotype == genotype]
-        session_clus_geno = [group for _, group in df_geno.groupby("Session")]
+        df_geno = df[df.genotype == genotype]
+        session_clus_geno = [group for _, group in df_geno.groupby("session")]
         grouped_bins = []
 
         for start in range(lower_lim, upper_lim, difference):
@@ -105,15 +105,15 @@ def generate_region_heatmap_pivots(
 
         reg_datafr = []
         for i, df_bin in enumerate(grouped_bins):
-            datafr = pd.DataFrame(columns=["Session"] + region_columns)
-            for sess in df.Session.unique():
-                df_sess = df_bin[df_bin.Session == sess]
+            datafr = pd.DataFrame(columns=["session"] + region_columns)
+            for sess in df.session.unique():
+                df_sess = df_bin[df_bin.session == sess]
                 for region in region_columns:
-                    count = len(df_sess[df_sess.Region == region])
+                    count = len(df_sess[df_sess.region == region])
                     datafr.loc[sess, region] = count
-                datafr.loc[sess, "Session"] = sess
+                datafr.loc[sess, "session"] = sess
             datafr.fillna(0, inplace=True)
-            datafr.set_index("Session", inplace=True)
+            datafr.set_index("session", inplace=True)
             reg_datafr.append(datafr)
 
         for j in range(len(reg_datafr)):
@@ -123,9 +123,19 @@ def generate_region_heatmap_pivots(
                 datafr_sub[region] /= region_len
 
             melted = pd.melt(
-                datafr_sub, id_vars="Session", value_vars=region_columns, var_name="Region", value_name="value"
+                datafr_sub,
+                id_vars="session",
+                value_vars=region_columns,
+                var_name="region",
+                value_name="value",
             )
-            pivoted = pd.pivot_table(melted, index="Region", columns="Session", values="value", aggfunc="mean")
+            pivoted = pd.pivot_table(
+                melted,
+                index="region",
+                columns="session",
+                values="value",
+                aggfunc="mean",
+            )
             col_sums = pivoted.sum(axis=0).replace(0, np.nan)
             pivoted = pivoted.div(col_sums, axis=1)
 
@@ -140,7 +150,7 @@ def generate_region_heatmap_pivots(
 # Exclusion Criteria
 ###################################################################
 def compute_frames_per_session(df: pd.DataFrame) -> pd.DataFrame:
-    return df.groupby("Session").size().reset_index(name="No_of_Frames")
+    return df.groupby("session").size().reset_index(name="no_of_frames")
 
 
 def compute_target_zone_usage(
@@ -155,9 +165,9 @@ def compute_target_zone_usage(
     Parameters
     -----------
     df : pd.DataFrame
-        DataFrame containing 'Session' and 'Genotype' columns.
+        DataFrame containing 'session' and 'genotype' columns.
     pivot_dict : dict
-        Dictionary with Genotype as keys and list of pivot DataFrames as values.
+        Dictionary with genotype as keys and list of pivot DataFrames as values.
     region : str
         The region to compute usage for.
     difference : int
@@ -169,16 +179,16 @@ def compute_target_zone_usage(
         DataFrame containing target zone usage information.
     """
     usage_records = []
-    for genotype in df.Genotype.unique():
+    for genotype in df.genotype.unique():
         li_genotype = pivot_dict[genotype]
         for bout_idx, pivot in enumerate(li_genotype):
             for session in pivot.columns:
                 usage_records.append(
                     {
-                        "Genotype": genotype,
-                        "Session": session,
-                        "Bout": (bout_idx + 1) * difference,
-                        "Target_Usage": pivot.loc[region, session],
+                        "genotype": genotype,
+                        "session": session,
+                        "bout": (bout_idx + 1) * difference,
+                        "target_usage": pivot.loc[region, session],
                     }
                 )
     return pd.DataFrame(usage_records)
@@ -207,10 +217,10 @@ def summarize_target_usage(
         DataFrame containing the summary of target zone usage.
     """
     session_frames = dict(frames_df.values)
-    session_sex = dict(cohort_metadata[["Session #", "Sex"]].values)
-    summary = region_target.groupby(["Genotype", "Session"])["Target_Usage"].mean().reset_index()
-    summary["No_of_Frames"] = summary["Session"].map(session_frames)
-    summary["Sex"] = summary["Session"].map(session_sex)
+    session_sex = dict(cohort_metadata[["session", "sex"]].values)
+    summary = region_target.groupby(["genotype", "session"])["target_usage"].mean().reset_index()
+    summary["no_of_frames"] = summary["session"].map(session_frames)
+    summary["sex"] = summary["session"].map(session_sex)
     return summary
 
 
@@ -242,14 +252,14 @@ def plot_target_usage_vs_frames(
     plt.Figure or None
         The figure object if return_fig is True, otherwise None.
     """
-    summary_df = summary_df[np.isfinite(summary_df["No_of_Frames"]) & np.isfinite(summary_df["Target_Usage"])]
+    summary_df = summary_df[np.isfinite(summary_df["no_of_frames"]) & np.isfinite(summary_df["target_usage"])]
     fig, ax = plt.subplots(figsize=(10, 8))
     sns.scatterplot(
         data=summary_df,
-        x="No_of_Frames",
-        y="Target_Usage",
-        hue="Genotype",
-        style="Sex",
+        x="no_of_frames",
+        y="target_usage",
+        hue="genotype",
+        style="sex",
         palette=["orange", "grey", "red", "blue"],
         ax=ax,
     ).collections[0].set_sizes([200])
@@ -261,9 +271,9 @@ def plot_target_usage_vs_frames(
 
     for line in range(summary_df.shape[0]):
         plt.text(
-            summary_df["No_of_Frames"].iloc[line] + 0.2,
-            summary_df["Target_Usage"].iloc[line],
-            summary_df["Session"].iloc[line],
+            summary_df["no_of_frames"].iloc[line] + 0.2,
+            summary_df["target_usage"].iloc[line],
+            summary_df["session"].iloc[line],
             ha="right",
             color="black",
             size="medium",
@@ -323,14 +333,15 @@ def exclude_low_performing_sessions(
 
     sessions_to_exclude = (
         summary_df.loc[
-            (summary_df["Target_Usage"] < usage_threshold) & (summary_df["No_of_Frames"] < min_frames), "Session"
+            (summary_df["target_usage"] < usage_threshold) & (summary_df["no_of_frames"] < min_frames),
+            "session",
         ]
         .unique()
         .tolist()
     )
 
     print(f"\nExcluding {len(sessions_to_exclude)} session(s): {sessions_to_exclude}")
-    df_cleaned = df[~df["Session"].isin(sessions_to_exclude)].copy()
+    df_cleaned = df[~df["session"].isin(sessions_to_exclude)].copy()
     return df_cleaned
 
 
@@ -365,20 +376,20 @@ def plot_target_usage_with_exclusions(
     None | plt.Figure
         The created figure, if return_fig is True.
     """
-    summary_df = summary_df[np.isfinite(summary_df["No_of_Frames"]) & np.isfinite(summary_df["Target_Usage"])]
+    summary_df = summary_df[np.isfinite(summary_df["no_of_frames"]) & np.isfinite(summary_df["target_usage"])]
     fig, ax = plt.subplots(figsize=(10, 8))
 
     # Split included and excluded sessions
-    included_df = summary_df[~summary_df["Session"].isin(sessions_to_exclude)]
-    excluded_df = summary_df[summary_df["Session"].isin(sessions_to_exclude)]
+    included_df = summary_df[~summary_df["session"].isin(sessions_to_exclude)]
+    excluded_df = summary_df[summary_df["session"].isin(sessions_to_exclude)]
 
     # Plot included points
     sns.scatterplot(
         data=included_df,
-        x="No_of_Frames",
-        y="Target_Usage",
-        hue="Genotype",
-        style="Sex",
+        x="no_of_frames",
+        y="target_usage",
+        hue="genotype",
+        style="sex",
         palette=["orange", "grey", "red", "blue"],
         ax=ax,
         s=200,
@@ -388,12 +399,26 @@ def plot_target_usage_with_exclusions(
 
     # Plot excluded points (overlay with 'X' marker)
     sns.scatterplot(
-        data=excluded_df, x="No_of_Frames", y="Target_Usage", color="black", marker="X", s=250, label="Excluded", ax=ax
+        data=excluded_df,
+        x="no_of_frames",
+        y="target_usage",
+        color="black",
+        marker="X",
+        s=250,
+        label="Excluded",
+        ax=ax,
     )
 
     # Add session labels
     for _, row in summary_df.iterrows():
-        plt.text(row["No_of_Frames"] + 0.2, row["Target_Usage"], row["Session"], ha="right", fontsize=9, color="black")
+        plt.text(
+            row["no_of_frames"] + 0.2,
+            row["target_usage"],
+            row["session"],
+            ha="right",
+            fontsize=9,
+            color="black",
+        )
 
     plt.xlabel("No. of Frames", fontsize=10)
     plt.ylabel("Mean Target Usage", fontsize=10)
@@ -430,7 +455,7 @@ def subset_pivot_dict_sessions(pivot_dict: dict, df_all_csv: pd.DataFrame) -> di
     pivot_dict : dict
         Original pivot_dict with all sessions.
     df_all_csv : pd.DataFrame
-        Must contain 'Session' and 'Genotype' columns.
+        Must contain 'session' and 'genotype' columns.
 
     Returns
     --------
@@ -439,8 +464,8 @@ def subset_pivot_dict_sessions(pivot_dict: dict, df_all_csv: pd.DataFrame) -> di
     """
     # Map genotype to list of valid sessions
     valid_sessions_dict = {
-        geno: df_all_csv[df_all_csv.Genotype == geno]["Session"].unique().tolist()
-        for geno in df_all_csv["Genotype"].unique()
+        geno: df_all_csv[df_all_csv.genotype == geno]["session"].unique().tolist()
+        for geno in df_all_csv["genotype"].unique()
     }
 
     # Filter pivot_dict
@@ -482,7 +507,7 @@ def plot_region_heatmaps(
     config : dict
         Configuration dictionary containing project settings.
     pivot_dict : dict
-        Dictionary with Genotype as keys and list of pivot DataFrames as values.
+        Dictionary with genotype as keys and list of pivot DataFrames as values.
     group_name : str
         The genotype or group to plot.
     lower_lim : int
@@ -625,9 +650,9 @@ def plot_region_heatmaps_all_genotypes(
     config : dict
         Configuration dictionary containing project settings.
     pivot_dict : dict
-        Dictionary with Genotype as keys and list of pivot DataFrames as values.
+        Dictionary with genotype as keys and list of pivot DataFrames as values.
     df_all_csv : pd.DataFrame
-        DataFrame with valid 'Genotype' and 'Session' combinations.
+        DataFrame with valid 'genotype' and 'session' combinations.
     lower_lim : int
         Start frame
     upper_lim : int
@@ -697,7 +722,7 @@ def plot_region_heatmaps_all_genotypes(
             pivot_tab = pivot_tables[i]
 
             # Use only valid sessions from df_all_csv
-            valid_sessions = df_all_csv.loc[df_all_csv["Genotype"] == genotype, "Session"].unique()
+            valid_sessions = df_all_csv.loc[df_all_csv["genotype"] == genotype, "session"].unique()
             pivot_tab = pivot_tab[[s for s in pivot_tab.columns if s in valid_sessions]]
             pivot_tab = pivot_tab.reindex(region_order).fillna(np.nan)
             pivot_tab.index = pivot_tab.index.map(lambda x: REGION_NAMES.get(x, x))
@@ -766,23 +791,23 @@ def compute_shannon_entropy_per_bin(
     Parameters
     -----------
     pivot_dict : dict
-        Dictionary with Genotype as keys and list of pivot DataFrames as values.
+        Dictionary with genotype as keys and list of pivot DataFrames as values.
     df_all_csv : pd.DataFrame
-        DataFrame containing 'Session' and 'Genotype' columns.
+        DataFrame containing 'session' and 'genotype' columns.
     bin_size : int
         Size of each time bin.
 
     Returns
     --------
     pd.DataFrame
-        DataFrame with columns: 'Session', 'Bin', 'Entropy', 'Genotype'.
+        DataFrame with columns: 'session', 'bin', 'entropy', 'genotype'.
     """
     entropy_records = []
 
     df_all_csv = df_all_csv.copy()
-    df_all_csv["Session"] = df_all_csv["Session"].astype(str)
+    df_all_csv["session"] = df_all_csv["session"].astype(str)
 
-    for genotype in df_all_csv["Genotype"].unique():
+    for genotype in df_all_csv["genotype"].unique():
         bins = pivot_dict.get(genotype, [])
         for idx, pivot_table in enumerate(bins):
             if pivot_table is None or pivot_table.empty:
@@ -798,26 +823,26 @@ def compute_shannon_entropy_per_bin(
 
             for session_id, e in zip(data.index, ent_vals):
                 if np.isfinite(e):
-                    entropy_records.append({"Session": session_id, "Bin": (idx + 1) * bin_size, "Entropy": e})
+                    entropy_records.append({"session": session_id, "bin": (idx + 1) * bin_size, "entropy": e})
 
     entropy_df = pd.DataFrame(entropy_records)
 
     # Prepare full session × bin grid
-    entropy_df["Session"] = entropy_df["Session"].astype(str)
-    df_all_csv["Session"] = df_all_csv["Session"].astype(str)
+    entropy_df["session"] = entropy_df["session"].astype(str)
+    df_all_csv["session"] = df_all_csv["session"].astype(str)
 
-    all_bins = sorted(entropy_df["Bin"].unique())
-    all_sessions = df_all_csv["Session"].unique()
-    full_index = pd.MultiIndex.from_product([all_sessions, all_bins], names=["Session", "Bin"])
+    all_bins = sorted(entropy_df["bin"].unique())
+    all_sessions = df_all_csv["session"].unique()
+    full_index = pd.MultiIndex.from_product([all_sessions, all_bins], names=["session", "bin"])
     full_df = pd.DataFrame(index=full_index).reset_index()
 
     # Merge in entropy and genotype
-    full_df = full_df.merge(entropy_df, on=["Session", "Bin"], how="left")
-    genotype_map = df_all_csv[["Session", "Genotype"]].drop_duplicates()
-    full_df = full_df.merge(genotype_map, on="Session", how="left")
+    full_df = full_df.merge(entropy_df, on=["session", "bin"], how="left")
+    genotype_map = df_all_csv[["session", "genotype"]].drop_duplicates()
+    full_df = full_df.merge(genotype_map, on="session", how="left")
 
     # Final checks
-    if "Genotype" not in full_df.columns or full_df["Genotype"].isna().all():
+    if "genotype" not in full_df.columns or full_df["genotype"].isna().all():
         raise ValueError("Genotype column is missing or all values are NaN after merge.")
 
     return full_df
@@ -843,7 +868,7 @@ def plot_entropy_over_bins(
     config : dict
         Configuration dictionary containing project settings.
     entropy_df : pd.DataFrame
-        DataFrame containing 'Session', 'Bin', 'Entropy', and 'Genotype' columns
+        DataFrame containing 'session', 'bin', 'entropy', and 'genotype' columns
     palette : list | None
         List of colors for genotypes.
     ylim : tuple
@@ -863,9 +888,9 @@ def plot_entropy_over_bins(
     sns.set_style("ticks")
     g = sns.catplot(
         data=entropy_df,
-        x="Bin",
-        y="Entropy",
-        hue="Genotype",
+        x="bin",
+        y="entropy",
+        hue="genotype",
         kind="point",
         capsize=0.15,
         errwidth=1.5,
@@ -876,7 +901,7 @@ def plot_entropy_over_bins(
         height=5,
     )
 
-    g._legend.set_title("Genotype")
+    g._legend.set_title("genotype")
     g._legend.set_bbox_to_anchor((1, 1))
     for text in g._legend.texts:
         text.set_fontsize(12)
@@ -912,7 +937,7 @@ def run_entropy_anova(entropy_df: pd.DataFrame) -> AnovaRM | None:
     Parameters
     -----------
     entropy_df : pd.DataFrame
-        DataFrame containing 'Session', 'Bin', 'Entropy', and 'Genotype' columns
+        DataFrame containing 'session', 'bin', 'entropy', and 'genotype' columns
 
     Returns
     --------
@@ -920,10 +945,10 @@ def run_entropy_anova(entropy_df: pd.DataFrame) -> AnovaRM | None:
         The fitted ANOVA model or None if it fails.
     """
     df_stats = entropy_df.copy()
-    df_stats["Entropy"] = df_stats["Entropy"].fillna(0)
+    df_stats["entropy"] = df_stats["entropy"].fillna(0)
 
     try:
-        aovrm = AnovaRM(data=df_stats, depvar="Entropy", subject="Session", within=["Bin"])
+        aovrm = AnovaRM(data=df_stats, depvar="entropy", subject="session", within=["bin"])
         result = aovrm.fit()
         print("Repeated Measures ANOVA (within-subject Bin):")
         print(result.summary())
@@ -942,7 +967,7 @@ def run_fdr_pairwise_tests(entropy_df: pd.DataFrame) -> pd.DataFrame | None:
     Parameters
     -----------
     entropy_df : pd.DataFrame
-        DataFrame containing 'Session', 'Bin', 'Entropy', and 'Genotype' columns
+        DataFrame containing 'session', 'bin', 'entropy', and 'genotype' columns
 
     Returns
     --------
@@ -950,23 +975,23 @@ def run_fdr_pairwise_tests(entropy_df: pd.DataFrame) -> pd.DataFrame | None:
         DataFrame with pairwise test results.
     """
     df = entropy_df.copy()
-    df["Entropy"] = df["Entropy"].fillna(0)
+    df["entropy"] = df["entropy"].fillna(0)
 
-    all_bins = sorted(df["Bin"].dropna().unique())
-    all_genotypes = df["Genotype"].dropna().unique()
+    all_bins = sorted(df["bin"].dropna().unique())
+    all_genotypes = df["genotype"].dropna().unique()
     pairwise_combos = list(combinations(all_genotypes, 2))
 
     results = []
 
     for bin_val in all_bins:
-        df_bin = df[df["Bin"] == bin_val]
+        df_bin = df[df["bin"] == bin_val]
         for g1, g2 in pairwise_combos:
-            g1_vals = df_bin[df_bin["Genotype"] == g1]["Entropy"].values
-            g2_vals = df_bin[df_bin["Genotype"] == g2]["Entropy"].values
+            g1_vals = df_bin[df_bin["genotype"] == g1]["entropy"].values
+            g2_vals = df_bin[df_bin["genotype"] == g2]["entropy"].values
 
             if len(g1_vals) > 1 and len(g2_vals) > 1:
                 stat, pval = ttest_ind(g1_vals, g2_vals, equal_var=False)
-                results.append({"Bin": bin_val, "Group1": g1, "Group2": g2, "t-stat": stat, "raw-p": pval})
+                results.append({"bin": bin_val, "Group1": g1, "Group2": g2, "t-stat": stat, "raw-p": pval})
 
     # FDR correction
     raw_pvals = [r["raw-p"] for r in results]
@@ -979,16 +1004,16 @@ def run_fdr_pairwise_tests(entropy_df: pd.DataFrame) -> pd.DataFrame | None:
     return pd.DataFrame(results)
 
 
-# --------------- Mixed Effects Model (Bin × Genotype interaction per pair) --------------#
+# --------------- Mixed Effects Model (Bin × genotype interaction per pair) --------------#
 def run_mixed_model_per_genotype_pair(entropy_df: pd.DataFrame) -> tuple[dict, pd.DataFrame]:
     """
-    For each genotype pair, test if Bin x Genotype interaction is significant.
+    For each genotype pair, test if bin x genotype interaction is significant.
     Does NOT fill NaNs. Uses only complete-case rows per model.
 
     Parameters
     -----------
     entropy_df : pd.DataFrame
-        DataFrame containing 'Session', 'Bin', 'Entropy', and 'Genotype' columns
+        DataFrame containing 'session', 'bin', 'entropy', and 'genotype' columns
 
     Returns
     --------
@@ -998,32 +1023,31 @@ def run_mixed_model_per_genotype_pair(entropy_df: pd.DataFrame) -> tuple[dict, p
         p-values of interaction terms
     """
     df = entropy_df.copy()
-    df = df.dropna(subset=["Entropy"])
-    df["Session"] = df["Session"].astype(str)
-    df["Bin"] = df["Bin"].astype("category")
-    df["Genotype"] = df["Genotype"].astype("category")
+    df = df.dropna(subset=["entropy"])
+    df["session"] = df["session"].astype(str)
+    df["bin"] = df["bin"].astype("category")
+    df["genotype"] = df["genotype"].astype("category")
 
-    genotype_pairs = list(combinations(df["Genotype"].dropna().unique(), 2))
+    genotype_pairs = list(combinations(df["genotype"].dropna().unique(), 2))
     result_dict = {}
     summary_rows = []
 
     for g1, g2 in genotype_pairs:
-        df_pair = df[df["Genotype"].isin([g1, g2])].copy()
-        df_pair["Genotype"] = df_pair["Genotype"].cat.remove_unused_categories()
+        df_pair = df[df["genotype"].isin([g1, g2])].copy()
+        df_pair["genotype"] = df_pair["genotype"].cat.remove_unused_categories()
 
         try:
-            model = mixedlm("Entropy ~ Bin * Genotype", df_pair, groups=df_pair["Session"])
+            model = mixedlm("entropy ~ bin * genotype", df_pair, groups=df_pair["session"])
             result = model.fit()
             result_dict[(g1, g2)] = result
 
-            interaction_pvals = {k: v for k, v in result.pvalues.items() if "Bin" in k and "Genotype" in k}
-
+            interaction_pvals = {k: v for k, v in result.pvalues.items() if "bin" in k and "genotype" in k}
             summary_rows.append(
                 {
-                    "Genotype1": g1,
-                    "Genotype2": g2,
-                    "Interaction_pvals": interaction_pvals,
-                    "Significant": any(p < 0.05 for p in interaction_pvals.values()),
+                    "genotype1": g1,
+                    "genotype2": g2,
+                    "interaction_pvals": interaction_pvals,
+                    "significant": any(p < 0.05 for p in interaction_pvals.values()),
                 }
             )
 
@@ -1033,7 +1057,7 @@ def run_mixed_model_per_genotype_pair(entropy_df: pd.DataFrame) -> tuple[dict, p
         except Exception as e:
             print(f"\n MixedLM failed for {g1} vs {g2}: {e}")
             result_dict[(g1, g2)] = None
-            summary_rows.append({"Genotype1": g1, "Genotype2": g2, "Interaction_pvals": {}, "Significant": False})
+            summary_rows.append({"genotype1": g1, "genotype2": g2, "interaction_pvals": {}, "significant": False})
 
     interaction_table = pd.DataFrame(summary_rows)
     return result_dict, interaction_table
@@ -1065,7 +1089,7 @@ def compute_region_usage_over_bins(
     Returns
     --------
     pd.DataFrame
-        Binned region usage across sessions with Genotype labels.
+        Binned region usage across sessions with genotype labels.
     """
     region_usage = []
 
@@ -1073,15 +1097,15 @@ def compute_region_usage_over_bins(
         for i, df_bin in enumerate(bin_list):
             if region in df_bin.index:
                 subset = df_bin.loc[[region]].T.reset_index()
-                subset["Bin"] = (i + 1) * bin_size
+                subset["bin"] = (i + 1) * bin_size
                 region_usage.append(subset)
 
     reg_binned = pd.concat(region_usage, ignore_index=True)
 
-    # Map Session to Genotype
-    session_to_genotype = {k: g["Session"].tolist() for k, g in df_all_csv.groupby("Genotype")}
+    # Map Session to genotype
+    session_to_genotype = {k: g["session"].tolist() for k, g in df_all_csv.groupby("genotype")}
     for geno, sessions in session_to_genotype.items():
-        reg_binned.loc[reg_binned["Session"].isin(sessions), "Genotype"] = geno
+        reg_binned.loc[reg_binned["session"].isin(sessions), "genotype"] = geno
 
     return reg_binned
 
@@ -1127,9 +1151,9 @@ def plot_region_usage_over_bins(
         The figure object if return_fig is True, otherwise None.
     """
     ax = sns.catplot(
-        x="Bin",
+        x="bin",
         y=region_name,
-        hue="Genotype",
+        hue="genotype",
         data=region_data,
         kind="point",
         capsize=0.15,
@@ -1219,7 +1243,14 @@ def plot_all_regions_usage_over_bins(
 
         # Plot with seaborn
         plot = sns.pointplot(
-            data=region_data, x="Bin", y=region, hue="Genotype", errorbar="se", palette=palette, capsize=0.15, ax=ax
+            data=region_data,
+            x="bin",
+            y=region,
+            hue="genotype",
+            errorbar="se",
+            palette=palette,
+            capsize=0.15,
+            ax=ax,
         )
 
         ax.set_title(REGION_NAMES[region], fontsize=14, weight="bold")
@@ -1244,7 +1275,7 @@ def plot_all_regions_usage_over_bins(
         labels=legend_labels,
         loc="center right",
         fontsize=12,
-        title="Genotype",
+        title="genotype",
         title_fontsize=13,
         frameon=True,
     )
@@ -1266,9 +1297,12 @@ def plot_all_regions_usage_over_bins(
 
 
 # ------------------- Mixed Effects Model ----------------------#
-def run_region_usage_stats_mixedlm(reg_binned: pd.DataFrame, region_col: str = "target_zone") -> None:
+def run_region_usage_stats_mixedlm(
+    reg_binned: pd.DataFrame,
+    region_col: str = "target_zone",
+) -> None:
     """
-    Mixed Effects Model (Bin x Genotype) with missing bins dropped.
+    Mixed Effects Model (bin x genotype) with missing bins dropped.
 
     Parameters
     -----------
@@ -1286,13 +1320,13 @@ def run_region_usage_stats_mixedlm(reg_binned: pd.DataFrame, region_col: str = "
     reg_binned = reg_binned.rename(columns={region_col: safe_col})
 
     # MixedLM (drop NaNs)
-    df_nan = reg_binned[["Session", "Bin", "Genotype", safe_col]].dropna()
-    df_nan["Bin"] = df_nan["Bin"].astype(float)
-    df_nan["Genotype"] = df_nan["Genotype"].astype("category")
+    df_nan = reg_binned[["session", "bin", "genotype", safe_col]].dropna()
+    df_nan["bin"] = df_nan["bin"].astype(float)
+    df_nan["genotype"] = df_nan["genotype"].astype("category")
 
     print("\n=== Mixed Effects Model (missing values preserved) ===")
     try:
-        model = mixedlm(f"{safe_col} ~ Bin * Genotype", data=df_nan, groups=df_nan["Session"])
+        model = mixedlm(f"{safe_col} ~ bin * genotype", data=df_nan, groups=df_nan["session"])
         result = model.fit()
         print(result.summary())
     except Exception as e:
@@ -1324,20 +1358,20 @@ def run_region_usage_stats_fdr(
     reg_binned = reg_binned.rename(columns={region_col: safe_col})
 
     # ------------ Pairwise t-tests at each bin (fillna(0)) -------------
-    df_zero = reg_binned[["Session", "Bin", "Genotype", safe_col]].copy()
+    df_zero = reg_binned[["session", "bin", "genotype", safe_col]].copy()
     df_zero[safe_col] = df_zero[safe_col].fillna(0)
 
-    print("\n=== Pairwise t-tests between Genotypes at each Bin (FDR corrected) ===")
+    print("\n=== Pairwise t-tests between genotypes at each bin (FDR corrected) ===")
     try:
         bin_results = []
-        for b in sorted(df_zero["Bin"].unique()):
-            df_bin = df_zero[df_zero["Bin"] == b]
-            genotypes = df_bin["Genotype"].unique()
+        for b in sorted(df_zero["bin"].unique()):
+            df_bin = df_zero[df_zero["bin"] == b]
+            genotypes = df_bin["genotype"].unique()
             for g1, g2 in combinations(genotypes, 2):
-                vals1 = df_bin[df_bin["Genotype"] == g1][safe_col]
-                vals2 = df_bin[df_bin["Genotype"] == g2][safe_col]
+                vals1 = df_bin[df_bin["genotype"] == g1][safe_col]
+                vals2 = df_bin[df_bin["genotype"] == g2][safe_col]
                 stat, pval = ttest_ind(vals1, vals2, equal_var=False)
-                bin_results.append({"Bin": b, "Group1": g1, "Group2": g2, "pval": pval})
+                bin_results.append({"bin": b, "group1": g1, "group2": g2, "pval": pval})
 
         df_stats = pd.DataFrame(bin_results)
         reject, pvals_corrected, _, _ = multipletests(df_stats["pval"], method="fdr_bh")

@@ -17,7 +17,7 @@ class TestCompasPosthocAnalysis:
         project_path = Path(config["project_path_full"])
         df_hmm = pd.read_csv(project_path / "results" / "compass_level_1" / "data_with_states.csv")
 
-        grid_filename = "Session-3 grid.shp"
+        grid_filename = "Session-3_grid.shp"
 
         fig = plot_all_genotype_heatmaps(
             config=config,
@@ -62,7 +62,7 @@ class TestCompasPosthocAnalysis:
         project_path = Path(config["project_path_full"])
         df_hmm = pd.read_csv(project_path / "results" / "compass_level_1" / "data_with_states.csv")
 
-        column_of_interest = "NodeType"
+        column_of_interest = "node_type"
         values_displayed = [
             "3-way Decision (Reward)",
             "4-way Decision (Reward)",
@@ -170,7 +170,7 @@ class TestCompasPosthocAnalysis:
         )
         assert isinstance(df_hmm, pd.DataFrame)
         assert not df_hmm.empty
-        assert "Bout_Index" in df_hmm.columns
+        assert "bout_id" in df_hmm.columns
 
         # Compute surveillance probability at Decision nodes by Bout type
         index_df, median_df = compute_surveillance_probabilities(
@@ -179,7 +179,7 @@ class TestCompasPosthocAnalysis:
         )
         assert isinstance(median_df, pd.DataFrame)
         assert not median_df.empty
-        for col in ["Genotype", "Session", "Successful_bout", "Probability_1"]:
+        for col in ["genotype", "session", "successful_bout", "probability_1"]:
             assert col in median_df.columns
 
         # Barplot to depict the above with ttest-ind pvalue

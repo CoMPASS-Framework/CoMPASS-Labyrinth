@@ -48,7 +48,7 @@ class TestCompasLevel1:
             stationary_flag="auto",
             use_data_driven_ranges=True,
             angle_mean_biased=(np.pi / 2, 0.0),
-            session_col="Session",
+            session_col="session",
             seed=123,
             enforce_behavioral_constraints=False,
             show_progress=False,

@@ -45,22 +45,30 @@ def create_project_fixture(tmp_path_factory):
     source_data_path = tmp_path / "source_data"
     source_data_path.mkdir()
 
-    # Copy CSV files from assets to source directory
-    csv_files = [
-        "Session-3withGrids.csv",
-        "Session-4withGrids.csv",
-        "Session-5withGrids.csv",
-        "Session-6withGrids.csv",
-        "Session-7withGrids.csv",
+    # Copy pose estimation files from assets to source directory
+    pes_files = [
+        "Session-3DLC_resnet50_LabyrinthMar13shuffle1_1000000.h5",
+        "Session-4DLC_resnet50_LabyrinthMar13shuffle1_1000000.h5",
+        "Session-5DLC_resnet50_LabyrinthMar13shuffle1_1000000.h5",
+        "Session-6DLC_resnet50_LabyrinthMar13shuffle1_1000000.h5",
     ]
 
     shape_files = [
-        "Session-3 grid.dbf",
-        "Session-3 grid.shp",
-        "Session-3 grid.shx",
+        "Session-3_grid.shp",
+        "Session-3_grid.shx",
+        "Session-3_grid.dbf",
+        "Session-4_grid.shp",
+        "Session-4_grid.shx",
+        "Session-4_grid.dbf",
+        "Session-5_grid.shp",
+        "Session-5_grid.shx",
+        "Session-5_grid.dbf",
+        "Session-6_grid.shp",
+        "Session-6_grid.shx",
+        "Session-6_grid.dbf",
     ]
 
-    all_files = csv_files + shape_files
+    all_files = pes_files + shape_files
 
     for f in all_files:
         src = assets_dir / f
@@ -89,7 +97,7 @@ def create_project_fixture(tmp_path_factory):
         source_data_path=source_data_path,
         user_metadata_file_path=metadata_dst,
         trial_type="Labyrinth_DSI",
-        file_ext=".csv",
+        file_ext=".h5",
         video_type=".mp4",
         dlc_scorer="DLC_resnet50_LabyrinthMar13shuffle1_1000000",
     )
@@ -256,7 +264,7 @@ def task_performance(create_project_fixture, create_time_binned_dict):
     )
 
     # Step 6: Replot the target usage v/s frames plot with the excluded sessions 'X' out
-    sessions_to_exclude = region_summary.loc[~region_summary["Session"].isin(df_all_csv["Session"])]["Session"].tolist()
+    sessions_to_exclude = region_summary.loc[~region_summary["session"].isin(df_all_csv["session"])]["session"].tolist()
 
     plot_target_usage_with_exclusions(
         config=config,

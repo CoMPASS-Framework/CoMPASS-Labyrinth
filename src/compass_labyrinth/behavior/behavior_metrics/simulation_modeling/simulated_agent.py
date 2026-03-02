@@ -42,14 +42,14 @@ def get_valid_and_optimal_transitions(
     """
     valid_transitions, optimal_transitions = {}, {}
 
-    for session, group in df.groupby("Session"):
+    for session, group in df.groupby("session"):
         valid, optimal = {}, {}
 
         for i in range(len(group) - 1):
-            if group.iloc[i]["NodeType"] == decision_label:
-                current = group.iloc[i]["Grid Number"]
-                nxt = group.iloc[i + 1]["Grid Number"]
-                region = group.iloc[i + 1]["Region"]
+            if group.iloc[i]["node_type"] == decision_label:
+                current = group.iloc[i]["grid_number"]
+                nxt = group.iloc[i + 1]["grid_number"]
+                region = group.iloc[i + 1]["region"]
 
                 valid.setdefault(current, set()).add(nxt)
                 if region == reward_label:
@@ -92,9 +92,9 @@ def simulate_agent_vs_actual(
     actual, simulated = [], []
 
     for i in range(len(df_slice) - 1):
-        if df_slice.iloc[i]["NodeType"] == decision_label:
-            current = df_slice.iloc[i]["Grid Number"]
-            actual_next = df_slice.iloc[i + 1]["Grid Number"]
+        if df_slice.iloc[i]["node_type"] == decision_label:
+            current = df_slice.iloc[i]["grid_number"]
+            actual_next = df_slice.iloc[i + 1]["grid_number"]
 
             is_actual_optimal = actual_next in optimal_dict.get(current, set())
             actual.append(1 if is_actual_optimal else 0)
@@ -164,7 +164,7 @@ def compute_epoch_metrics(
     pd.Series
         Series with computed metrics.
     """
-    if df_slice.empty or decision_label not in df_slice["NodeType"].values:
+    if df_slice.empty or decision_label not in df_slice["node_type"].values:
         return pd.Series(
             {
                 k: np.nan
@@ -236,7 +236,7 @@ def segment_data_by_epoch(
         Each tuple contains (session, epoch_number, epoch_dataframe).
     """
     epochs = []
-    for (genotype, session), group in df.groupby(["Genotype", "Session"]):
+    for (genotype, session), group in df.groupby(["genotype", "session"]):
         for i in range(0, len(group), epoch_size):
             segment = group.iloc[i : i + epoch_size]
             if not segment.empty:
@@ -252,8 +252,8 @@ def trim_to_common_epochs(df_results: pd.DataFrame) -> pd.DataFrame:
     -----------
     df_results : pd.DataFrame
         The output of evaluate_agent_performance.
-            - 'Session' (str): Column name indicating sessions.
-            - 'Epoch_Number' (str): Column name indicating epoch/bin number.
+            - 'session' (str): Column name indicating sessions.
+            - 'epoch_number' (str): Column name indicating epoch/bin number.
 
     Returns
     --------
@@ -263,11 +263,11 @@ def trim_to_common_epochs(df_results: pd.DataFrame) -> pd.DataFrame:
     df_trimmed = df_results.copy()
 
     # Ensure correct dtypes
-    df_trimmed["Session"] = df_trimmed["Session"].astype(int)
-    df_trimmed["Epoch Number"] = df_trimmed["Epoch Number"].astype(int)
+    df_trimmed["session"] = df_trimmed["session"].astype(int)
+    df_trimmed["epoch_number"] = df_trimmed["epoch_number"].astype(int)
 
     # Find common epochs across all sessions
-    epoch_sets = df_trimmed.groupby("Session")["Epoch Number"].apply(set)
+    epoch_sets = df_trimmed.groupby("session")["epoch_number"].apply(set)
     common_epochs = set.intersection(*epoch_sets)
 
     if not common_epochs:
@@ -278,7 +278,7 @@ def trim_to_common_epochs(df_results: pd.DataFrame) -> pd.DataFrame:
     print(f" Max common epoch across all sessions: {max_common_epoch}")
 
     # Filter
-    df_trimmed = df_trimmed[df_trimmed["Epoch Number"] <= max_common_epoch].reset_index(drop=True)
+    df_trimmed = df_trimmed[df_trimmed["epoch_number"] <= max_common_epoch].reset_index(drop=True)
     return df_trimmed
 
 
@@ -323,15 +323,15 @@ def evaluate_agent_performance(
 
     # Filter by genotype if specified
     if genotype is not None:
-        if genotype not in df["Genotype"].unique():
-            raise ValueError(f"Genotype '{genotype}' not found in DataFrame.")
+        if genotype not in df["genotype"].unique():
+            raise ValueError(f"genotype '{genotype}' not found in DataFrame.")
         genotypes = [genotype]
     else:
-        genotypes = df["Genotype"].unique()
+        genotypes = df["genotype"].unique()
 
     results = dict()
     for i, genotype in enumerate(genotypes):
-        df_genotype = df.loc[df["Genotype"] == genotype]
+        df_genotype = df.loc[df["genotype"] == genotype]
 
         valid_dict, optimal_dict = get_valid_and_optimal_transitions(df_genotype, decision_label, reward_label)
         epochs = segment_data_by_epoch(df_genotype, epoch_size)
@@ -341,8 +341,8 @@ def evaluate_agent_performance(
             valid = valid_dict.get(session, {})
             optimal = optimal_dict.get(session, {})
             result = compute_epoch_metrics(segment, valid, optimal, n_bootstrap, n_simulations, decision_label)
-            result["Session"] = session
-            result["Epoch Number"] = epoch_num
+            result["session"] = session
+            result["epoch_number"] = epoch_num
             all_results.append(result)
 
         if trim:
@@ -410,7 +410,7 @@ def plot_agent_transition_performance(
 
         sns.lineplot(
             data=df_result,
-            x="Epoch Number",
+            x="epoch_number",
             y="Actual Reward Path %",
             marker="o",
             label="Mouse",
@@ -419,7 +419,7 @@ def plot_agent_transition_performance(
         )
         sns.lineplot(
             data=df_result,
-            x="Epoch Number",
+            x="epoch_number",
             y="Simulated Agent Reward Path %",
             linestyle="dashed",
             label="Simulated Agent",
@@ -509,7 +509,7 @@ def plot_relative_agent_performance(
         df_result = evaluation_results[genotype]
         sns.lineplot(
             data=df_result,
-            x="Epoch Number",
+            x="epoch_number",
             y="Relative Performance",
             marker="o",
             color="black",
@@ -561,7 +561,7 @@ def fit_mixed_effects_model(df_long: pd.DataFrame) -> tuple:
     tuple
         Tuple with result (Fitted model object) and p_value (P-value for AgentType effect).
     """
-    model = mixedlm("Performance ~ AgentType", df_long, groups=df_long["Session"])
+    model = mixedlm("Performance ~ AgentType", df_long, groups=df_long["session"])
     result = model.fit()
 
     # Automatically detect which coefficient relates to the simulated agent
@@ -611,7 +611,7 @@ def reshape_for_mixedlm(df_results: pd.DataFrame) -> pd.DataFrame:
     -----------
     df_results : pd.DataFrame
         DataFrame with columns 'Actual Reward Path %', 'Simulated Agent Reward Path %',
-        'Session', 'Epoch Number' and 'Genotype'.
+        'session', 'epoch_number' and 'genotype'.
 
     Returns
     --------
@@ -620,13 +620,13 @@ def reshape_for_mixedlm(df_results: pd.DataFrame) -> pd.DataFrame:
     """
     df_long = pd.melt(
         df_results,
-        id_vars=["Session", "Epoch Number", "Genotype"],
+        id_vars=["session", "epoch_number", "genotype"],
         value_vars=["Actual Reward Path %", "Simulated Agent Reward Path %"],
         var_name="AgentType",
         value_name="Performance",
     )
     df_long = df_long.dropna(subset=["Performance"])
-    df_long["Session"] = df_long["Session"].astype(str)
+    df_long["session"] = df_long["session"].astype(str)
     return df_long.reset_index(drop=True)
 
 
@@ -647,7 +647,7 @@ def fit_mixed_effects_model(df_long: pd.DataFrame) -> tuple:
     tuple
         Tuple with result (Fitted model object) and p_value (P-value for AgentType effect).
     """
-    model = mixedlm("Performance ~ AgentType", df_long, groups=df_long["Session"])
+    model = mixedlm("Performance ~ AgentType", df_long, groups=df_long["session"])
     result = model.fit()
     coef_key = [key for key in result.pvalues.keys() if "Simulated Agent" in key]
     p_value = result.pvalues.get(coef_key[0], np.nan) if coef_key else np.nan
@@ -740,7 +740,7 @@ def run_mixedlm_for_all_genotypes(
 
     for i, genotype in enumerate(genotypes):
         df_eval = evaluation_results[genotype]
-        df_eval["Genotype"] = genotype
+        df_eval["genotype"] = genotype
 
         df_long = reshape_for_mixedlm(df_eval)
         result, p_val = fit_mixed_effects_model(df_long)
@@ -773,7 +773,7 @@ def run_mixedlm_for_all_genotypes(
 def compute_chi_square_statistic(df: pd.DataFrame) -> pd.DataFrame:
     """
     Compute the chi-square statistic between actual and simulated reward path usage
-    for each row in the DataFrame. Also ensures 'Epoch Number' and 'Session' are integers.
+    for each row in the DataFrame. Also ensures 'epoch_number' and 'session' are integers.
 
     Parameters
     -----------
@@ -791,10 +791,10 @@ def compute_chi_square_statistic(df: pd.DataFrame) -> pd.DataFrame:
     ]
     df["Chi Square Statistic"] = chi_square
     # Ensure consistent types
-    if "Epoch Number" in df.columns:
-        df["Epoch Number"] = df["Epoch Number"].astype(int)
-    if "Session" in df.columns:
-        df["Session"] = df["Session"].astype(int)
+    if "epoch_number" in df.columns:
+        df["epoch_number"] = df["epoch_number"].astype(int)
+    if "session" in df.columns:
+        df["session"] = df["session"].astype(int)
     return df
 
 
@@ -815,7 +815,7 @@ def compute_rolling_chi_square(df: pd.DataFrame, window: int = 3) -> pd.DataFram
         Updated DataFrame with 'Rolling Chi Square' column.
     """
     df = df.copy()
-    df["Rolling Chi Square"] = df.groupby("Session")["Chi Square Statistic"].transform(
+    df["Rolling Chi Square"] = df.groupby("session")["Chi Square Statistic"].transform(
         lambda x: x.rolling(window=window, min_periods=1).mean()
     )
     return df
@@ -836,7 +836,7 @@ def compute_cumulative_chi_square(df: pd.DataFrame) -> pd.DataFrame:
         Updated DataFrame with 'Cumulative Chi Square' column.
     """
     df = df.copy()
-    df["Cumulative Chi Square"] = df.groupby("Session")["Chi Square Statistic"].cumsum()
+    df["Cumulative Chi Square"] = df.groupby("session")["Chi Square Statistic"].cumsum()
     return df
 
 
@@ -855,7 +855,7 @@ def run_chi_square_analysis(
     results = dict()
     for genotype in genotypes:
         df_result = evaluation_results[genotype].copy()
-        df_result["Genotype"] = genotype
+        df_result["genotype"] = genotype
         df_chisq = compute_chi_square_statistic(df=df_result)
         df_chisq = compute_rolling_chi_square(df=df_chisq, window=rolling_window)
         df_chisq = compute_cumulative_chi_square(df=df_chisq)
@@ -866,7 +866,7 @@ def run_chi_square_analysis(
 def plot_chi_square_and_rolling(
     config: dict,
     chisquare_results: dict,
-    epoch_col: str = "Epoch Number",
+    epoch_col: str = "epoch_number",
     chi_col: str = "Chi Square Statistic",
     rolling_col: str = "Rolling Chi Square",
     save_fig: bool = True,
@@ -958,7 +958,7 @@ def plot_chi_square_and_rolling(
 def plot_rolling_mean(
     config: dict,
     chisquare_results: dict,
-    epoch_col: str = "Epoch Number",
+    epoch_col: str = "epoch_number",
     rolling_col: str = "Rolling Chi Square",
     save_fig: bool = True,
     show_fig: bool = True,
@@ -1037,7 +1037,7 @@ def plot_rolling_mean(
 def plot_cumulative_chi_square(
     config: dict,
     chisquare_results: dict,
-    epoch_col: str = "Epoch Number",
+    epoch_col: str = "epoch_number",
     cum_col: str = "Cumulative Chi Square",
     save_fig: bool = True,
     show_fig: bool = True,

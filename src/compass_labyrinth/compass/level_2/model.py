@@ -70,7 +70,7 @@ def run_compass(
     k_options: list[int] = [2, 3],
     reg_options: list = [1e-4, 1e-5, 1e-6],
     terminal_values: list = [47],
-    bout_col: str = "Bout_ID",
+    bout_col: str = "bout_id",
     patience: None | str = None,
     patience_candidates: list = [2, 3, 5, 10],
     verbose: bool = False,
@@ -97,7 +97,7 @@ def run_compass(
     terminal_values : list, optional
         List of terminal grid values (default is [47]).
     bout_col : str, optional
-        Name of the bout column (default is "Bout_ID").
+        Name of the bout column (default is "bout_id").
     patience : None or str, optional
         Patience setting for early stopping (default is None).
         Set to 'tune' if wanted to apply patience window.
@@ -120,23 +120,23 @@ def run_compass(
     df = assign_bouts_per_session(df, terminal_values=terminal_values, bout_col=bout_col)
 
     for n_phases in phase_options:
-        sessions = df.Session.unique()
+        sessions = df.session.unique()
         phase_labels = range(n_phases)
         phase_map = build_phase_map(df, n_phases)
 
         for phase_index in phase_labels:
             for test_sess in sessions:
-                print(f"\n=== CV | Test: Session {test_sess} - Phase {phase_index+1}/{n_phases} ===")
+                print(f"\n=== CV | Test: session {test_sess} - Phase {phase_index+1}/{n_phases} ===")
 
                 test_bouts = phase_map[(test_sess, phase_index)]
-                df_test = df[(df.Session == test_sess) & (df[bout_col].isin(test_bouts))]
+                df_test = df[(df.session == test_sess) & (df[bout_col].isin(test_bouts))]
 
                 train_sessions = [s for s in sessions if s != test_sess]
                 df_train_pool = pd.concat(
-                    [df[(df.Session == s) & (df[bout_col].isin(phase_map[(s, phase_index)]))] for s in train_sessions]
+                    [df[(df.session == s) & (df[bout_col].isin(phase_map[(s, phase_index)]))] for s in train_sessions]
                 )
 
-                inner_sessions = df_train_pool.Session.unique()
+                inner_sessions = df_train_pool.session.unique()
                 best_log_lik = -np.inf
                 best_aic = np.inf
                 best_model = None
@@ -152,8 +152,8 @@ def run_compass(
                     early_stopped = False
 
                     for val_sess in inner_sessions:
-                        df_val = df_train_pool[df_train_pool.Session == val_sess]
-                        df_train = df_train_pool[df_train_pool.Session != val_sess]
+                        df_val = df_train_pool[df_train_pool.session == val_sess]
+                        df_train = df_train_pool[df_train_pool.session != val_sess]
 
                         for ncomp in ncomp_options:
                             for k in k_options:
@@ -208,7 +208,7 @@ def run_compass(
                     best_patience, (best_avg_loglik, best_model, log_liks, aics, param_labels) = max(
                         patience_results.items(), key=lambda x: x[1][0]
                     )
-                    print(f"Optimal patience for Session {test_sess}, Phase {phase_index+1}: {best_patience}")
+                    print(f"Optimal patience for session {test_sess}, Phase {phase_index+1}: {best_patience}")
 
                 if best_model is not None:
                     X_test = df_test[features].values
@@ -330,7 +330,7 @@ def plot_state_sequence_for_session(
 
     ax.set_xlim(df_session.index.min(), df_session.index.max() + 1)
     ax.set_yticks([])
-    ax.set_title(f"{title_prefix} - Session {df_session['Session'].iloc[0]}")
+    ax.set_title(f"{title_prefix} - Session {df_session['session'].iloc[0]}")
 
     legend_handles = [patches.Patch(color=color_map[state], label=f"State {state}") for state in color_map]
     ax.legend(
@@ -357,12 +357,12 @@ def plot_state_sequences(
     return_fig: bool = False,
 ) -> None | list[plt.Figure]:
     """Plot state sequences for specified sessions and genotype."""
-    df_geno = df[df["Genotype"] == genotype]
+    df_geno = df[df["genotype"] == genotype]
     unique_states = get_unique_states(df_geno, state_col=state_col)
     color_map = generate_state_color_map(unique_states)
 
     # Determine which sessions to plot
-    all_sessions = df_geno["Session"].unique()
+    all_sessions = df_geno["session"].unique()
     if isinstance(sessions_to_plot, int):
         selected_sessions = all_sessions[:sessions_to_plot]
     elif isinstance(sessions_to_plot, list):
@@ -373,7 +373,7 @@ def plot_state_sequences(
     # Plot each selected session
     all_figs = []
     for sess_id in selected_sessions:
-        df_sess = df_geno[df_geno["Session"] == sess_id][[state_col, "Session"]]
+        df_sess = df_geno[df_geno["session"] == sess_id][[state_col, "session"]]
         fig = plot_state_sequence_for_session(
             df_sess,
             state_col=state_col,
@@ -406,7 +406,7 @@ def assign_reward_orientation(
     df: pd.DataFrame,
     angle_col: str = "Targeted_Angle_smooth_abs",
     level_2_state_col: str = "Level_2_States",
-    session_col: str = "Session",
+    session_col: str = "session",
 ) -> pd.DataFrame:
     """
     Assigns reward orientation labels ('Reward Oriented' or 'Non-Reward Oriented') to Level 2 states per session,
@@ -521,7 +521,7 @@ def assign_hhmm_state(
 def plot_hhmm_state_sequence(
     config: dict,
     df: pd.DataFrame,
-    session_col: str = "Session",
+    session_col: str = "session",
     state_col: str = "HHMM State",
     session_id: None | int = None,
     title_prefix: str = "State Sequence",

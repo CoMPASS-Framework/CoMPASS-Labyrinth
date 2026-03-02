@@ -40,7 +40,7 @@ def compute_state_proportion(
     Parameters
     -----------
     df : pd.DataFrame
-        DataFrame containing columns: 'Genotype', 'Grid Number', 'HMM_State', 'x', 'y'.
+        DataFrame containing columns: 'genotype', 'grid_number', 'HMM_State', 'x', 'y'.
     genotype_name : str
         Name of the genotype to filter.
     hmm_state : int
@@ -51,14 +51,14 @@ def compute_state_proportion(
     pd.DataFrame
         DataFrame with computed proportions for the specified genotype and HMM state.
     """
-    st_cnt = df.groupby(["Genotype", "Grid Number", "HMM_State"]).size().rename("cnt").reset_index()
-    gn_cnt = df.groupby(["Genotype", "Grid Number"]).size().rename("tot").reset_index()
-    x_y = df.groupby(["Genotype", "Grid Number"]).agg({"x": "mean", "y": "mean"}).reset_index()
-    state_count = st_cnt.merge(gn_cnt, on=["Genotype", "Grid Number"], how="left")
+    st_cnt = df.groupby(["genotype", "grid_number", "HMM_State"]).size().rename("cnt").reset_index()
+    gn_cnt = df.groupby(["genotype", "grid_number"]).size().rename("tot").reset_index()
+    x_y = df.groupby(["genotype", "grid_number"]).agg({"x": "mean", "y": "mean"}).reset_index()
+    state_count = st_cnt.merge(gn_cnt, on=["genotype", "grid_number"], how="left")
     state_count["prop"] = state_count["cnt"] / state_count["tot"]
-    state_count = state_count.merge(x_y, on=["Genotype", "Grid Number"], how="left")
+    state_count = state_count.merge(x_y, on=["genotype", "grid_number"], how="left")
 
-    return state_count[(state_count.Genotype == genotype_name) & (state_count["HMM_State"] == hmm_state)].reset_index(
+    return state_count[(state_count.genotype == genotype_name) & (state_count["HMM_State"] == hmm_state)].reset_index(
         drop=True
     )
 
@@ -82,12 +82,12 @@ def merge_state_proportions_to_grid(
     df_props: pd.DataFrame,
 ) -> gpd.GeoDataFrame:
     """Merge state proportions to shapefile grid polygons."""
-    prop_by_grid = df_props[["Grid Number", "prop"]].copy()
+    prop_by_grid = df_props[["grid_number", "prop"]].copy()
     prop_by_grid = prop_by_grid.rename(columns={"prop": "State1_Proportion"})
     return grid.merge(
         prop_by_grid,
         left_on="FID",
-        right_on="Grid Number",
+        right_on="grid_number",
         how="left",
     )
 
@@ -199,7 +199,7 @@ def plot_all_genotype_heatmaps(
     config : dict
         Configuration dictionary containing project details.
     df_hmm : pd.DataFrame
-        DataFrame containing HMM data with 'Genotype' and 'Grid Number' columns.
+        DataFrame containing HMM data with 'genotype' and 'grid_number' columns.
     grid_filename : str
         Filename of the grid shapefile.
     highlight_grids : str | None
@@ -222,7 +222,7 @@ def plot_all_genotype_heatmaps(
     fig : plt.Figure | None
         Matplotlib Figure object if return_fig is True, else None.
     """
-    genotypes = sorted(df_hmm["Genotype"].unique())
+    genotypes = sorted(df_hmm["genotype"].unique())
     n_genotypes = len(genotypes)
     n_cols = math.ceil(n_genotypes**0.5)
     n_rows = math.ceil(n_genotypes / n_cols)
@@ -319,7 +319,7 @@ def overlay_trajectory_lines_plotly(
     fig : go.Figure
         Plotly Figure object to overlay lines on.
     df_hmm : pd.DataFrame
-        DataFrame containing HMM data with 'Genotype' and 'Grid Number' columns.
+        DataFrame containing HMM data with 'genotype' and 'grid_number' columns.
     genotype_name : str
         Name of the genotype to filter.
     grid_centroids : dict
@@ -331,9 +331,9 @@ def overlay_trajectory_lines_plotly(
     --------
     None
     """
-    df_geno = df_hmm[df_hmm["Genotype"] == genotype_name].copy()
-    df_geno["Grid.Next"] = df_geno["Grid Number"].shift(-1)
-    df_geno["Grid.Prev"] = df_geno["Grid Number"]
+    df_geno = df_hmm[df_hmm["genotype"] == genotype_name].copy()
+    df_geno["Grid.Next"] = df_geno["grid_number"].shift(-1)
+    df_geno["Grid.Prev"] = df_geno["grid_number"]
     transitions = df_geno[["Grid.Prev", "Grid.Next"]].dropna()
     transitions = transitions[transitions["Grid.Prev"] != transitions["Grid.Next"]].astype(int)
     transitions["pair"] = list(zip(transitions["Grid.Prev"], transitions["Grid.Next"]))
@@ -440,9 +440,9 @@ def plot_interactive_heatmap(
         )
 
     # Highlight decision nodes in black
-    for fid in NODE_TYPE_MAPPING.get(decision_grids, []):
-        if fid in grid_mapped["FID"].values:
-            poly = grid_mapped.loc[grid_mapped["FID"] == fid, "geometry"].values[0]
+    for FID in NODE_TYPE_MAPPING.get(decision_grids, []):
+        if FID in grid_mapped["FID"].values:
+            poly = grid_mapped.loc[grid_mapped["FID"] == FID, "geometry"].values[0]
             x = list(poly.exterior.xy[0])
             y = list(poly.exterior.xy[1])
             fig.add_trace(
@@ -474,9 +474,9 @@ def plot_interactive_heatmap(
             )
 
     # Highlight target nodes in yellow
-    for fid in NODE_TYPE_MAPPING.get(target_grids, []):
-        if fid in grid_mapped["FID"].values:
-            poly = grid_mapped.loc[grid_mapped["FID"] == fid, "geometry"].values[0]
+    for FID in NODE_TYPE_MAPPING.get(target_grids, []):
+        if FID in grid_mapped["FID"].values:
+            poly = grid_mapped.loc[grid_mapped["FID"] == FID, "geometry"].values[0]
             x = list(poly.exterior.xy[0])
             y = list(poly.exterior.xy[1])
             fig.add_trace(
@@ -499,9 +499,9 @@ def plot_interactive_heatmap(
     )
 
     # Add annotations above Grid Number 47 and below 84
-    for fid, label, valign in [(47, "entry_zone", "top"), (84, "target_zone", "bottom")]:
-        if fid in grid_mapped["FID"].values:
-            poly = grid_mapped.loc[grid_mapped["FID"] == fid, "geometry"].values[0]
+    for FID, label, valign in [(47, "entry_zone", "top"), (84, "target_zone", "bottom")]:
+        if FID in grid_mapped["FID"].values:
+            poly = grid_mapped.loc[grid_mapped["FID"] == FID, "geometry"].values[0]
             centroid_x = poly.centroid.x
             centroid_y = poly.centroid.y
 
@@ -555,7 +555,7 @@ def plot_all_genotype_interactive_heatmaps(
     config : dict
         Configuration dictionary containing project details.
     df_hmm : pd.DataFrame
-        DataFrame containing HMM data with 'Genotype' and 'Grid Number' columns.
+        DataFrame containing HMM data with 'genotype' and 'grid_number' columns.
     grid_filename : str
         Filename of the grid shapefile.
     hmm_state : int
@@ -580,7 +580,7 @@ def plot_all_genotype_interactive_heatmaps(
     fig : go.Figure | None
         Plotly Figure object if return_fig is True, else None.
     """
-    genotypes = sorted(df_hmm["Genotype"].unique())
+    genotypes = sorted(df_hmm["genotype"].unique())
     n = len(genotypes)
     n_cols = math.ceil(math.sqrt(n))
     n_rows = math.ceil(n / n_cols)

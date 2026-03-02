@@ -323,7 +323,7 @@ class GammaHMM:
                     self.k_ang_[s] = np.exp(logk_a)
                     self.theta_ang_[s] = np.exp(logth_a)
 
-    def fit(self, df, id_col="Session", step_col="step", angle_col="angle"):
+    def fit(self, df, id_col="session", step_col="step", angle_col="angle"):
         ids = df[id_col].to_numpy()
         step = df[step_col].to_numpy(float)
         if self.angle_model == "vm":
@@ -386,7 +386,7 @@ class GammaHMM:
             self.turn_metric_ = ang_means
         return self
 
-    def score(self, df, id_col="Session", step_col="step", angle_col="angle"):
+    def score(self, df, id_col="session", step_col="step", angle_col="angle"):
         ids = df[id_col].to_numpy()
         step = df[step_col].to_numpy(float)
         ang_raw = df[angle_col].to_numpy(float)
@@ -502,7 +502,7 @@ def fit_best_hmm(
     stationary_flag: str | bool = "auto",
     use_data_driven_ranges: bool = True,
     angle_mean_biased: tuple[float, float] = (np.pi / 2, 0.0),  # only for VM branch
-    session_col: str = "Session",
+    session_col: str = "session",
     seed: int = 123,
     enforce_behavioral_constraints: bool = True,
     show_progress: bool = True,

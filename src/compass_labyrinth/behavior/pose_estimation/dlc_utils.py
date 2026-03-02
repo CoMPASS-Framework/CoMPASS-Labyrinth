@@ -52,7 +52,7 @@ def import_cohort_metadata(
         print(f"Initial rows loaded: {len(mouseinfo)}")
 
         # Remove rows with missing Session numbers or where it's 0
-        mouseinfo = mouseinfo[~mouseinfo["Session #"].isna() & (mouseinfo["Session #"] != 0)]
+        mouseinfo = mouseinfo[~mouseinfo["session"].isna() & (mouseinfo["session"] != 0)]
 
         # Special processing for Probe Trial data
         if trial_sheet_name == "Probe Trial":
@@ -111,7 +111,7 @@ def validate_metadata(df: pd.DataFrame) -> bool:
         return False
 
     # Required columns for analysis
-    required_columns = ["Session #"]
+    required_columns = ["session"]
     missing_columns = [col for col in required_columns if col not in df.columns]
 
     if missing_columns:
@@ -119,12 +119,11 @@ def validate_metadata(df: pd.DataFrame) -> bool:
         return False
 
     # Check for duplicate sessions
-    duplicates = df.duplicated(subset=["Session #"], keep=False)
+    duplicates = df.duplicated(subset=["session"], keep=False)
     if duplicates.any():
-        print(f"Warning: Found {duplicates.sum()} duplicate Session # entries")
+        print(f"Warning: Found {duplicates.sum()} duplicate session entries")
         print("Duplicate sessions:")
-        print(df[duplicates][["Session #"]])
-
+        print(df[duplicates][["session"]])
     return True
 
 
@@ -140,8 +139,8 @@ def display_metadata_summary(df: pd.DataFrame) -> None:
     print(f"Columns: {list(df.columns)}")
 
     # Show session number range
-    if "Session #" in df.columns:
-        print(f"Session # range: {df['Session #'].min()} - {df['Session #'].max()}")
+    if "session" in df.columns:
+        print(f"Session range: {df['session'].min()} - {df['session'].max()}")
 
     # Show group distribution if available
     if "Group" in df.columns:
@@ -203,61 +202,6 @@ def save_first_frame(
     cap.release()
 
 
-def create_organized_directory_structure(base_path):
-    """
-    Create an organized directory structure for the DeepLabCut project.
-
-    Parameters
-    -----------
-    base_path : str or Path
-        Base project directory
-
-    Returns
-    --------
-    dict
-        Dictionary of all directory paths
-    """
-    from pathlib import Path
-
-    base_path = Path(base_path)
-
-    # Define organized directory structure
-    DIRS = {
-        # Videos folder - original videos and frames
-        "videos": base_path / "videos",
-        "videos_original": base_path / "videos" / "original_videos",
-        "frames": base_path / "videos" / "frames",
-        # Data folder - analysis inputs and outputs
-        "data": base_path / "data",
-        "dlc_results": base_path / "data" / "dlc_results",
-        "dlc_cropping": base_path / "data" / "dlc_cropping_bounds",
-        "grid_files": base_path / "data" / "grid_files",
-        "grid_boundaries": base_path / "data" / "grid_boundaries",
-        "metadata": base_path / "data" / "metadata",
-        # Figures folder - all plots and visualizations
-        "figures": base_path / "figures",
-        # CSV's folder
-        "csvs": base_path / "csvs",
-        "csvs_individual": base_path / "csvs" / "individual",
-        "csvs_combined": base_path / "csvs" / "combined",
-        # Results folders
-        "results": base_path / "results",
-        "results_task_performance": base_path / "results" / "task_performance",
-        "results_simulation_agent": base_path / "results" / "simulation_agent",
-        "results_compass_level_1": base_path / "results" / "compass_level_1",
-        "results_compass_level_2": base_path / "results" / "compass_level_2",
-        "results_ephys_compass": base_path / "results" / "ephys_compass",
-    }
-
-    # Create all directories
-    print("Creating organized directory structure...")
-    for dir_name, dir_path in DIRS.items():
-        dir_path.mkdir(parents=True, exist_ok=True)
-        print(f"{dir_name}: {dir_path}")
-
-    return DIRS
-
-
 def copy_and_rename_videos(mouseinfo_df, video_paths, destination_path):
     """
     Copy videos from source paths and rename them according to session information.
@@ -305,7 +249,7 @@ def copy_and_rename_videos(mouseinfo_df, video_paths, destination_path):
     # Process each session
     for index, row in mouseinfo_df.iterrows():
         print("------------------------")
-        session_name = f"Session{int(row['Session #']):04d}"
+        session_name = f"Session{int(row['session']):04d}"
         destination_file = destination_path / f"{session_name}.mp4"
 
         print(f"Processing {session_name}...")
@@ -426,8 +370,8 @@ def batch_save_first_frames(mouseinfo_df, video_directory, frames_directory):
 
     # Process each session
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
-        session_name = f"Session{int(row['Session #']):04d}"
+        session_num = int(row["session"])
+        session_name = f"Session{int(row['session']):04d}"
 
         # Check if video exists
         video_path = video_directory / f"{session_name}.mp4"
@@ -719,7 +663,7 @@ def batch_get_boundary_and_cropping(
     print("Press 'c' to skip a session, or ESC to stop completely.")
 
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
 
         # Check if files already exist
@@ -1161,7 +1105,7 @@ def prepare_dlc_analysis(mouseinfo_df, video_directory, cropping_directory, resu
     }
 
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
         video_name = f"{session_name}.mp4"
         video_path = Path(video_directory) / video_name
@@ -1351,7 +1295,7 @@ def batch_create_grids(mouseinfo_df, boundaries_directory, grid_files_directory,
 
     # Process each session
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
 
         # Get chamber info if available
@@ -1648,7 +1592,7 @@ def batch_create_grid_scatter_plots(
 
     # Process each session
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
 
         print("-----------------------------")
@@ -1908,7 +1852,7 @@ def batch_create_trajectory_plots(
 
     # Process each session
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
 
         print("-----------------------------")
@@ -2068,7 +2012,7 @@ def append_grid_numbers_to_csv(
                 grid_numbers = pointInPolys["index_right"].values
 
             # Add grid number column to the original dataframe
-            df[dlc_scorer, bp, "Grid Number"] = grid_numbers
+            df[dlc_scorer, bp, "grid_number"] = grid_numbers
 
         except Exception as e:
             print(f"Error processing {bp}: {e}")
@@ -2141,7 +2085,7 @@ def batch_append_grid_numbers(
 
     # Process each session
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
         grid_numbers_file = save_directory / f"{session_name}_withGrids.csv"
 
@@ -2255,7 +2199,7 @@ def run_grid_preprocessing(
     sessions_in_directory = []
 
     for index, row in mouseinfo_full.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
 
         # Check if this session has a video or DLC file in the directory
@@ -2290,7 +2234,7 @@ def run_grid_preprocessing(
     if len(mouseinfo) < len(mouseinfo_full):
         print("Sessions to process:")
         for index, row in mouseinfo.iterrows():
-            session_num = int(row["Session #"])
+            session_num = int(row["session"])
             print(f"  - Session{session_num:04d}")
         print()
 
@@ -2302,7 +2246,7 @@ def run_grid_preprocessing(
     grid_numbers_needed = []
 
     for index, row in mouseinfo.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
 
         frame_file = source_data_path / f"{session_name}Frame1.jpg"

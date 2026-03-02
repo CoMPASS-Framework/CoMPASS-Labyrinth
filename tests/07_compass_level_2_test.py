@@ -90,7 +90,7 @@ class TestCompassLevel2:
             k_options=[2],
             reg_options=[1e-4],
             terminal_values=[47],
-            bout_col="Bout_ID",
+            bout_col="bout_id",
             patience=None,
         )
         assert isinstance(df_hier, pd.DataFrame)
@@ -119,7 +119,7 @@ class TestCompassLevel2:
             df_hier,
             angle_col="Targeted_Angle_smooth_abs",
             level_2_state_col="Level_2_States",
-            session_col="Session",
+            session_col="session",
         )
 
         # Then assign the final HHMM state
@@ -155,7 +155,7 @@ class TestCompassLevel2:
         all_figs_3 = plot_hhmm_state_sequence(
             config=config,
             df=df_hier,
-            session_col="Session",
+            session_col="session",
             state_col="HHMM State",
             save_fig=True,
             show_fig=False,

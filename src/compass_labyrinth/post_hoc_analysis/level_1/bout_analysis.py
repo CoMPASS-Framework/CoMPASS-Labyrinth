@@ -37,24 +37,24 @@ def assign_bout_indices(
     Parameters
     -----------
     df : pd.DataFrame
-        Dataframe with 'Session' and 'Grid Number' columns.
+        Dataframe with 'session' and 'grid_number' columns.
     delimiter_node : int
         Grid Number that indicates the start of a new bout.
     """
     df = df.copy()
     updated = []
 
-    for _, sess_df in df.groupby("Session"):
+    for _, sess_df in df.groupby("session"):
         sess_df = sess_df.reset_index(drop=True)
         bout_id = 1
         bout_indices = []
 
         for _, row in sess_df.iterrows():
-            if row["Grid Number"] == delimiter_node:
+            if row["grid_number"] == delimiter_node:
                 bout_id += 1
             bout_indices.append(bout_id)
 
-        sess_df["Bout_Index"] = bout_indices
+        sess_df["bout_id"] = bout_indices
         updated.append(sess_df)
 
     return pd.concat(updated, ignore_index=True)
@@ -72,7 +72,7 @@ def compute_surveillance_probabilities(
     Parameters
     -----------
     df_hmm : pd.DataFrame
-        Dataframe with 'Genotype', 'Session', 'HMM_State', 'Grid Number', 'Region', and 'Bout_Index'.
+        Dataframe with 'genotype', 'session', 'HMM_State', 'grid_number', 'region', and 'bout_id'.
     decision_nodes : str
         Type of decision node to consider for surveillance probability.
 
@@ -84,30 +84,30 @@ def compute_surveillance_probabilities(
     records = []
     decision_nodes_ids = NODE_TYPE_MAPPING.get(decision_nodes, [])
 
-    for session_id, sess_df in df_hmm.groupby("Session"):
-        genotype = sess_df["Genotype"].unique()[0]
-        bouts = list(sess_df.groupby("Bout_Index"))[1:]  # skip incomplete first bout
+    for session_id, sess_df in df_hmm.groupby("session"):
+        genotype = sess_df["genotype"].unique()[0]
+        bouts = list(sess_df.groupby("bout_id"))[1:]  # skip incomplete first bout
 
         for bout_num, (_, bout_df) in enumerate(bouts, 1):
-            success = "Successful" if "Target Zone" in bout_df["Region"].values else "Unsuccessful"
-            state_probs = bout_df[bout_df["Grid Number"].isin(decision_nodes_ids)]["HMM_State"].value_counts(
+            success = "Successful" if "Target Zone" in bout_df["region"].values else "Unsuccessful"
+            state_probs = bout_df[bout_df["grid_number"].isin(decision_nodes_ids)]["HMM_State"].value_counts(
                 normalize=True
             )
             prob_state_1 = state_probs.get(1, np.nan)
 
             records.append(
                 {
-                    "Session": session_id,
-                    "Genotype": genotype,
-                    "Bout_no": bout_num,
-                    "Successful_bout": success,
-                    "Probability_1": prob_state_1,
+                    "session": session_id,
+                    "genotype": genotype,
+                    "bout_no": bout_num,
+                    "successful_bout": success,
+                    "probability_1": prob_state_1,
                 }
             )
 
     index_df = pd.DataFrame(records)
     median_df = (
-        index_df.dropna().groupby(["Genotype", "Session", "Successful_bout"])["Probability_1"].median().reset_index()
+        index_df.dropna().groupby(["genotype", "session", "successful_bout"])["probability_1"].median().reset_index()
     )
     return (index_df, median_df)
 
@@ -150,11 +150,11 @@ def plot_surveillance_by_bout(
         The generated matplotlib figure.
     """
     plt.figure(figsize=figure_size)
-    genotypes = sorted(median_df["Genotype"].unique())
+    genotypes = sorted(median_df["genotype"].unique())
     ax = sns.barplot(
-        x="Successful_bout",
-        y="Probability_1",
-        hue="Genotype",
+        x="successful_bout",
+        y="probability_1",
+        hue="genotype",
         data=median_df,
         errorbar="se",
         capsize=0.1,
@@ -194,16 +194,16 @@ def test_within_genotype_success(index_df):
     """
     results = []
 
-    for genotype in sorted(index_df["Genotype"].unique()):
-        df = index_df[index_df["Genotype"] == genotype]
-        s = df[df["Successful_bout"] == "Successful"]["Probability_1"].dropna()
-        u = df[df["Successful_bout"] == "Unsuccessful"]["Probability_1"].dropna()
+    for genotype in sorted(index_df["genotype"].unique()):
+        df = index_df[index_df["genotype"] == genotype]
+        s = df[df["successful_bout"] == "Successful"]["probability_1"].dropna()
+        u = df[df["successful_bout"] == "Unsuccessful"]["probability_1"].dropna()
 
         if len(s) >= 2 and len(u) >= 2:
             stat, pval = ttest_ind(s, u, equal_var=False)
             results.append(
                 {
-                    "Genotype": genotype,
+                    "genotype": genotype,
                     "Group 1": "Successful",
                     "Group 2": "Unsuccessful",
                     "T-stat": stat,
@@ -223,12 +223,12 @@ def test_across_genotypes_per_bout(
     """
     results = []
 
-    df = index_df[index_df["Successful_bout"] == bout_type]
-    genotypes = sorted(df["Genotype"].unique())
+    df = index_df[index_df["successful_bout"] == bout_type]
+    genotypes = sorted(df["genotype"].unique())
 
     for g1, g2 in combinations(genotypes, 2):
-        vals1 = df[df["Genotype"] == g1]["Probability_1"].dropna()
-        vals2 = df[df["Genotype"] == g2]["Probability_1"].dropna()
+        vals1 = df[df["genotype"] == g1]["probability_1"].dropna()
+        vals2 = df[df["genotype"] == g2]["probability_1"].dropna()
 
         if len(vals1) >= 2 and len(vals2) >= 2:
             stat, pval = ttest_ind(vals1, vals2, equal_var=False)
@@ -245,40 +245,40 @@ def run_within_genotype_mixedlm_with_fdr(median_df: pd.DataFrame) -> pd.DataFram
     with Session as a random effect. Applies FDR correction.
 
     Returns
-    - DataFrame with Genotype, Effect size, raw P-value, FDR P-value, and significance flag.
+    - DataFrame with genotype, Effect size, raw P-value, FDR P-value, and significance flag.
     """
     results = []
-    genotypes = median_df["Genotype"].unique()
+    genotypes = median_df["genotype"].unique()
 
     for genotype in genotypes:
-        df_sub = median_df[median_df["Genotype"] == genotype].copy()
+        df_sub = median_df[median_df["genotype"] == genotype].copy()
 
         # Ensure sufficient sessions
-        if df_sub["Session"].nunique() < 2:
+        if df_sub["session"].nunique() < 2:
             continue
 
         # Ensure both bout types are present
-        bout_counts = df_sub["Successful_bout"].value_counts()
+        bout_counts = df_sub["successful_bout"].value_counts()
         if not all(x in bout_counts.index for x in ["Successful", "Unsuccessful"]):
             continue
 
         try:
             # Proper data typing
-            df_sub["Successful_bout"] = pd.Categorical(
-                df_sub["Successful_bout"], categories=["Unsuccessful", "Successful"]
+            df_sub["successful_bout"] = pd.Categorical(
+                df_sub["successful_bout"], categories=["Unsuccessful", "Successful"]
             )
-            df_sub["Session"] = df_sub["Session"].astype(str)
+            df_sub["session"] = df_sub["session"].astype(str)
 
             # Fit model
             model = mixedlm(
-                "Probability_1 ~ Successful_bout",
+                "probability_1 ~ successful_bout",
                 data=df_sub,
-                groups=df_sub["Session"],
+                groups=df_sub["session"],
             )
             result = model.fit()
 
             # Extract stats
-            term_name = next((k for k in result.params.keys() if "Successful_bout" in k), None)
+            term_name = next((k for k in result.params.keys() if "successful_bout" in k), None)
             coef = result.params.get(term_name, np.nan)
             pval = result.pvalues.get(term_name, np.nan)
 
@@ -286,7 +286,7 @@ def run_within_genotype_mixedlm_with_fdr(median_df: pd.DataFrame) -> pd.DataFram
             coef = np.nan
             pval = np.nan
 
-        results.append({"Genotype": genotype, "Effect: Successful vs Unsuccessful": coef, "P-value": pval})
+        results.append({"genotype": genotype, "Effect: Successful vs Unsuccessful": coef, "P-value": pval})
 
     result_df = pd.DataFrame(results)
 

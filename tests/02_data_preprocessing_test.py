@@ -16,8 +16,8 @@ class TestPreprocessing:
     def test_velocity_column(self, velocity_column_df):
         assert isinstance(velocity_column_df, pd.DataFrame)
         assert not velocity_column_df.empty
-        assert "Velocity" in velocity_column_df.columns
-        assert velocity_column_df["Velocity"].dtype in [float, int]
+        assert "velocity" in velocity_column_df.columns
+        assert velocity_column_df["velocity"].dtype in [float, int]
 
     def test_save_preprocessed_to_csv(self, create_project_fixture, save_preprocessed_data):
         assert save_preprocessed_data
