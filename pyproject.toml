@@ -49,7 +49,7 @@ dependencies = [
     "openpyxl",
     "PyYAML",
 
-    "movement",
+    "movement==0.12.0",
 ]
 
 [project.optional-dependencies]
