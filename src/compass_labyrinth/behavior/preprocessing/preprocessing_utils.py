@@ -83,13 +83,16 @@ def load_and_preprocess_session_data(
     return dflin
 
 
+from pathlib import Path
+import pandas as pd
+
 def compile_mouse_sessions(
     config: dict,
     bp: str,
     region_mapping: dict = REGION_MAPPING,
 ) -> pd.DataFrame:
     """
-    Compiles all sessions from NetCDF files into a single DataFrame.
+    Compiles all sessions into a single DataFrame.
 
     Parameters
     -----------
@@ -98,37 +101,115 @@ def compile_mouse_sessions(
     bp : str
         Body part name (e.g., 'sternum').
     region_mapping : dict
-        Region name → grid number list.
+        Region name -> grid number list.
 
     Returns
     --------
     pd.DataFrame
-        Combined session dataframe with region, genotype, sex.
+        Combined session dataframe with Region, Genotype, Sex.
+        (Sessions with missing files are skipped and reported.)
     """
     pose_est_filepath = Path(config["project_path_full"]) / "data" / "dlc_results"
+    dlc_scorer = config["dlc_scorer"]
     cohort_metadata = load_cohort_metadata(config)
 
+    cohort_metadata = cohort_metadata.copy()
+    cohort_metadata.columns = cohort_metadata.columns.str.strip().str.lower()
+
+    if "session" in cohort_metadata.columns:
+        session_col = "session"
+    elif "session #" in cohort_metadata.columns:
+        session_col = "session #"
+    else:
+        raise ValueError(
+            f"No session column found in cohort metadata. "
+            f"Columns found: {list(cohort_metadata.columns)}"
+        )
+
+    genotype_col = "genotype" if "genotype" in cohort_metadata.columns else None
+    sex_col = "sex" if "sex" in cohort_metadata.columns else None
+
     li_group = []
-    for sess in cohort_metadata["session"].unique():
-        session_name = f"Session-{int(sess)}"
-        filename = pose_est_filepath / f"{session_name}.nc"
-        df = load_and_preprocess_session_data(str(filename), bp, region_mapping)
-        df["session"] = sess
+    missing_sessions = []
+
+    for sess in cohort_metadata[session_col].dropna().unique():
+        session_num = int(sess)
+        session_id = f"Session{session_num:04d}"
+
+        # try CSV first
+        filename_csv_underscore = pose_est_filepath / f"{session_id}_withGrids.csv"
+        filename_csv_space = pose_est_filepath / f"{session_id} withGrids.csv"
+        filename_nc = pose_est_filepath / f"{session_id}.nc"
+
+        if filename_csv_underscore.exists():
+            filename = filename_csv_underscore
+            filetype = "csv"
+        elif filename_csv_space.exists():
+            filename = filename_csv_space
+            filetype = "csv"
+        elif filename_nc.exists():
+            filename = filename_nc
+            filetype = "nc"
+        else:
+            missing_sessions.append(session_num)
+            print(
+                f"[WARN] Skipping Session {session_num}: no matching file found "
+                f"(tried '{filename_csv_underscore.name}', "
+                f"'{filename_csv_space.name}', '{filename_nc.name}')"
+            )
+            continue
+
+        if filetype == "csv":
+            df = load_and_preprocess_session_data(
+                filename,
+                bp,
+                dlc_scorer,
+                region_mapping,
+            )
+        else:
+            df = load_and_preprocess_session_data(
+                str(filename),
+                bp,
+                region_mapping,
+            )
+
+        df["Session"] = session_num
         li_group.append(df)
 
+    if not li_group:
+        raise RuntimeError(
+            "No session files were loaded. "
+            "All sessions were missing."
+        )
+
     df_comb = pd.concat(li_group, axis=0, ignore_index=True)
-    df_comb["grid_number"] = df_comb["grid_number"].astype(int)
 
-    # Map genotype and sex
-    session_to_genotype = {k: g["session"].tolist() for k, g in cohort_metadata.groupby("genotype")}
-    inverse_mapping = {session: genotype for genotype, sessions in session_to_genotype.items() for session in sessions}
-    df_comb["genotype"] = df_comb["session"].map(inverse_mapping)
+    if "Grid Number" in df_comb.columns:
+        df_comb["Grid Number"] = pd.to_numeric(df_comb["Grid Number"], errors="coerce")
+        df_comb = df_comb.dropna(subset=["Grid Number"]).copy()
+        df_comb["Grid Number"] = df_comb["Grid Number"].astype(int)
 
-    session_to_sex = dict(cohort_metadata[["session", "sex"]].values)
-    df_comb["sex"] = df_comb["session"].map(session_to_sex)
+    if genotype_col is not None:
+        session_to_genotype = dict(
+            cohort_metadata[[session_col, genotype_col]].drop_duplicates().values
+        )
+        df_comb["Genotype"] = df_comb["Session"].map(session_to_genotype)
+
+    if sex_col is not None:
+        session_to_sex = dict(
+            cohort_metadata[[session_col, sex_col]].drop_duplicates().values
+        )
+        df_comb["Sex"] = df_comb["Session"].map(session_to_sex)
+
+    if missing_sessions:
+        missing_sessions_sorted = sorted(missing_sessions)
+        print(
+            "\n[SUMMARY] The following sessions were skipped because no file was found:\n"
+            f"{missing_sessions_sorted}\n"
+            f"Total skipped: {len(missing_sessions_sorted)}"
+        )
 
     return df_comb
-
 
 ##################################################################
 # OLD CSV-BASED FUNCTIONS - DEPRECATED
@@ -315,35 +396,45 @@ def preprocess_sessions(
 ) -> pd.DataFrame:
     """
     Full preprocessing pipeline for all sessions: trims to initial nodes and removes invalid transitions.
-
-    Parameters
-    ----------
-    df_comb: pd.DataFrame
-        Combined dataframe with all sessions.
-    adjacency_matrix: pd.DataFrame
-        Grid adjacency matrix.
-    initial_nodes: list
-        Nodes that mark the true session start.
-
-    Returns
-    -------
-    pd.DataFrame
-        Fully cleaned and combined dataframe across all sessions.
     """
+    df_comb = df_comb.copy()
+
+    # handle column-name variants
+    if "session" in df_comb.columns:
+        session_col = "session"
+    elif "Session" in df_comb.columns:
+        session_col = "Session"
+    else:
+        raise KeyError(f"No session column found. Columns are: {df_comb.columns.tolist()}")
+
+    if "grid_number" in df_comb.columns:
+        grid_col = "grid_number"
+    elif "Grid Number" in df_comb.columns:
+        grid_col = "Grid Number"
+    else:
+        raise KeyError(f"No grid number column found. Columns are: {df_comb.columns.tolist()}")
+
     preprocessed_sessions = []
 
-    for _, session_df in df_comb.groupby("session"):
+    for _, session_df in df_comb.groupby(session_col):
         session_df = session_df.reset_index(drop=True)
         session_df = remove_until_initial_node(session_df, initial_nodes)
         session_df = remove_invalid_grid_transitions(session_df, adjacency_matrix)
         preprocessed_sessions.append(session_df)
 
     df_all_cleaned = pd.concat(preprocessed_sessions, ignore_index=True)
+
+    # standardize names after processing
+    df_all_cleaned = df_all_cleaned.rename(
+        columns={
+            session_col: "session",
+            grid_col: "grid_number",
+        }
+    )
+
     df_all_cleaned["session"] = df_all_cleaned["session"].astype(int)
     df_all_cleaned["grid_number"] = df_all_cleaned["grid_number"].astype(int)
 
-    # Mapping of variable names to node_type labels
-    # key : value pair, key = list name (as in Initializations) & value = column value name decided by user
     label_mapping = {
         "decision_reward": "Decision (Reward)",
         "nondecision_reward": "Non-Decision (Reward)",
@@ -354,16 +445,16 @@ def preprocess_sessions(
         "entry_zone": "Entry Nodes",
         "target_zone": "Target Nodes",
     }
+
     df_all_cleaned["node_type"] = "Unlabeled"
 
-    # Apply mapping to access the list by name
-    # Creates the column node_type based on grid_number
     for var_name, label in label_mapping.items():
         node_list = NODE_TYPE_MAPPING[var_name]
-        df_all_cleaned.loc[df_all_cleaned["grid_number"].isin(node_list), "node_type"] = label
+        df_all_cleaned.loc[
+            df_all_cleaned["grid_number"].isin(node_list), "node_type"
+        ] = label
 
     return df_all_cleaned
-
 
 #######################################################
 # Velocity column creation
@@ -428,9 +519,11 @@ def ensure_velocity_column(
 def save_preprocessed_to_csv(
     config: dict,
     df: pd.DataFrame,
+    save_combined: bool = True,
+    save_individual: bool = True,
 ) -> None:
     """
-    Saves Preprocessed data to CSV files
+    Saves preprocessed data to CSV files.
 
     Parameters
     ----------
@@ -438,6 +531,10 @@ def save_preprocessed_to_csv(
         Project configuration dictionary.
     df : pd.DataFrame
         Preprocessed DataFrame to save.
+    save_combined : bool, optional
+        If True, saves a single combined CSV file. Default is True.
+    save_individual : bool, optional
+        If True, saves per-session individual CSV files. Default is True.
 
     Returns
     -------
@@ -448,18 +545,34 @@ def save_preprocessed_to_csv(
     combined_dir = csv_dir / "combined"
     individual_dir = csv_dir / "individual"
 
-    # Create folders if they don’t exist
-    combined_dir.mkdir(parents=True, exist_ok=True)
-    individual_dir.mkdir(parents=True, exist_ok=True)
+    # detect session column
+    if "Session" in df.columns:
+        session_col = "Session"
+    elif "session" in df.columns:
+        session_col = "session"
+    else:
+        raise KeyError(f"No session column found. Columns are: {df.columns.tolist()}")
+
+    # Create base csv directory only if needed
+    if save_combined or save_individual:
+        csv_dir.mkdir(parents=True, exist_ok=True)
 
     # Save combined file
-    combined_path = combined_dir / "Preprocessed_combined_file.csv"
-    df.to_csv(combined_path, index=False)
-    print(f"Saved combined file: {combined_path}")
+    if save_combined:
+        combined_dir.mkdir(parents=True, exist_ok=True)
+        combined_path = combined_dir / "Preprocessed_combined_file.csv"
+        df.to_csv(combined_path, index=False)
+        print(f"Saved combined file: {combined_path}")
 
-    # Save per-session individual files
-    for session_id, df_session in df.groupby("session"):
-        file_name = f"Session-{session_id}_preprocessed.csv"
-        file_path = individual_dir / file_name
-        df_session.to_csv(file_path, index=False)
-    print(f"Saved {df['session'].nunique()} individual session CSVs to: {individual_dir}")
+    # Save per-session files
+    if save_individual:
+        individual_dir.mkdir(parents=True, exist_ok=True)
+
+        for session_id, df_session in df.groupby(session_col):
+            file_name = f"Session{int(session_id):04d}_preprocessed.csv"
+            file_path = individual_dir / file_name
+            df_session.to_csv(file_path, index=False)
+
+        print(
+            f"Saved {df[session_col].nunique()} individual session CSVs to: {individual_dir}"
+        )
