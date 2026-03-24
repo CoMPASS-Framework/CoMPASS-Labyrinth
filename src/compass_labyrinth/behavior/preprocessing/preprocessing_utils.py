@@ -83,9 +83,6 @@ def load_and_preprocess_session_data(
     return dflin
 
 
-from pathlib import Path
-import pandas as pd
-
 def compile_mouse_sessions(
     config: dict,
     bp: str,
@@ -136,7 +133,6 @@ def compile_mouse_sessions(
         session_num = int(sess)
         session_id = f"Session{session_num:04d}"
 
-        # try CSV first
         filename_csv_underscore = pose_est_filepath / f"{session_id}_withGrids.csv"
         filename_csv_space = pose_est_filepath / f"{session_id} withGrids.csv"
         filename_nc = pose_est_filepath / f"{session_id}.nc"
@@ -209,7 +205,16 @@ def compile_mouse_sessions(
             f"Total skipped: {len(missing_sessions_sorted)}"
         )
 
+    # make all column names lowercase with underscores instead of spaces
+    df_comb.columns = (
+        df_comb.columns
+        .str.strip()
+        .str.lower()
+        .str.replace(r"\s+", "_", regex=True)
+    )
+
     return df_comb
+
 
 ##################################################################
 # OLD CSV-BASED FUNCTIONS - DEPRECATED
