@@ -8,6 +8,7 @@ import pytest
 import shutil
 from pathlib import Path
 import pandas as pd
+import numpy as np
 
 
 @pytest.fixture(scope="session")
@@ -402,3 +403,27 @@ def compass_level_1_fixture(create_project_fixture, task_performance):
         altCoordNames=None,
     )
     return final_df
+
+
+@pytest.fixture(scope="session")
+def hmm_results_fixture(create_project_fixture, compass_level_1_fixture):
+    from compass_labyrinth.compass.level_1 import fit_best_hmm
+
+    config, _ = create_project_fixture
+    res = fit_best_hmm(
+        preproc_df=compass_level_1_fixture,
+        n_states=2,
+        n_repetitions=1,
+        opt_methods=["L-BFGS-B"],
+        max_iter=50,
+        use_abs_angle=(False,),
+        stationary_flag="auto",
+        use_data_driven_ranges=True,
+        angle_mean_biased=(np.pi / 2, 0.0),
+        session_col="session",
+        seed=123,
+        enforce_behavioral_constraints=False,
+        show_progress=False,
+    )
+    res.save(config=config)
+    return res

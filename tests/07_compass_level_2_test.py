@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 class TestCompassLevel2:
 
-    def test_compass_level_2(self, create_project_fixture):
+    def test_compass_level_2(self, create_project_fixture, hmm_results_fixture):
         from compass_labyrinth.compass.level_2 import (
             loso_kde_cv,
             compute_kde_scaled,

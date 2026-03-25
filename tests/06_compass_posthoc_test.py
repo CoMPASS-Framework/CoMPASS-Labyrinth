@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 
 class TestCompasPosthocAnalysis:
 
-    def test_compass_posthoc_heatmaps(self, create_project_fixture):
+    def test_compass_posthoc_heatmaps(self, create_project_fixture, hmm_results_fixture):
         from compass_labyrinth.post_hoc_analysis.level_1 import (
             plot_all_genotype_heatmaps,
             plot_all_genotype_interactive_heatmaps,
@@ -51,7 +51,7 @@ class TestCompasPosthocAnalysis:
         assert isinstance(interactive_fig, go.Figure)
         assert (project_path / "figures" / "all_genotypes_interactive_grid_heatmap.html").exists()
 
-    def test_compass_posthoc_surveillance(self, create_project_fixture):
+    def test_compass_posthoc_surveillance(self, create_project_fixture, hmm_results_fixture):
         from compass_labyrinth.post_hoc_analysis.level_1 import (
             compute_state_probability,
             plot_state_probability_boxplot,
@@ -107,7 +107,7 @@ class TestCompasPosthocAnalysis:
         assert isinstance(ttest_results, pd.DataFrame)
         assert not ttest_results.empty
 
-    def test_compass_posthoc_temporal_analysis(self, create_project_fixture):
+    def test_compass_posthoc_temporal_analysis(self, create_project_fixture, hmm_results_fixture):
         from compass_labyrinth.post_hoc_analysis.level_1 import (
             get_max_session_row_bracket,
             get_min_session_row_bracket,
@@ -150,7 +150,7 @@ class TestCompasPosthocAnalysis:
         save_path = Path(config["project_path_full"]) / "figures" / "temporal_median_state_probability_curve.pdf"
         assert save_path.exists()
 
-    def test_compass_posthoc_surveillance_analysis(self, create_project_fixture):
+    def test_compass_posthoc_surveillance_analysis(self, create_project_fixture, hmm_results_fixture):
         from compass_labyrinth.post_hoc_analysis.level_1 import (
             assign_bout_indices,
             compute_surveillance_probabilities,

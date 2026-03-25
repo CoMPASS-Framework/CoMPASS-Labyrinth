@@ -131,7 +131,7 @@ def compile_mouse_sessions(
 
     for sess in cohort_metadata[session_col].dropna().unique():
         session_num = int(sess)
-        session_id = f"Session{session_num:04d}"
+        session_id = f"Session-{session_num}"
 
         filename_csv_underscore = pose_est_filepath / f"{session_id}_withGrids.csv"
         filename_csv_space = pose_est_filepath / f"{session_id} withGrids.csv"
@@ -157,9 +157,8 @@ def compile_mouse_sessions(
 
         if filetype == "csv":
             df = load_and_preprocess_session_data(
-                filename,
+                str(filename),
                 bp,
-                dlc_scorer,
                 region_mapping,
             )
         else:
