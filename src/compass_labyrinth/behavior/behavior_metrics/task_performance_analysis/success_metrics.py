@@ -156,6 +156,7 @@ def plot_success_rate(
     ax = sns.barplot(
         x="genotype",
         y="success_rate",
+        hue="genotype",
         data=summary_table,
         errorbar="se",
         width=0.7,
@@ -163,6 +164,7 @@ def plot_success_rate(
         capsize=0.15,
         edgecolor="black",
         palette=palette if palette else "deep",
+        legend=False,
     )
 
     sns.stripplot(x="genotype", y="success_rate", data=summary_table, dodge=True, color="black", size=4)

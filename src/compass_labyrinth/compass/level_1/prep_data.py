@@ -156,7 +156,7 @@ def prep_data(
     # Step & angle per ID
     coord_type = "LL" if type.upper() == "LL" else "UTM"
 
-    for _id, g in df.groupby("ID", sort=False):
+    for _id, g in df.groupby("ID", sort=False, observed=False):
         idx = g.index
         x = g[xcol].to_numpy()
         y = g[ycol].to_numpy()
@@ -189,7 +189,7 @@ def prep_data(
             df[dist_col] = np.nan
             df[ang_col] = np.nan
         # compute per row with previous point (like R: distance/angle uses prev->cur and cur->center)
-        for _id, g in df.groupby("ID", sort=False):
+        for _id, g in df.groupby("ID", sort=False, observed=False):
             idx = g.index
             x = g[xcol].to_numpy()
             y = g[ycol].to_numpy()
@@ -227,7 +227,7 @@ def prep_data(
             df[dcol] = np.nan
             df[acol] = np.nan
 
-            for _id, g in df.groupby("ID", sort=False):
+            for _id, g in df.groupby("ID", sort=False, observed=False):
                 idx = g.index
                 x = g[xcol].to_numpy()
                 y = g[ycol].to_numpy()

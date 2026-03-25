@@ -149,7 +149,7 @@ def plot_node_state_median_curve(
         kind="point",
         errorbar="se",
         capsize=0.15,
-        errwidth=1.5,
+        err_kws={"linewidth": 1.5},
         palette=palette,
         aspect=1.9,
         legend=True,  # auto legend

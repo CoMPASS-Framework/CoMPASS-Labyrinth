@@ -145,7 +145,8 @@ def calculate_deviation(row):
 
     cos_theta = np.dot(vector, ref_vec) / (np.linalg.norm(vector) * np.linalg.norm(ref_vec))
     angle = np.arccos(np.clip(cos_theta, -1, 1))
-    return -angle if np.cross(vector, ref_vec) < 0 else angle
+    cross_z = vector[0] * ref_vec[1] - vector[1] * ref_vec[0]
+    return -angle if cross_z < 0 else angle
 
 
 # ------------------ Main Processing ------------------ #
