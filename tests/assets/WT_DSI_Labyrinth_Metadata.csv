@@ -1,5 +1,0 @@
-session,run_date,time_of_day,rack_location,computer,noldus_chamber,camera,noldus_trial,noldus_project_name,dsi_trial,id,name,sex,status,line,genotype,birth_date,age,housing_id,transmitter,exclude_trial,x1,x2,y1,y2
-3,2024-11-18T00:00:00,17:15:00,BR,1,TR,6,1,20241118_WT_DSI_Labyrinth_2,2,75240,2017,Female,Available,LG124KI3,KO,2024-06-01T00:00:00,5m13d,H-11495-17,"3,4",,1486,2399,70,986
-4,2024-11-18T00:00:00,17:15:00,TR,1,BR,2,1,20241118_WT_DSI_Labyrinth_2,2,75249,2009,Female,Available,LG124KI3,WT,2024-06-02T00:00:00,5m12d,H-11497-17,"5,6",,1435,2359,1086,2015
-5,2024-11-18T00:00:00,17:15:00,BR,1,TR,6,1,20241118_WT_DSI_Labyrinth_2,2,75240,2017,Female,Available,LG124KI3,KO,2024-06-01T00:00:00,5m13d,H-11495-17,"3,4",,1486,2399,70,986
-6,2024-11-18T00:00:00,17:15:00,TR,1,BR,2,1,20241118_WT_DSI_Labyrinth_2,2,75249,2009,Female,Available,LG124KI3,WT,2024-06-02T00:00:00,5m12d,H-11497-17,"5,6",,1435,2359,1086,2015

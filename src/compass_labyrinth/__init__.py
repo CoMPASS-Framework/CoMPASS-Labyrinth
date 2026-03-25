@@ -4,6 +4,7 @@ import datetime
 import shutil
 import yaml
 import os
+import re
 from movement.io import load_poses
 
 from .utils import load_project, update_dataset_with_grid_positions
@@ -13,6 +14,17 @@ from .behavior.pose_estimation.dlc_utils import (
     save_first_frame,
     check_preprocessing_status,
 )
+
+
+def normalize_session_name(name: str) -> str:
+    """
+    Convert names like Session-4, Session4, Session_4, Session0004
+    into Session0004.
+    """
+    m = re.search(r"Session[-_]?(\d+)", str(name), flags=re.IGNORECASE)
+    if not m:
+        return str(name)
+    return f"Session{int(m.group(1)):04d}"
 
 
 def init_project(
@@ -29,58 +41,32 @@ def init_project(
     palette: str = "grey",
 ) -> tuple[dict, pd.DataFrame]:
     """
-    Initializes project for the CoMPASS-Labyrinth analysis,  including:
+    Initializes project for the CoMPASS-Labyrinth analysis, including:
     - Setting up directory structure
     - Copying user metadata file to project directory
     - Creating a config.yaml file with project parameters
+    - Saving normalized processed pose files as Session000X_withGrids.csv
+      into data/dlc_results
+    - Copying existing withGrids CSV files into data/dlc_results
+      with normalized names
 
-    Parameters
-    ----------
-    project_name : str
-        The name of the project.
-    project_path : Path | str
-        The path to the project directory.
-    source_data_path : Path | str
-        The path to the source data directory containing videos and DLC outputs.
-    user_metadata_file_path : Path | str
-        The path to the user metadata Excel file.
-    trial_type : str, optional
-        Type of trial. Default is "Labyrinth_DSI".
-    file_ext : str, optional
-        File extension for data files. Default is ".h5".
-    video_type : str, optional
-        Video file extension. Default is ".mp4".
-    sampling_rate : int, optional
-        Sampling rate of the videos. Default is 30.
-    dlc_scorer : str, optional
-        DeepLabCut scorer identifier. Default is "DLC_resnet50_LabyrinthMar13shuffle1_1000000".
-    experimental_groups : list, optional
-        List of experimental groups. Default is ["A", "B", "C", "D"].
-    palette : str, optional
-        Color palette for visualizations. Default is "grey".
-
-    Returns
-    -------
-    config : dict
-        A dictionary containing configuration parameters.
-    metadata_df : pd.DataFrame
-        A DataFrame containing cohort metadata.
+    IMPORTANT:
+    If the project folder already exists, this function prints a message and
+    returns the already existing project without processing again.
     """
-    # Project name checks should be alphanumeric and underscores only
     if not project_name.replace("_", "").isalnum():
         raise ValueError("Project name must be alphanumeric and can only contain underscores.")
 
-    # Validate source data path
     source_data_path = Path(source_data_path).resolve()
     if not source_data_path.exists():
         raise ValueError(f"Source data path {source_data_path} does not exist.")
 
-    # TODO - Commenting out for now, to be re-enabled later
+    # TODO - re-enable later if needed
     # check_preprocessing_status(source_data_path)
 
-    # Set up project's base path
     project_path = Path(project_path).resolve()
     project_path_full = project_path / project_name
+
     if not project_path_full.exists():
         project_path_full.mkdir(parents=True, exist_ok=True)
         print(f"Project path does not exist. Creating directory at {project_path_full}")
@@ -88,13 +74,10 @@ def init_project(
         print(f"Project already exists at {project_path_full}")
         return load_project(project_path_full)
 
-    # Create organized directory structure
     all_dirs = {
-        # Videos folder - original videos and frames
         "videos": project_path_full / "videos",
         "videos_original": project_path_full / "videos" / "original_videos",
         "frames": project_path_full / "videos" / "frames",
-        # Data folder - analysis inputs and outputs
         "data": project_path_full / "data",
         "dlc_results": project_path_full / "data" / "dlc_results",
         "dlc_cropping": project_path_full / "data" / "dlc_cropping_bounds",
@@ -102,13 +85,10 @@ def init_project(
         "grid_boundaries": project_path_full / "data" / "grid_boundaries",
         "metadata": project_path_full / "data" / "metadata",
         "eeg_edfs": project_path_full / "data" / "processed_eeg_edfs",
-        # Figures folder - all plots and visualizations
         "figures": project_path_full / "figures",
-        # CSV's folder
         "csvs": project_path_full / "csvs",
         "csvs_individual": project_path_full / "csvs" / "individual",
         "csvs_combined": project_path_full / "csvs" / "combined",
-        # Results folders
         "results": project_path_full / "results",
         "results_task_performance": project_path_full / "results" / "task_performance",
         "results_simulation_agent": project_path_full / "results" / "simulation_agent",
@@ -116,64 +96,105 @@ def init_project(
         "results_compass_level_2": project_path_full / "results" / "compass_level_2",
         "results_ephys_compass": project_path_full / "results" / "ephys_compass",
     }
-    for _, dir_path in all_dirs.items():
+    for dir_path in all_dirs.values():
         dir_path.mkdir(parents=True, exist_ok=True)
 
-    # List of pose estimation files
     pose_est_dest_path = project_path_full / "data" / "dlc_results"
-    pe_files = [f.resolve() for f in source_data_path.glob(f"*{dlc_scorer}*{file_ext}")]
-    pe_files = sorted(pe_files, key=lambda f: f.name)
 
-    # Extract session names from pose estimation files
-    session_names = [f.stem.replace(f"{dlc_scorer}", "") for f in pe_files]
+    # Find DLC pose-estimation files
+    pe_files = sorted(
+        [f.resolve() for f in source_data_path.glob(f"*{dlc_scorer}*{file_ext}")],
+        key=lambda f: f.name,
+    )
 
-    # Read pose estimation files as movement datasets and save as .nc files to project path
+    print(f"source_data_path: {source_data_path}")
+    print(f"pose_est_dest_path: {pose_est_dest_path}")
+    print(f"Looking for pose files with pattern: *{dlc_scorer}*{file_ext}")
+    print("Pose files found:", [f.name for f in pe_files])
+
+    session_names = [
+        normalize_session_name(f.stem.replace(dlc_scorer, ""))
+        for f in pe_files
+    ]
+    print("Normalized session names:", session_names)
+
     bodyparts = []
+    processed_sessions = set()
+
+    # Create normalized Session000X_withGrids.csv files from DLC pose files
     for file in pe_files:
-        session_name = file.stem.replace(f"{dlc_scorer}", "")
-        dest_file = pose_est_dest_path / f"{session_name}.nc"
-        if not dest_file.exists():
+        raw_session_name = file.stem.replace(dlc_scorer, "")
+        session_name = normalize_session_name(raw_session_name)
+        dest_file = pose_est_dest_path / f"{session_name}_withGrids.csv"
+
+        try:
             ds = load_poses.from_dlc_file(
                 file_path=file,
                 fps=sampling_rate,
             )
 
-            # Load the grid file (.shp) and update the datasets with grid positions
-            grid_file_aux = [f for f in source_data_path.glob(f"{session_name}*.shp")]
+            # Use raw source naming to find the shapefile first
+            grid_file_aux = [f for f in source_data_path.glob(f"{raw_session_name}*.shp")]
+
+            # Fallback: also try normalized session name
+            if len(grid_file_aux) == 0:
+                grid_file_aux = [f for f in source_data_path.glob(f"{session_name}*.shp")]
+
             if len(grid_file_aux) == 0:
                 raise FileNotFoundError(
-                    f"Grid shapefile for session {session_name} not found.",
-                    f"Expected at {source_data_path} with pattern {session_name}*.shp",
+                    f"Grid shapefile for session {session_name} not found. "
+                    f"Tried patterns '{raw_session_name}*.shp' and '{session_name}*.shp' "
+                    f"in {source_data_path}"
                 )
+
             grid_file_path = grid_file_aux[0].resolve()
             ds = update_dataset_with_grid_positions(
                 ds=ds,
                 grid_file_path=grid_file_path,
             )
 
-            # Save as .nc file
-            ds.to_netcdf(dest_file)
+            # Convert to dataframe and save as CSV
+            df_pose = ds.to_dataframe().reset_index()
 
-            # Extract keypoints / bodyparts names
-            if len(bodyparts) == 0:
+            if "confidence" in df_pose.columns and "likelihood" not in df_pose.columns:
+                df_pose = df_pose.rename(columns={"confidence": "likelihood"})
+
+            df_pose.to_csv(dest_file, index=False)
+            processed_sessions.add(session_name)
+            print(f"Saved CSV: {dest_file.name}")
+
+            if len(bodyparts) == 0 and hasattr(ds, "keypoints"):
                 bodyparts = ds.keypoints.values.tolist()
-            else:
+            elif hasattr(ds, "keypoints"):
                 if ds.keypoints.values.tolist() != bodyparts:
-                    raise ValueError(f"Bodyparts in file {file} do not match previously read bodyparts.")
+                    raise ValueError(
+                        f"Bodyparts in file {file} do not match previously read bodyparts."
+                    )
 
-    # # ------ temporary - to be removed later ------
-    # # COPY withGrids.csv files as well
-    # with_grid_files = [f.resolve() for f in source_data_path.glob(f"*withGrids*.csv")]
-    # for file in with_grid_files:
-    #     dest_file = pose_est_csv_path / file.name
-    #     if not dest_file.exists():
-    #         shutil.copy2(file, dest_file)
+        except Exception as e:
+            print(f"[WARN] Failed to process {file.name}: {e}")
 
-    # if len(pe_files) == 0:
-    #     pe_files = with_grid_files
-    # # ------------------------------------------------------
+    # Copy existing withGrids CSV files only for sessions not already processed
+    with_grid_files = sorted(
+        list(source_data_path.glob("*withGrids.csv")) +
+        list(source_data_path.glob("*_withGrids.csv")),
+        key=lambda f: f.name,
+    )
+    print("withGrids CSV files found:", [f.name for f in with_grid_files])
 
-    # Copy all shape files (.dbf, .shp, .shx) from source data path to project grid_files folder
+    for file in with_grid_files:
+        try:
+            normalized_session = normalize_session_name(file.stem)
+            if normalized_session in processed_sessions:
+                continue
+
+            dest_file = pose_est_dest_path / f"{normalized_session}_withGrids.csv"
+            shutil.copy2(file.resolve(), dest_file)
+            print(f"Copied CSV: {file.name} -> {dest_file.name}")
+        except Exception as e:
+            print(f"[WARN] Failed to copy CSV {file.name}: {e}")
+
+    # Copy all shape files into project grid_files folder
     grid_files_dest = project_path_full / "data" / "grid_files"
     for ext in [".shp", ".dbf", ".shx"]:
         grid_files = [f.resolve() for f in source_data_path.glob(f"*{ext}")]
@@ -182,45 +203,35 @@ def init_project(
             if not dest_file.exists():
                 shutil.copy2(file, dest_file)
 
-    # Link videos to central video location
+    # Link videos to project and save first frames
     video_dest_path = project_path_full / "videos" / "original_videos"
-    video_files = [f.resolve() for f in source_data_path.glob(f"*{video_type}")]
-    video_files = sorted(video_files, key=lambda f: f.name)
+    video_files = sorted(
+        [f.resolve() for f in source_data_path.glob(f"*{video_type}")],
+        key=lambda f: f.name,
+    )
+
     for file in video_files:
         dest_file = video_dest_path / file.name
         if not dest_file.exists():
             os.symlink(file, dest_file)
-        # Save first frame of each video for reference
+
         save_first_frame(
             video_path=file,
             frames_dir=project_path_full / "videos" / "frames",
         )
 
-    # Copy the user passed metadata to the project's path
-    # TODO - later on, we will like to construct this metadata file automatically, instead of requesting from user
-    construct_metadata = False
-    if construct_metadata:
-        cohort_metadata = []
-        for sess in session_names:
-            cohort_metadata.append(
-                {
-                    "session_name": sess,
-                }
-            )
-    else:
-        user_metadata_file_path = Path(user_metadata_file_path).resolve()
-        metadata_df = import_cohort_metadata(
-            metadata_path=user_metadata_file_path,
-            trial_sheet_name=trial_type,
-        )
-        validate_metadata(metadata_df)
-        cohort_metadata = metadata_df.to_dict(orient="records")
+    # Load metadata
+    user_metadata_file_path = Path(user_metadata_file_path).resolve()
+    metadata_df = import_cohort_metadata(
+        metadata_path=user_metadata_file_path,
+        trial_sheet_name=trial_type,
+    )
+    validate_metadata(metadata_df)
+    metadata_df = pd.DataFrame(metadata_df.to_dict(orient="records"))
 
-    # Save cohort metadata as CSV
-    metadata_df = pd.DataFrame(cohort_metadata)
+    # Save cohort metadata
     metadata_df.to_csv(project_path_full / "cohort_metadata.csv", index=False)
 
-    # Create config dictionary and save config.yaml in project path
     config = {
         "project_name": project_name,
         "project_path_full": str(project_path_full),
@@ -238,4 +249,4 @@ def init_project(
     with open(project_path_full / "config.yaml", "w") as config_file:
         yaml.dump(config, config_file)
 
-    return (config, metadata_df)
+    return config, metadata_df
