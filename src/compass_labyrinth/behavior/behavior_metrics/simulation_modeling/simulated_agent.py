@@ -916,9 +916,11 @@ def plot_chi_square_and_rolling(
             data=df_geno,
             x=epoch_col,
             y=chi_col,
+            hue=epoch_col,
             errorbar="se",
             palette="viridis",
             ax=ax,
+            legend=False,
         )
         sns.lineplot(
             data=df_geno,
@@ -1005,9 +1007,11 @@ def plot_rolling_mean(
             data=df_geno,
             x=epoch_col,
             y=rolling_col,
+            hue=epoch_col,
             errorbar="se",
             palette="Blues",
             ax=ax,
+            legend=False,
         )
         ax.set_title(f"{genotype}: Rolling Chi-Square")
         ax.set_xlabel("Epochs")
@@ -1084,9 +1088,11 @@ def plot_cumulative_chi_square(
             data=df_geno,
             x=epoch_col,
             y=cum_col,
+            hue=epoch_col,
             errorbar="se",
             palette="magma",
             ax=ax,
+            legend=False,
         )
         ax.set_title(f"{genotype}: Cumulative Chi-Square")
         ax.set_xlabel("Epochs")

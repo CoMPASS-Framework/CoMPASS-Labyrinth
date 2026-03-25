@@ -598,7 +598,9 @@ def plot_cumulative_agent_comparison_boxplot_multi(
         data=df_melt,
         x="Agent",
         y="Reward Path %",
+        hue="Agent",
         palette="Set2",
+        legend=False,
     )
     sns.stripplot(
         data=df_melt,

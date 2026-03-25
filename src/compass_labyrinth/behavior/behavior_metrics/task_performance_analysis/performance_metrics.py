@@ -563,7 +563,7 @@ def plot_region_heatmaps(
             pivot_tab = pivot_tab[valid_cols]
 
         # Reindex and round values
-        pivot_tab = pivot_tab.reindex(region_order).fillna(np.nan)
+        pivot_tab = pivot_tab.reindex(region_order)
         pivot_tab.index = pivot_tab.index.map(lambda x: REGION_NAMES.get(x, x))
         rounded = pivot_tab.round(2)
 
@@ -724,7 +724,7 @@ def plot_region_heatmaps_all_genotypes(
             # Use only valid sessions from df_all_csv
             valid_sessions = df_all_csv.loc[df_all_csv["genotype"] == genotype, "session"].unique()
             pivot_tab = pivot_tab[[s for s in pivot_tab.columns if s in valid_sessions]]
-            pivot_tab = pivot_tab.reindex(region_order).fillna(np.nan)
+            pivot_tab = pivot_tab.reindex(region_order)
             pivot_tab.index = pivot_tab.index.map(lambda x: REGION_NAMES.get(x, x))
 
             sns.heatmap(
@@ -818,7 +818,7 @@ def compute_shannon_entropy_per_bin(
                 continue
 
             data.index = data.index.astype(str)
-            prob_data = data.div(data.sum(axis=1), axis=0).replace([np.inf, -np.inf], np.nan).fillna(0)
+            prob_data = data.div(data.sum(axis=1), axis=0).replace([np.inf, -np.inf], np.nan).infer_objects(copy=False).fillna(0)
             ent_vals = entropy(prob_data.values, base=2, axis=1)
 
             for session_id, e in zip(data.index, ent_vals):
@@ -893,7 +893,7 @@ def plot_entropy_over_bins(
         hue="genotype",
         kind="point",
         capsize=0.15,
-        errwidth=1.5,
+        err_kws={"linewidth": 1.5},
         errorbar="se",
         palette=palette,
         legend=True,
@@ -1359,7 +1359,7 @@ def run_region_usage_stats_fdr(
 
     # ------------ Pairwise t-tests at each bin (fillna(0)) -------------
     df_zero = reg_binned[["session", "bin", "genotype", safe_col]].copy()
-    df_zero[safe_col] = df_zero[safe_col].fillna(0)
+    df_zero[safe_col] = df_zero[safe_col].fillna(0).infer_objects(copy=False)
 
     print("\n=== Pairwise t-tests between genotypes at each bin (FDR corrected) ===")
     try:

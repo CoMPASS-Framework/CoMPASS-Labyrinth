@@ -429,7 +429,7 @@ def assign_reward_orientation(
         Updated dataframe with 'Reward_Oriented' column.
     """
     df = df.copy()
-    df["Reward_Oriented"] = np.nan
+    df["Reward_Oriented"] = None
 
     for sess in df[session_col].unique():
         df_sess = df[df[session_col] == sess]

@@ -158,7 +158,7 @@ def plot_surveillance_by_bout(
         data=median_df,
         errorbar="se",
         capsize=0.1,
-        errwidth=1.6,
+        err_kws={"linewidth": 1.6},
         palette=palette,
         edgecolor="black",
     )
