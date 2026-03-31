@@ -317,22 +317,22 @@ def evaluate_epoch_multi(
 
     return pd.Series(
         {
-            "Actual Reward Path %": actual_boot.mean(),
-            "Random Agent Reward Path %": random_boot.mean(),
-            "Binary Agent Reward Path %": binary_boot.mean(),
-            "Three/Four Way Agent Reward Path %": multi_boot.mean(),
-            "Actual Reward Path % CI Lower": np.percentile(actual_boot, 5),
-            "Actual Reward Path % CI Upper": np.percentile(actual_boot, 95),
-            "Random Agent Reward Path % CI Lower": np.percentile(random_boot, 5),
-            "Random Agent Reward Path % CI Upper": np.percentile(random_boot, 95),
-            "Binary Agent Reward Path % CI Lower": np.percentile(binary_boot, 5),
-            "Binary Agent Reward Path % CI Upper": np.percentile(binary_boot, 95),
-            "Three/Four Way Agent Reward Path % CI Lower": np.percentile(multi_boot, 5),
-            "Three/Four Way Agent Reward Path % CI Upper": np.percentile(multi_boot, 95),
-            "Relative Performance (Actual/Random)": (
+            "actual_reward_path_pct": actual_boot.mean(),
+            "random_agent_reward_path_pct": random_boot.mean(),
+            "binary_agent_reward_path_pct": binary_boot.mean(),
+            "three_four_way_agent_reward_path_pct": multi_boot.mean(),
+            "actual_reward_path_pct_ci_lower": np.percentile(actual_boot, 5),
+            "actual_reward_path_pct_ci_upper": np.percentile(actual_boot, 95),
+            "random_agent_reward_path_pct_ci_lower": np.percentile(random_boot, 5),
+            "random_agent_reward_path_pct_ci_upper": np.percentile(random_boot, 95),
+            "binary_agent_reward_path_pct_ci_lower": np.percentile(binary_boot, 5),
+            "binary_agent_reward_path_pct_ci_upper": np.percentile(binary_boot, 95),
+            "three_four_way_agent_reward_path_pct_ci_lower": np.percentile(multi_boot, 5),
+            "three_four_way_agent_reward_path_pct_ci_upper": np.percentile(multi_boot, 95),
+            "relative_performance_actual_random": (
                 actual_boot.mean() / random_boot.mean() if random_boot.mean() > 0 else np.nan
             ),
-            "Relative Performance (Actual/Binary)": (
+            "relative_performance_actual_binary": (
                 actual_boot.mean() / binary_boot.mean() if binary_boot.mean() > 0 else np.nan
             ),
         }
@@ -459,10 +459,10 @@ def plot_agent_vs_mouse_performance_multi(
     """
     # --- Constants ---
     x_col = "epoch_number"
-    y_col_actual = "Actual Reward Path %"
-    y_col_random = "Random Agent Reward Path %"
-    y_col_binary = "Binary Agent Reward Path %"
-    y_col_multi = "Three/Four Way Agent Reward Path %"
+    y_col_actual = "actual_reward_path_pct"
+    y_col_random = "random_agent_reward_path_pct"
+    y_col_binary = "binary_agent_reward_path_pct"
+    y_col_multi = "three_four_way_agent_reward_path_pct"
     title = "Mouse vs. Agent Reward Path Transition Proportion"
 
     # --- Filter sessions by genotype ---
@@ -575,10 +575,10 @@ def plot_cumulative_agent_comparison_boxplot_multi(
     """
     # --- Constants ---
     metric_cols = {
-        "Mouse": "Actual Reward Path %",
-        "Random Agent": "Random Agent Reward Path %",
-        "Binary Agent": "Binary Agent Reward Path %",
-        "3/4-Way Agent": "Three/Four Way Agent Reward Path %",
+        "Mouse": "actual_reward_path_pct",
+        "Random Agent": "random_agent_reward_path_pct",
+        "Binary Agent": "binary_agent_reward_path_pct",
+        "3/4-Way Agent": "three_four_way_agent_reward_path_pct",
     }
 
     # --- Filter sessions for the genotype ---
@@ -589,23 +589,23 @@ def plot_cumulative_agent_comparison_boxplot_multi(
     df_agg = df_filtered.groupby("session")[[*metric_cols.values()]].mean().reset_index()
 
     # --- Melt for plotting ---
-    df_melt = df_agg.melt(id_vars="session", var_name="Agent", value_name="Reward Path %")
-    df_melt["Agent"] = df_melt["Agent"].map({v: k for k, v in metric_cols.items()})
+    df_melt = df_agg.melt(id_vars="session", var_name="agent", value_name="reward_path_pct")
+    df_melt["agent"] = df_melt["agent"].map({v: k for k, v in metric_cols.items()})
 
     # --- Plot ---
     fig = plt.figure(figsize=figsize)
     sns.boxplot(
         data=df_melt,
-        x="Agent",
-        y="Reward Path %",
-        hue="Agent",
+        x="agent",
+        y="reward_path_pct",
+        hue="agent",
         palette="Set2",
         legend=False,
     )
     sns.stripplot(
         data=df_melt,
-        x="Agent",
-        y="Reward Path %",
+        x="agent",
+        y="reward_path_pct",
         color="black",
         size=4,
         jitter=True,

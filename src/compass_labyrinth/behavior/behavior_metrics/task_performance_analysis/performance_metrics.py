@@ -998,8 +998,8 @@ def run_fdr_pairwise_tests(entropy_df: pd.DataFrame) -> pd.DataFrame | None:
     reject, pvals_corrected, _, _ = multipletests(raw_pvals, alpha=0.05, method="fdr_bh")
 
     for i, r in enumerate(results):
-        r["FDR-p"] = pvals_corrected[i]
-        r["Significant"] = reject[i]
+        r["fdr_p"] = pvals_corrected[i]
+        r["significant"] = reject[i]
 
     return pd.DataFrame(results)
 

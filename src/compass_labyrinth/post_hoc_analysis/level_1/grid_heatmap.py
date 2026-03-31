@@ -40,7 +40,7 @@ def compute_state_proportion(
     Parameters
     -----------
     df : pd.DataFrame
-        DataFrame containing columns: 'genotype', 'grid_number', 'HMM_State', 'x', 'y'.
+        DataFrame containing columns: 'genotype', 'grid_number', 'hmm_state', 'x', 'y'.
     genotype_name : str
         Name of the genotype to filter.
     hmm_state : int
@@ -51,14 +51,14 @@ def compute_state_proportion(
     pd.DataFrame
         DataFrame with computed proportions for the specified genotype and HMM state.
     """
-    st_cnt = df.groupby(["genotype", "grid_number", "HMM_State"]).size().rename("cnt").reset_index()
+    st_cnt = df.groupby(["genotype", "grid_number", "hmm_state"]).size().rename("cnt").reset_index()
     gn_cnt = df.groupby(["genotype", "grid_number"]).size().rename("tot").reset_index()
     x_y = df.groupby(["genotype", "grid_number"]).agg({"x": "mean", "y": "mean"}).reset_index()
     state_count = st_cnt.merge(gn_cnt, on=["genotype", "grid_number"], how="left")
     state_count["prop"] = state_count["cnt"] / state_count["tot"]
     state_count = state_count.merge(x_y, on=["genotype", "grid_number"], how="left")
 
-    return state_count[(state_count.genotype == genotype_name) & (state_count["HMM_State"] == hmm_state)].reset_index(
+    return state_count[(state_count.genotype == genotype_name) & (state_count["hmm_state"] == hmm_state)].reset_index(
         drop=True
     )
 
@@ -83,7 +83,7 @@ def merge_state_proportions_to_grid(
 ) -> gpd.GeoDataFrame:
     """Merge state proportions to shapefile grid polygons."""
     prop_by_grid = df_props[["grid_number", "prop"]].copy()
-    prop_by_grid = prop_by_grid.rename(columns={"prop": "State1_Proportion"})
+    prop_by_grid = prop_by_grid.rename(columns={"prop": "state1_proportion"})
     return grid.merge(
         prop_by_grid,
         left_on="FID",
@@ -137,7 +137,7 @@ def plot_grid_heatmap(
     cax = divider.append_axes("right", size="5%", pad=0.1)
 
     grid.plot(
-        column="State1_Proportion",
+        column="state1_proportion",
         cmap=cmap,
         linewidth=0.8,
         ax=ax,
@@ -248,7 +248,7 @@ def plot_all_genotype_heatmaps(
         cax = divider.append_axes("right", size="5%", pad=0.1)
 
         grid_mapped.plot(
-            column="State1_Proportion",
+            column="state1_proportion",
             cmap=cmap,
             linewidth=0.8,
             ax=ax,
@@ -332,11 +332,11 @@ def overlay_trajectory_lines_plotly(
     None
     """
     df_geno = df_hmm[df_hmm["genotype"] == genotype_name].copy()
-    df_geno["Grid.Next"] = df_geno["grid_number"].shift(-1)
-    df_geno["Grid.Prev"] = df_geno["grid_number"]
-    transitions = df_geno[["Grid.Prev", "Grid.Next"]].dropna()
-    transitions = transitions[transitions["Grid.Prev"] != transitions["Grid.Next"]].astype(int)
-    transitions["pair"] = list(zip(transitions["Grid.Prev"], transitions["Grid.Next"]))
+    df_geno["grid_next"] = df_geno["grid_number"].shift(-1)
+    df_geno["grid_prev"] = df_geno["grid_number"]
+    transitions = df_geno[["grid_prev", "grid_next"]].dropna()
+    transitions = transitions[transitions["grid_prev"] != transitions["grid_next"]].astype(int)
+    transitions["pair"] = list(zip(transitions["grid_prev"], transitions["grid_next"]))
     trans_counts = transitions["pair"].value_counts()
 
     top_n = int(len(trans_counts) * top_percent)
@@ -418,11 +418,11 @@ def plot_interactive_heatmap(
 
     # Add grid cells as filled polygons
     for _, row in grid_mapped.iterrows():
-        if row.geometry is None or row["State1_Proportion"] is None:
+        if row.geometry is None or row["state1_proportion"] is None:
             continue
         x = list(row.geometry.exterior.xy[0])
         y = list(row.geometry.exterior.xy[1])
-        color_val = row["State1_Proportion"]
+        color_val = row["state1_proportion"]
         fillcolor = sample_colorscale("RdBu", [color_val])[0]  # RdBu reversed = blue to red
         fig.add_trace(
             go.Scatter(
@@ -430,11 +430,11 @@ def plot_interactive_heatmap(
                 y=y,
                 mode="lines",
                 fill="toself",
-                # fillcolor=f'rgba({255 * (1 - row["State1_Proportion"])},0,{255 * row["State1_Proportion"]},0.7)',
+                # fillcolor=f'rgba({255 * (1 - row["state1_proportion"])},0,{255 * row["state1_proportion"]},0.7)',
                 fillcolor=fillcolor,
                 line=dict(width=0.5, color="gray"),
                 hoverinfo="text",
-                text=f"Grid: {row['FID']}<br>Proportion: {row['State1_Proportion']:.2f}",
+                text=f"Grid: {row['FID']}<br>Proportion: {row['state1_proportion']:.2f}",
                 showlegend=False,
             )
         )

@@ -48,12 +48,12 @@ def ensure_velocity_column(
     pd.DataFrame
         Updated DataFrame with 'Velocity' column.
     """
-    if "Velocity" not in df.columns:
+    if "velocity" not in df.columns:
         if x_col in df.columns and y_col in df.columns:
             dx = df[x_col].diff()
             dy = df[y_col].diff()
             displacement = np.sqrt(dx**2 + dy**2)
-            df["Velocity"] = displacement * frame_rate
+            df["velocity"] = displacement * frame_rate
         else:
             raise ValueError(f"Missing '{x_col}' or '{y_col}' columns required to compute velocity.")
     return df
@@ -276,7 +276,7 @@ def plot_deviation_velocity_fit(
     if max_bouts:
         plt.xlim(0, max_bouts)
     else:
-        plt.xlim(0, df["Ind_no"].max() + 5)
+        plt.xlim(0, df["ind_no"].max() + 5)
 
     plt.legend(frameon=False)
     sns.despine()

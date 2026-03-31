@@ -72,7 +72,7 @@ def compute_surveillance_probabilities(
     Parameters
     -----------
     df_hmm : pd.DataFrame
-        Dataframe with 'genotype', 'session', 'HMM_State', 'grid_number', 'region', and 'bout_id'.
+        Dataframe with 'genotype', 'session', 'hmm_state', 'grid_number', 'region', and 'bout_id'.
     decision_nodes : str
         Type of decision node to consider for surveillance probability.
 
@@ -90,7 +90,7 @@ def compute_surveillance_probabilities(
 
         for bout_num, (_, bout_df) in enumerate(bouts, 1):
             success = "Successful" if "Target Zone" in bout_df["region"].values else "Unsuccessful"
-            state_probs = bout_df[bout_df["grid_number"].isin(decision_nodes_ids)]["HMM_State"].value_counts(
+            state_probs = bout_df[bout_df["grid_number"].isin(decision_nodes_ids)]["hmm_state"].value_counts(
                 normalize=True
             )
             prob_state_1 = state_probs.get(1, np.nan)
@@ -163,7 +163,7 @@ def plot_surveillance_by_bout(
         edgecolor="black",
     )
 
-    plt.xlabel("Bout Type", fontsize=12)
+    plt.xlabel("bout_type", fontsize=12)
     plt.ylabel("Surveillance Probability (State 1)", fontsize=12)
     plt.title("Surveillance Probability across Bout Types", fontsize=14)
     plt.xticks(fontsize=10)
@@ -204,10 +204,10 @@ def test_within_genotype_success(index_df):
             results.append(
                 {
                     "genotype": genotype,
-                    "Group 1": "Successful",
-                    "Group 2": "Unsuccessful",
-                    "T-stat": stat,
-                    "P-value": pval,
+                    "group_1": "Successful",
+                    "group_2": "Unsuccessful",
+                    "t_stat": stat,
+                    "p_value": pval,
                 }
             )
 
@@ -233,7 +233,7 @@ def test_across_genotypes_per_bout(
         if len(vals1) >= 2 and len(vals2) >= 2:
             stat, pval = ttest_ind(vals1, vals2, equal_var=False)
             results.append(
-                {"Bout Type": bout_type, "Genotype 1": g1, "Genotype 2": g2, "T-stat": stat, "P-value": pval}
+                {"bout_type": bout_type, "genotype_1": g1, "genotype_2": g2, "t_stat": stat, "p_value": pval}
             )
 
     return pd.DataFrame(results)
@@ -286,17 +286,17 @@ def run_within_genotype_mixedlm_with_fdr(median_df: pd.DataFrame) -> pd.DataFram
             coef = np.nan
             pval = np.nan
 
-        results.append({"genotype": genotype, "Effect: Successful vs Unsuccessful": coef, "P-value": pval})
+        results.append({"genotype": genotype, "effect_successful_vs_unsuccessful": coef, "p_value": pval})
 
     result_df = pd.DataFrame(results)
 
     # Apply FDR correction if valid
-    if not result_df.empty and result_df["P-value"].notna().sum() > 0:
-        reject, pvals_corrected, _, _ = multipletests(result_df["P-value"], method="fdr_bh")
-        result_df["FDR P-value"] = pvals_corrected
-        result_df["Significant (FDR < 0.05)"] = reject
+    if not result_df.empty and result_df["p_value"].notna().sum() > 0:
+        reject, pvals_corrected, _, _ = multipletests(result_df["p_value"], method="fdr_bh")
+        result_df["fdr_p_value"] = pvals_corrected
+        result_df["significant_fdr_005"] = reject
     else:
-        result_df["FDR P-value"] = np.nan
-        result_df["Significant (FDR < 0.05)"] = False
+        result_df["fdr_p_value"] = np.nan
+        result_df["significant_fdr_005"] = False
 
     return result_df

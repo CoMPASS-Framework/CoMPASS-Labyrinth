@@ -36,7 +36,7 @@ def compute_state_probability(
     Parameters
     -----------
     df_hmm: pd.DataFrame
-        Dataframe with 'genotype', 'session', 'HMM_State', and category column.
+        Dataframe with 'genotype', 'session', 'hmm_state', and category column.
     column_of_interest: str
         'node_type' or 'region'.
     values_displayed: Optional[List[str]]
@@ -62,14 +62,14 @@ def compute_state_probability(
 
     # Compute state occurrence counts
     st_cnt = (
-        df_plot.groupby(["genotype", column_of_interest, "session", "HMM_State"]).size().rename("cnt").reset_index()
+        df_plot.groupby(["genotype", column_of_interest, "session", "hmm_state"]).size().rename("cnt").reset_index()
     )
     gn_cnt = df_plot.groupby(["genotype", column_of_interest, "session"]).size().rename("tot").reset_index()
     state_count = st_cnt.merge(gn_cnt, on=[column_of_interest, "genotype", "session"], how="left")
     state_count["prop"] = state_count["cnt"] / state_count["tot"]
 
     # Filter for target HMM state and reorder
-    state_count = state_count[state_count["HMM_State"] == state].copy()
+    state_count = state_count[state_count["hmm_state"] == state].copy()
     if values_displayed:
         state_count = state_count[state_count[column_of_interest].isin(values_displayed)].reset_index(drop=True)
         state_count[column_of_interest] = pd.Categorical(
@@ -181,6 +181,6 @@ def run_pairwise_ttests(
             values2 = subset[subset["genotype"] == g2]["prop"].dropna()
             if len(values1) >= 2 and len(values2) >= 2:
                 t_stat, p_val = ttest_ind(values1, values2, equal_var=False)
-                results.append({"Group": group, "genotype1": g1, "genotype2": g2, "T-stat": t_stat, "P-value": p_val})
+                results.append({"group": group, "genotype1": g1, "genotype2": g2, "t_stat": t_stat, "p_value": p_val})
 
     return pd.DataFrame(results)

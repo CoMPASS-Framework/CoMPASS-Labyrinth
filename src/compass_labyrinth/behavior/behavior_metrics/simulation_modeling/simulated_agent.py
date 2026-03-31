@@ -169,13 +169,13 @@ def compute_epoch_metrics(
             {
                 k: np.nan
                 for k in [
-                    "Actual Reward Path %",
-                    "Simulated Agent Reward Path %",
-                    "Actual Reward Path % CI Lower",
-                    "Actual Reward Path % CI Upper",
-                    "Simulated Agent Reward Path % CI Lower",
-                    "Simulated Agent Reward Path % CI Upper",
-                    "Relative Performance",
+                    "actual_reward_path_pct",
+                    "simulated_agent_reward_path_pct",
+                    "actual_reward_path_pct_ci_lower",
+                    "actual_reward_path_pct_ci_upper",
+                    "simulated_agent_reward_path_pct_ci_lower",
+                    "simulated_agent_reward_path_pct_ci_upper",
+                    "relative_performance",
                 ]
             }
         )
@@ -187,13 +187,13 @@ def compute_epoch_metrics(
             {
                 k: np.nan
                 for k in [
-                    "Actual Reward Path %",
-                    "Simulated Agent Reward Path %",
-                    "Actual Reward Path % CI Lower",
-                    "Actual Reward Path % CI Upper",
-                    "Simulated Agent Reward Path % CI Lower",
-                    "Simulated Agent Reward Path % CI Upper",
-                    "Relative Performance",
+                    "actual_reward_path_pct",
+                    "simulated_agent_reward_path_pct",
+                    "actual_reward_path_pct_ci_lower",
+                    "actual_reward_path_pct_ci_upper",
+                    "simulated_agent_reward_path_pct_ci_lower",
+                    "simulated_agent_reward_path_pct_ci_upper",
+                    "relative_performance",
                 ]
             }
         )
@@ -203,13 +203,13 @@ def compute_epoch_metrics(
 
     return pd.Series(
         {
-            "Actual Reward Path %": np.mean(actual_dist),
-            "Simulated Agent Reward Path %": np.mean(simulated_dist),
-            "Actual Reward Path % CI Lower": np.percentile(actual_dist, 5),
-            "Actual Reward Path % CI Upper": np.percentile(actual_dist, 95),
-            "Simulated Agent Reward Path % CI Lower": np.percentile(simulated_dist, 5),
-            "Simulated Agent Reward Path % CI Upper": np.percentile(simulated_dist, 95),
-            "Relative Performance": (
+            "actual_reward_path_pct": np.mean(actual_dist),
+            "simulated_agent_reward_path_pct": np.mean(simulated_dist),
+            "actual_reward_path_pct_ci_lower": np.percentile(actual_dist, 5),
+            "actual_reward_path_pct_ci_upper": np.percentile(actual_dist, 95),
+            "simulated_agent_reward_path_pct_ci_lower": np.percentile(simulated_dist, 5),
+            "simulated_agent_reward_path_pct_ci_upper": np.percentile(simulated_dist, 95),
+            "relative_performance": (
                 np.mean(actual_dist) / np.mean(simulated_dist) if np.mean(simulated_dist) > 0 else np.nan
             ),
         }
@@ -411,7 +411,7 @@ def plot_agent_transition_performance(
         sns.lineplot(
             data=df_result,
             x="epoch_number",
-            y="Actual Reward Path %",
+            y="actual_reward_path_pct",
             marker="o",
             label="Mouse",
             color="black",
@@ -420,7 +420,7 @@ def plot_agent_transition_performance(
         sns.lineplot(
             data=df_result,
             x="epoch_number",
-            y="Simulated Agent Reward Path %",
+            y="simulated_agent_reward_path_pct",
             linestyle="dashed",
             label="Simulated Agent",
             color="navy",
@@ -510,7 +510,7 @@ def plot_relative_agent_performance(
         sns.lineplot(
             data=df_result,
             x="epoch_number",
-            y="Relative Performance",
+            y="relative_performance",
             marker="o",
             color="black",
             ax=ax,
@@ -525,7 +525,7 @@ def plot_relative_agent_performance(
         ax.set_xlabel("Epochs (in Maze)")
         ax.set_ylabel("Relative Performance (Mouse / Simulated)")
         ax.set_title(f"{genotype}: Mouse vs. Simulated Agent - Relative Performance Over Time")
-        ax.legend(["Relative Performance", "Simulated Agent Baseline"])
+        ax.legend(["relative_performance", "Simulated Agent Baseline"])
         ax.grid(True)
         plt.tight_layout()
 
@@ -554,14 +554,14 @@ def fit_mixed_effects_model(df_long: pd.DataFrame) -> tuple:
     Parameters
     -----------
     df_long : pd.DataFrame
-        Long-form DataFrame with columns 'AgentType', 'Performance', and session info.
+        Long-form DataFrame with columns 'agent_type', 'performance', and session info.
 
     Returns
     --------
     tuple
         Tuple with result (Fitted model object) and p_value (P-value for AgentType effect).
     """
-    model = mixedlm("Performance ~ AgentType", df_long, groups=df_long["session"])
+    model = mixedlm("performance ~ agent_type", df_long, groups=df_long["session"])
     result = model.fit()
 
     # Automatically detect which coefficient relates to the simulated agent
@@ -588,7 +588,7 @@ def plot_agent_performance_boxplot(df_long: pd.DataFrame, p_value: float, palett
     None
     """
     plt.figure(figsize=(6, 6))
-    sns.boxplot(x="AgentType", y="Performance", data=df_long, palette=palette, showfliers=False)
+    sns.boxplot(x="agent_type", y="performance", data=df_long, palette=palette, showfliers=False)
 
     plt.title(f"Performance: Mouse vs. Simulated Agent (across sessions)\n LMM p-value = {p_value:.4f}", fontsize=13)
     plt.xlabel("Agent Type", fontsize=11)
@@ -610,7 +610,7 @@ def reshape_for_mixedlm(df_results: pd.DataFrame) -> pd.DataFrame:
     Parameters
     -----------
     df_results : pd.DataFrame
-        DataFrame with columns 'Actual Reward Path %', 'Simulated Agent Reward Path %',
+        DataFrame with columns 'actual_reward_path_pct', 'simulated_agent_reward_path_pct',
         'session', 'epoch_number' and 'genotype'.
 
     Returns
@@ -621,11 +621,11 @@ def reshape_for_mixedlm(df_results: pd.DataFrame) -> pd.DataFrame:
     df_long = pd.melt(
         df_results,
         id_vars=["session", "epoch_number", "genotype"],
-        value_vars=["Actual Reward Path %", "Simulated Agent Reward Path %"],
-        var_name="AgentType",
-        value_name="Performance",
+        value_vars=["actual_reward_path_pct", "simulated_agent_reward_path_pct"],
+        var_name="agent_type",
+        value_name="performance",
     )
-    df_long = df_long.dropna(subset=["Performance"])
+    df_long = df_long.dropna(subset=["performance"])
     df_long["session"] = df_long["session"].astype(str)
     return df_long.reset_index(drop=True)
 
@@ -647,7 +647,7 @@ def fit_mixed_effects_model(df_long: pd.DataFrame) -> tuple:
     tuple
         Tuple with result (Fitted model object) and p_value (P-value for AgentType effect).
     """
-    model = mixedlm("Performance ~ AgentType", df_long, groups=df_long["session"])
+    model = mixedlm("performance ~ agent_type", df_long, groups=df_long["session"])
     result = model.fit()
     coef_key = [key for key in result.pvalues.keys() if "Simulated Agent" in key]
     p_value = result.pvalues.get(coef_key[0], np.nan) if coef_key else np.nan
@@ -684,7 +684,7 @@ def plot_agent_performance_boxplot_ax(
     --------
     None
     """
-    sns.boxplot(x="AgentType", y="Performance", data=df_long, palette=palette, showfliers=False, ax=ax)
+    sns.boxplot(x="agent_type", y="performance", data=df_long, palette=palette, showfliers=False, ax=ax)
     title = f"Mouse vs. Agent Performance\n{genotype} | LMM p = {p_value:.4f}"
     ax.set_title(title, fontsize=11)
     ax.set_xlabel("Agent Type", fontsize=10)
@@ -778,18 +778,18 @@ def compute_chi_square_statistic(df: pd.DataFrame) -> pd.DataFrame:
     Parameters
     -----------
     df : pd.DataFrame
-        DataFrame with columns 'Actual Reward Path %' and 'Simulated Agent Reward Path %'.
+        DataFrame with columns 'actual_reward_path_pct' and 'simulated_agent_reward_path_pct'.
 
     Returns
     --------
     pd.DataFrame
-        Updated DataFrame with 'Chi Square Statistic' and cleaned column types.
+        Updated DataFrame with 'chi_square_statistic' and cleaned column types.
     """
     df = df.copy()
-    chi_square = ((df["Actual Reward Path %"] - df["Simulated Agent Reward Path %"]) ** 2) / df[
-        "Simulated Agent Reward Path %"
+    chi_square = ((df["actual_reward_path_pct"] - df["simulated_agent_reward_path_pct"]) ** 2) / df[
+        "simulated_agent_reward_path_pct"
     ]
-    df["Chi Square Statistic"] = chi_square
+    df["chi_square_statistic"] = chi_square
     # Ensure consistent types
     if "epoch_number" in df.columns:
         df["epoch_number"] = df["epoch_number"].astype(int)
@@ -805,17 +805,17 @@ def compute_rolling_chi_square(df: pd.DataFrame, window: int = 3) -> pd.DataFram
     Patameters:
     -----------
     df : pd.DataFrame
-        DataFrame with 'Chi Square Statistic' column.
+        DataFrame with 'chi_square_statistic' column.
     window : int
         Window size for rolling average.
 
     Returns
     --------
     pd.DataFrame
-        Updated DataFrame with 'Rolling Chi Square' column.
+        Updated DataFrame with 'rolling_chi_square' column.
     """
     df = df.copy()
-    df["Rolling Chi Square"] = df.groupby("session")["Chi Square Statistic"].transform(
+    df["rolling_chi_square"] = df.groupby("session")["chi_square_statistic"].transform(
         lambda x: x.rolling(window=window, min_periods=1).mean()
     )
     return df
@@ -828,15 +828,15 @@ def compute_cumulative_chi_square(df: pd.DataFrame) -> pd.DataFrame:
     Parameters
     -----------
     df : pd.DataFrame
-        DataFrame with 'Chi Square Statistic' column.
+        DataFrame with 'chi_square_statistic' column.
 
     Returns
     --------
     pd.DataFrame
-        Updated DataFrame with 'Cumulative Chi Square' column.
+        Updated DataFrame with 'cumulative_chi_square' column.
     """
     df = df.copy()
-    df["Cumulative Chi Square"] = df.groupby("session")["Chi Square Statistic"].cumsum()
+    df["cumulative_chi_square"] = df.groupby("session")["chi_square_statistic"].cumsum()
     return df
 
 
@@ -867,8 +867,8 @@ def plot_chi_square_and_rolling(
     config: dict,
     chisquare_results: dict,
     epoch_col: str = "epoch_number",
-    chi_col: str = "Chi Square Statistic",
-    rolling_col: str = "Rolling Chi Square",
+    chi_col: str = "chi_square_statistic",
+    rolling_col: str = "rolling_chi_square",
     save_fig: bool = True,
     show_fig: bool = True,
     return_fig: bool = False,
@@ -961,7 +961,7 @@ def plot_rolling_mean(
     config: dict,
     chisquare_results: dict,
     epoch_col: str = "epoch_number",
-    rolling_col: str = "Rolling Chi Square",
+    rolling_col: str = "rolling_chi_square",
     save_fig: bool = True,
     show_fig: bool = True,
     return_fig: bool = False,
@@ -1042,7 +1042,7 @@ def plot_cumulative_chi_square(
     config: dict,
     chisquare_results: dict,
     epoch_col: str = "epoch_number",
-    cum_col: str = "Cumulative Chi Square",
+    cum_col: str = "cumulative_chi_square",
     save_fig: bool = True,
     show_fig: bool = True,
     return_fig: bool = False,

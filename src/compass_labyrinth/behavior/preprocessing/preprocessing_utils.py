@@ -168,7 +168,7 @@ def compile_mouse_sessions(
                 region_mapping,
             )
 
-        df["Session"] = session_num
+        df["session"] = session_num
         li_group.append(df)
 
     if not li_group:
@@ -188,13 +188,13 @@ def compile_mouse_sessions(
         session_to_genotype = dict(
             cohort_metadata[[session_col, genotype_col]].drop_duplicates().values
         )
-        df_comb["Genotype"] = df_comb["Session"].map(session_to_genotype)
+        df_comb["genotype"] = df_comb["session"].map(session_to_genotype)
 
     if sex_col is not None:
         session_to_sex = dict(
             cohort_metadata[[session_col, sex_col]].drop_duplicates().values
         )
-        df_comb["Sex"] = df_comb["Session"].map(session_to_sex)
+        df_comb["sex"] = df_comb["session"].map(session_to_sex)
 
     if missing_sessions:
         missing_sessions_sorted = sorted(missing_sessions)
