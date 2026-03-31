@@ -55,7 +55,7 @@ def loso_kde_cv(df: pd.DataFrame, smoothing_factors: list) -> float:
     return best_sigma
 
 
-def compute_kde_scaled(df, best_sigma, kde_col="KDE"):
+def compute_kde_scaled(df, best_sigma, kde_col="kde"):
     df = df.copy()
     df[kde_col] = np.nan
     scaler = MinMaxScaler((0, 3))
@@ -78,7 +78,7 @@ def compute_kde_scaled(df, best_sigma, kde_col="KDE"):
     return df
 
 
-def plot_kde_per_session(df: pd.DataFrame, best_sigma: float, kde_col: str = "KDE") -> None:
+def plot_kde_per_session(df: pd.DataFrame, best_sigma: float, kde_col: str = "kde") -> None:
     for session in df["session"].unique():
         sess_df = df[df["session"] == session]
         if len(sess_df) < 5:
@@ -138,7 +138,7 @@ def calculate_deviation(row):
         return np.nan
 
     vector = np.array([row["dx"], row["dy"]])
-    ref_vec = np.array(get_reference_vector(row["Reference_axis"]))
+    ref_vec = np.array(get_reference_vector(row["reference_axis"]))
 
     if np.linalg.norm(vector) == 0 or np.linalg.norm(ref_vec) == 0:
         return np.nan
@@ -157,17 +157,17 @@ def compute_angle_deviation(df: pd.DataFrame, rolling_window: int) -> pd.DataFra
         # Unsmoothed angle deviation
         df_sess["dx"] = df_sess["x"].diff()
         df_sess["dy"] = df_sess["y"].diff()
-        df_sess["Targeted_Angle"] = df_sess.apply(calculate_deviation, axis=1)
+        df_sess["targeted_angle"] = df_sess.apply(calculate_deviation, axis=1)
         # Smoothed angle deviation
         df_sess["dx_smooth"] = df_sess["dx"].rolling(rolling_window, center=True, min_periods=1).mean()
         df_sess["dy_smooth"] = df_sess["dy"].rolling(rolling_window, center=True, min_periods=1).mean()
-        df_sess["Targeted_Angle_smooth"] = df_sess.apply(calculate_deviation, axis=1)
+        df_sess["targeted_angle_smooth"] = df_sess.apply(calculate_deviation, axis=1)
         li_sess.append(df_sess)
 
     df_result = pd.concat(li_sess)
-    df_result["Targeted_Angle_abs"] = np.abs(df_result["Targeted_Angle"])
-    df_result["Targeted_Angle_smooth_abs"] = np.abs(df_result["Targeted_Angle_smooth"])
-    df_result = df_result.dropna(subset=["Targeted_Angle_abs", "Targeted_Angle_smooth_abs"]).reset_index(drop=True)
+    df_result["targeted_angle_abs"] = np.abs(df_result["targeted_angle"])
+    df_result["targeted_angle_smooth_abs"] = np.abs(df_result["targeted_angle_smooth"])
+    df_result = df_result.dropna(subset=["targeted_angle_abs", "targeted_angle_smooth_abs"]).reset_index(drop=True)
     return df_result
 
 
@@ -175,10 +175,10 @@ def assign_reference_info(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     close_ref_dict = CLOSE_REF
     xy_mapping = X_Y_MAPPING
-    df["Closest_Node"] = df["grid_number"].apply(lambda x: map_category(x, close_ref_dict))
-    df["x_mean"] = df.groupby("Closest_Node")["x"].transform("mean")
-    df["y_mean"] = df.groupby("Closest_Node")["y"].transform("mean")
-    df["Reference_axis"] = df["grid_number"].apply(lambda x: map_category(x, xy_mapping))
+    df["closest_node"] = df["grid_number"].apply(lambda x: map_category(x, close_ref_dict))
+    df["x_mean"] = df.groupby("closest_node")["x"].transform("mean")
+    df["y_mean"] = df.groupby("closest_node")["y"].transform("mean")
+    df["reference_axis"] = df["grid_number"].apply(lambda x: map_category(x, xy_mapping))
     return df
 
 
@@ -194,7 +194,7 @@ def compute_center_coordinates(df: pd.DataFrame, grid_nodes: list) -> tuple:
     return x_mean, y_mean
 
 
-def compute_euclidean_distance(df, center_x, center_y, out_col="Targeted_Distance"):
+def compute_euclidean_distance(df, center_x, center_y, out_col="targeted_distance"):
     """
     Compute Euclidean distance from each (x, y) to a center (x_mean, y_mean).
     """
@@ -221,9 +221,9 @@ def merge_value_map(df: pd.DataFrame, value_map: pd.DataFrame) -> pd.DataFrame:
 
 def compute_weighted_and_normalized_distance(
     df: pd.DataFrame,
-    distance_col: str = "Targeted_Distance",
+    distance_col: str = "targeted_distance",
     value_col: str = "value",
-    out_col: str = "VB_Distance",
+    out_col: str = "vb_distance",
     norm_range: tuple = (0, 3),
 ) -> pd.DataFrame:
     """

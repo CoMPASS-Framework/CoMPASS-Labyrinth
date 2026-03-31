@@ -309,7 +309,7 @@ class TestPerformanceMetrics:
         )
         assert isinstance(df_all_csv_wvelocity, pd.DataFrame)
         assert not df_all_csv_wvelocity.empty
-        assert "Velocity" in df_all_csv_wvelocity.columns
+        assert "velocity" in df_all_csv_wvelocity.columns
 
         # Ensure Bout Index column bout_id exists
         df_all_csv_wbouts = ensure_bout_indices(

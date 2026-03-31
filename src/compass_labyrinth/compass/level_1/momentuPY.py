@@ -564,9 +564,9 @@ def fit_best_hmm(
 
                     # attach states/posteriors back to the original df rows
                     out = preproc_df.copy()
-                    out["HMM_State"] = np.nan
+                    out["hmm_state"] = np.nan
                     for s in range(model.S):
-                        out[f"Post_Prob_{s+1}"] = np.nan
+                        out[f"post_prob_{s+1}"] = np.nan
                     # valid mask (same as fit)
                     m = np.isfinite(preproc_df["step"].to_numpy(float)) & np.isfinite(
                         (
@@ -575,9 +575,9 @@ def fit_best_hmm(
                             else preproc_df["angle"].to_numpy(float)
                         )
                     )
-                    out.loc[m, "HMM_State"] = (model.viterbi_ + 1).astype(int)  # 1/2 labeling
+                    out.loc[m, "hmm_state"] = (model.viterbi_ + 1).astype(int)  # 1/2 labeling
                     # for s in range(model.S):      # Optional add the State Probs
-                    #     out.loc[m, f"Post_Prob_{s+1}"] = model.posterior_[:, s]
+                    #     out.loc[m, f"post_prob_{s+1}"] = model.posterior_[:, s]
 
                     candidates.append((model, out, summ))
 

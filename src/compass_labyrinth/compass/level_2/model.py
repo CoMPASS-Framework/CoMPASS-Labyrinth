@@ -213,7 +213,7 @@ def run_compass(
                 if best_model is not None:
                     X_test = df_test[features].values
                     df_test = df_test.copy()
-                    df_test["Level_2_States"] = best_model.predict(X_test)
+                    df_test["level_2_states"] = best_model.predict(X_test)
                     final_sess_data.append(df_test)
 
                 tag = f"Session:{test_sess}_PhaseIndex:{phase_index+1}_NumPhases:{n_phases}_Patience:{best_patience}"
@@ -302,7 +302,7 @@ def visualize_cv_results(
 ################################################################
 # Observe the raw state sequence
 ################################################################
-def get_unique_states(df, state_col="Level_2_States"):
+def get_unique_states(df, state_col="level_2_states"):
     """Return sorted unique states from the specified column."""
     return sorted(df[state_col].dropna().unique())
 
@@ -315,7 +315,7 @@ def generate_state_color_map(unique_states, palette="tab10"):
 
 def plot_state_sequence_for_session(
     df_session: pd.DataFrame,
-    state_col: str = "Level_2_States",
+    state_col: str = "level_2_states",
     color_map: None | dict = None,
     title_prefix: str = "State Sequence",
 ) -> plt.Figure:
@@ -349,7 +349,7 @@ def plot_state_sequences(
     config: dict,
     df: pd.DataFrame,
     genotype: str = "WT-WT",
-    state_col: str = "Level_2_States",
+    state_col: str = "level_2_states",
     sessions_to_plot: str | list | int = "all",  # Can be 'all', a list of session IDs, or an int (top n)
     title_prefix: str = "State Sequence",
     save_fig: bool = True,
@@ -404,8 +404,8 @@ def plot_state_sequences(
 ################################################################
 def assign_reward_orientation(
     df: pd.DataFrame,
-    angle_col: str = "Targeted_Angle_smooth_abs",
-    level_2_state_col: str = "Level_2_States",
+    angle_col: str = "targeted_angle_smooth_abs",
+    level_2_state_col: str = "level_2_states",
     session_col: str = "session",
 ) -> pd.DataFrame:
     """
@@ -426,10 +426,10 @@ def assign_reward_orientation(
     Returns
     --------
     pd.DataFrame
-        Updated dataframe with 'Reward_Oriented' column.
+        Updated dataframe with 'reward_oriented' column.
     """
     df = df.copy()
-    df["Reward_Oriented"] = None
+    df["reward_oriented"] = None
 
     for sess in df[session_col].unique():
         df_sess = df[df[session_col] == sess]
@@ -439,10 +439,10 @@ def assign_reward_orientation(
         if len(state_medians) == 2:
             reward_state = state_medians.idxmin()
             non_reward_state = state_medians.idxmax()
-            df.loc[(df[session_col] == sess) & (df[level_2_state_col] == reward_state), "Reward_Oriented"] = (
+            df.loc[(df[session_col] == sess) & (df[level_2_state_col] == reward_state), "reward_oriented"] = (
                 "Reward Oriented"
             )
-            df.loc[(df[session_col] == sess) & (df[level_2_state_col] == non_reward_state), "Reward_Oriented"] = (
+            df.loc[(df[session_col] == sess) & (df[level_2_state_col] == non_reward_state), "reward_oriented"] = (
                 "Non-Reward Oriented"
             )
 
@@ -457,13 +457,13 @@ def assign_reward_orientation(
             else:
                 middle_label = "Non-Reward Oriented"
 
-            df.loc[(df[session_col] == sess) & (df[level_2_state_col] == reward_state), "Reward_Oriented"] = (
+            df.loc[(df[session_col] == sess) & (df[level_2_state_col] == reward_state), "reward_oriented"] = (
                 "Reward Oriented"
             )
-            df.loc[(df[session_col] == sess) & (df[level_2_state_col] == non_reward_state), "Reward_Oriented"] = (
+            df.loc[(df[session_col] == sess) & (df[level_2_state_col] == non_reward_state), "reward_oriented"] = (
                 "Non-Reward Oriented"
             )
-            df.loc[(df[session_col] == sess) & (df[level_2_state_col] == middle_state), "Reward_Oriented"] = (
+            df.loc[(df[session_col] == sess) & (df[level_2_state_col] == middle_state), "reward_oriented"] = (
                 middle_label
             )
 
@@ -491,7 +491,7 @@ def assign_hhmm_state(
     Returns
     --------
     df : pd.DataFrame
-        DataFrame with an additional 'HHMM State' column indicating the final HHMM state.
+        DataFrame with an additional 'hhmm_state' column indicating the final HHMM state.
     """
     # Define the conditions for assigning the HHMM states
     conds = [
@@ -510,7 +510,7 @@ def assign_hhmm_state(
     ]
 
     # Set the default value as 'NaN' (string) to match the data type of the labels
-    df["HHMM State"] = np.select(conds, labels, default="NaN")
+    df["hhmm_state"] = np.select(conds, labels, default="NaN")
 
     return df
 
@@ -522,7 +522,7 @@ def plot_hhmm_state_sequence(
     config: dict,
     df: pd.DataFrame,
     session_col: str = "session",
-    state_col: str = "HHMM State",
+    state_col: str = "hhmm_state",
     session_id: None | int = None,
     title_prefix: str = "State Sequence",
     colors: None | dict = None,

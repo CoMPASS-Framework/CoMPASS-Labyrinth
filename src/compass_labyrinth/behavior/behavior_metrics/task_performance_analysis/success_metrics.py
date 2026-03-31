@@ -435,8 +435,8 @@ def run_pairwise_comparisons(summary_df: pd.DataFrame) -> None:
         all_results = pd.concat(results, ignore_index=True)
         # Apply FDR correction
         reject, pvals_corrected, _, _ = multipletests(all_results["p-adj"], method="fdr_bh")
-        all_results["FDR_p"] = pvals_corrected
-        all_results["Significant"] = reject
+        all_results["fdr_p"] = pvals_corrected
+        all_results["significant"] = reject
         print(all_results)
     else:
         print("No pairwise comparisons could be performed.")

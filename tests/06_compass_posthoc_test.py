@@ -132,7 +132,7 @@ class TestCompasPosthocAnalysis:
         )
 
         # Step 2: Optional filter to only plot early session bins
-        deci_df = deci_df.loc[deci_df.Time_Bins < threshold]
+        deci_df = deci_df.loc[deci_df.time_bins < threshold]
 
         # Step 3: Plot time-evolving median probability curves
         fig = plot_node_state_median_curve(

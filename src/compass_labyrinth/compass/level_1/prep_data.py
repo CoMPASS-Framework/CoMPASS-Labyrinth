@@ -112,16 +112,16 @@ def prep_data(
         raise ValueError("coordNames not found in data")
 
     # Sort data by ID, session, and S_no, and remove rows with missing values
-    data["ID"] = data["session"].astype("category")
-    data = data.sort_values(by=["ID", "session", "s_no"]).dropna().reset_index(drop=True)
+    data["id"] = data["session"].astype("category")
+    data = data.sort_values(by=["id", "session", "s_no"]).dropna().reset_index(drop=True)
 
     # ID handling
-    if "ID" in data.columns:
-        ID = data["ID"].astype(str)
+    if "id" in data.columns:
+        ID = data["id"].astype(str)
     else:
-        ID = pd.Series(["Animal1"] * len(data), name="ID")
+        ID = pd.Series(["Animal1"] * len(data), name="id")
         data = data.copy()
-        data["ID"] = ID
+        data["id"] = ID
 
     # Validate contiguity per ID (assumes data already grouped/contiguous per ID like in R)
     # If not contiguous, won't reorder automatically; user should sort beforehand.
@@ -150,13 +150,13 @@ def prep_data(
     # Forward fill covariates per ID
     if cov_all:
         df[cov_all] = (
-            df.groupby("ID", sort=False)[cov_all].apply(lambda g: g.ffill().bfill()).reset_index(level=0, drop=True)
+            df.groupby("id", sort=False)[cov_all].apply(lambda g: g.ffill().bfill()).reset_index(level=0, drop=True)
         )
 
     # Step & angle per ID
     coord_type = "LL" if type.upper() == "LL" else "UTM"
 
-    for _id, g in df.groupby("ID", sort=False, observed=False):
+    for _id, g in df.groupby("id", sort=False, observed=False):
         idx = g.index
         x = g[xcol].to_numpy()
         y = g[ycol].to_numpy()
@@ -189,7 +189,7 @@ def prep_data(
             df[dist_col] = np.nan
             df[ang_col] = np.nan
         # compute per row with previous point (like R: distance/angle uses prev->cur and cur->center)
-        for _id, g in df.groupby("ID", sort=False, observed=False):
+        for _id, g in df.groupby("id", sort=False, observed=False):
             idx = g.index
             x = g[xcol].to_numpy()
             y = g[ycol].to_numpy()
@@ -227,7 +227,7 @@ def prep_data(
             df[dcol] = np.nan
             df[acol] = np.nan
 
-            for _id, g in df.groupby("ID", sort=False, observed=False):
+            for _id, g in df.groupby("id", sort=False, observed=False):
                 idx = g.index
                 x = g[xcol].to_numpy()
                 y = g[ycol].to_numpy()
@@ -248,7 +248,7 @@ def prep_data(
             df.drop(columns=[f"__{name}_x", f"__{name}_y"], inplace=True)
 
     # Arrange final column order similar to R: ID, step, angle, covariates, coords (+ any added center/centroid cols)
-    base_cols = ["ID", "step", "angle"]
+    base_cols = ["id", "step", "angle"]
     keep_covs = cov_all
     extra_cols = [c for c in df.columns if c.endswith(".dist") or c.endswith(".angle")]
     coord_cols = [out_x, out_y]
@@ -258,7 +258,7 @@ def prep_data(
     df = df[ordered + remainder]
 
     # cast ID to category like the R factor
-    df["ID"] = df["ID"].astype("category")
+    df["id"] = df["id"].astype("category")
 
     df.attrs["coords"] = coord_cols
 

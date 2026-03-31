@@ -11,7 +11,7 @@ from scipy.ndimage import gaussian_filter
 # ----------------------------
 # KDE Plot per Session
 # ----------------------------
-def plot_kde_per_session(df, best_sigma, kde_col="KDE"):
+def plot_kde_per_session(df, best_sigma, kde_col="kde"):
     for session in df["session"].unique():
         sess_df = df[df["session"] == session]
         if len(sess_df) < 5:
@@ -163,7 +163,7 @@ def compute_detailed_bout_summary(
     df: pd.DataFrame,
     feature_cols: list[str],
     node_filter: str = "Decision (Reward)",
-    state_col: str = "HMM State",
+    state_col: str = "hmm_state",
     target_zone: str = "Target Zone",
     valid_bout_threshold: int = 10,
     bout_col: str = "bout_id",
