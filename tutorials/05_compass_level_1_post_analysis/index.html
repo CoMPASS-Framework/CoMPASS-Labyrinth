@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -33,7 +33,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1800,13 +1800,13 @@
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">compass_labyrinth</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_project</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">project_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;my_project_2&quot;</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">project_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"my_project_2"</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># Import config and metadata</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">config</span><span class="p">,</span> <span class="n">cohort_metadata</span> <span class="o">=</span> <span class="n">load_project</span><span class="p">(</span><span class="n">project_path</span><span class="o">=</span><span class="n">project_path</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="load-the-hmm-results">Load the HMM results<a class="headerlink" href="#load-the-hmm-results" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">df_hmm</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">project_path</span> <span class="o">/</span> <span class="s2">&quot;results&quot;</span> <span class="o">/</span> <span class="s2">&quot;compass_level_1&quot;</span> <span class="o">/</span> <span class="s2">&quot;data_with_states.csv&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">df_hmm</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">project_path</span> <span class="o">/</span> <span class="s2">"results"</span> <span class="o">/</span> <span class="s2">"compass_level_1"</span> <span class="o">/</span> <span class="s2">"data_with_states.csv"</span><span class="p">)</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">df_hmm</span>
 </span></code></pre></div>
 <div>
@@ -2098,8 +2098,8 @@
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">plot_grid_heatmap</span><span class="p">,</span>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">)</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">genotype_name</span> <span class="o">=</span> <span class="s1">&#39;WT&#39;</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">grid_filename</span> <span class="o">=</span> <span class="s2">&quot;Session-3 grid.shp&quot;</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">genotype_name</span> <span class="o">=</span> <span class="s1">'WT'</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">grid_filename</span> <span class="o">=</span> <span class="s2">"Session-3 grid.shp"</span>
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
 </span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="c1"># Step 1: Compute HMM state proportions by grid</span>
 </span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="n">state_df</span> <span class="o">=</span> <span class="n">compute_state_proportion</span><span class="p">(</span>
@@ -2125,12 +2125,12 @@
 </span><span id="__span-2-33"><a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
 </span><span id="__span-2-34"><a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>    <span class="n">grid</span><span class="o">=</span><span class="n">grid_mapped</span><span class="p">,</span>
 </span><span id="__span-2-35"><a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>    <span class="n">genotype_name</span><span class="o">=</span><span class="n">genotype_name</span><span class="p">,</span> 
-</span><span id="__span-2-36"><a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>    <span class="n">highlight_grids</span><span class="o">=</span><span class="s2">&quot;decision_reward&quot;</span><span class="p">,</span>
-</span><span id="__span-2-37"><a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>    <span class="n">target_grids</span><span class="o">=</span><span class="s2">&quot;target_zone&quot;</span><span class="p">,</span>
+</span><span id="__span-2-36"><a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>    <span class="n">highlight_grids</span><span class="o">=</span><span class="s2">"decision_reward"</span><span class="p">,</span>
+</span><span id="__span-2-37"><a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>    <span class="n">target_grids</span><span class="o">=</span><span class="s2">"target_zone"</span><span class="p">,</span>
 </span><span id="__span-2-38"><a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a><span class="p">)</span>
 </span><span id="__span-2-39"><a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>
-</span><span id="__span-2-40"><a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Decision Nodes highlighted in BLACK&#39;</span><span class="p">)</span>
-</span><span id="__span-2-41"><a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Target Nodes highlighted in YELLOW&#39;</span><span class="p">)</span>
+</span><span id="__span-2-40"><a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a><span class="nb">print</span><span class="p">(</span><span class="s1">'Decision Nodes highlighted in BLACK'</span><span class="p">)</span>
+</span><span id="__span-2-41"><a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a><span class="nb">print</span><span class="p">(</span><span class="s1">'Target Nodes highlighted in YELLOW'</span><span class="p">)</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code>Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/WT_grid_heatmap.png
 </code></pre></div>
@@ -2146,10 +2146,10 @@ Target Nodes highlighted in YELLOW
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">df_hmm</span><span class="o">=</span><span class="n">df_hmm</span><span class="p">,</span>
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">grid_filename</span> <span class="o">=</span> <span class="n">grid_filename</span><span class="p">,</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">highlight_grids</span><span class="o">=</span><span class="s2">&quot;decision_reward&quot;</span><span class="p">,</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">target_grids</span><span class="o">=</span><span class="s2">&quot;target_zone&quot;</span><span class="p">,</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">highlight_grids</span><span class="o">=</span><span class="s2">"decision_reward"</span><span class="p">,</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">target_grids</span><span class="o">=</span><span class="s2">"target_zone"</span><span class="p">,</span>
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">hmm_state</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;RdBu&#39;</span><span class="p">,</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="n">cmap</span><span class="o">=</span><span class="s1">'RdBu'</span><span class="p">,</span>
 </span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="p">)</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code>Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/all_genotypes_grid_heatmap.pdf
@@ -2165,7 +2165,7 @@ Target Nodes highlighted in YELLOW
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">)</span>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
 </span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">genotype_name</span> <span class="o">=</span> <span class="s1">&#39;WT&#39;</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">genotype_name</span> <span class="o">=</span> <span class="s1">'WT'</span>
 </span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="c1"># 1. Compute state proportions</span>
 </span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="n">state_df</span> <span class="o">=</span> <span class="n">compute_state_proportion</span><span class="p">(</span><span class="n">df_hmm</span><span class="p">,</span> <span class="n">genotype_name</span><span class="p">)</span>
@@ -2187,8 +2187,8 @@ Target Nodes highlighted in YELLOW
 </span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
 </span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>    <span class="n">grid_mapped</span><span class="o">=</span><span class="n">grid_mapped</span><span class="p">,</span>
 </span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>    <span class="n">genotype_name</span><span class="o">=</span><span class="n">genotype_name</span><span class="p">,</span>
-</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    <span class="n">decision_grids</span><span class="o">=</span><span class="s2">&quot;decision_reward&quot;</span><span class="p">,</span>
-</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    <span class="n">target_grids</span><span class="o">=</span><span class="s2">&quot;target_zone&quot;</span><span class="p">,</span>
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    <span class="n">decision_grids</span><span class="o">=</span><span class="s2">"decision_reward"</span><span class="p">,</span>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    <span class="n">target_grids</span><span class="o">=</span><span class="s2">"target_zone"</span><span class="p">,</span>
 </span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>    <span class="n">show_fig</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 </span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>    <span class="n">return_fig</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a><span class="p">)</span>
@@ -2214,10 +2214,10 @@ Target Nodes highlighted in YELLOW
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">plot_all_genotype_interactive_heatmaps</span><span class="p">(</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
 </span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">df_hmm</span><span class="o">=</span><span class="n">df_hmm</span><span class="p">,</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">grid_filename</span><span class="o">=</span><span class="s2">&quot;Session-3 grid.shp&quot;</span><span class="p">,</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">grid_filename</span><span class="o">=</span><span class="s2">"Session-3 grid.shp"</span><span class="p">,</span>
 </span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">hmm_state</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">decision_grids</span><span class="o">=</span><span class="s2">&quot;decision_reward&quot;</span><span class="p">,</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="n">target_grids</span><span class="o">=</span><span class="s2">&quot;target_zone&quot;</span><span class="p">,</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">decision_grids</span><span class="o">=</span><span class="s2">"decision_reward"</span><span class="p">,</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="n">target_grids</span><span class="o">=</span><span class="s2">"target_zone"</span><span class="p">,</span>
 </span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="n">top_percent</span><span class="o">=</span><span class="mf">.1</span><span class="p">,</span>
 </span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="p">)</span>
 </span></code></pre></div>
@@ -2238,11 +2238,11 @@ Target Nodes highlighted in YELLOW
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">)</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">column_of_interest</span> <span class="o">=</span> <span class="s1">&#39;NodeType&#39;</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">column_of_interest</span> <span class="o">=</span> <span class="s1">'node_type'</span>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="n">values_displayed</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    <span class="s1">&#39;3-way Decision (Reward)&#39;</span><span class="p">,</span> <span class="s1">&#39;4-way Decision (Reward)&#39;</span><span class="p">,</span><span class="s1">&#39;Non-Decision (Reward)&#39;</span><span class="p">,</span> 
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="s1">&#39;Decision (Non-Reward)&#39;</span><span class="p">,</span> <span class="s1">&#39;Non-Decision (Non-Reward)&#39;</span><span class="p">,</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    <span class="s1">&#39;Corner (Reward)&#39;</span><span class="p">,</span> <span class="s1">&#39;Corner (Non-Reward)&#39;</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    <span class="s1">'3-way Decision (Reward)'</span><span class="p">,</span> <span class="s1">'4-way Decision (Reward)'</span><span class="p">,</span><span class="s1">'Non-Decision (Reward)'</span><span class="p">,</span> 
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="s1">'Decision (Non-Reward)'</span><span class="p">,</span> <span class="s1">'Non-Decision (Non-Reward)'</span><span class="p">,</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    <span class="s1">'Corner (Reward)'</span><span class="p">,</span> <span class="s1">'Corner (Non-Reward)'</span>
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="p">]</span>
 </span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="n">state</span> <span class="o">=</span> <span class="mi">1</span>
 </span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
@@ -2269,8 +2269,8 @@ Target Nodes highlighted in YELLOW
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># T-tests amongst genotypes per category</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">ttest_results</span> <span class="o">=</span> <span class="n">run_pairwise_ttests</span><span class="p">(</span><span class="n">state_count_df</span><span class="p">,</span> <span class="n">column_of_interest</span><span class="o">=</span><span class="s1">&#39;NodeType&#39;</span><span class="p">)</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nb">print</span><span class="p">(</span><span class="n">ttest_results</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">&quot;P-value&quot;</span><span class="p">))</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">ttest_results</span> <span class="o">=</span> <span class="n">run_pairwise_ttests</span><span class="p">(</span><span class="n">state_count_df</span><span class="p">,</span> <span class="n">column_of_interest</span><span class="o">=</span><span class="s1">'node_type'</span><span class="p">)</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nb">print</span><span class="p">(</span><span class="n">ttest_results</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"P-value"</span><span class="p">))</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code>                       Group Genotype1 Genotype2    T-stat   P-value
 2        Corner (Non-Reward)        KO        WT  1.054990  0.370853
@@ -2304,7 +2304,7 @@ Target Nodes highlighted in YELLOW
 </span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="n">upper_limit</span> <span class="o">=</span> <span class="n">get_max_session_row_bracket</span><span class="p">(</span><span class="n">df_hmm</span><span class="p">)</span>
 </span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="n">threshold</span> <span class="o">=</span>  <span class="n">get_min_session_row_bracket</span><span class="p">(</span><span class="n">df_hmm</span><span class="p">)</span>  <span class="c1"># Only show bins where all sessions are present</span>
 </span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="n">bin_size</span> <span class="o">=</span> <span class="mi">2000</span>
-</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="n">palette</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="s1">&#39;black&#39;</span><span class="p">]</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="n">palette</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'grey'</span><span class="p">,</span> <span class="s1">'black'</span><span class="p">]</span>
 </span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="n">figure_ylimit</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">)</span>
 </span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>
 </span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="c1"># Step 1: Compute median probability of being in State 1 across time bins</span>
@@ -2317,7 +2317,7 @@ Target Nodes highlighted in YELLOW
 </span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="p">)</span>
 </span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>
 </span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="c1"># Step 2: Optional filter to only plot early session bins</span>
-</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="n">deci_df</span> <span class="o">=</span> <span class="n">deci_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">deci_df</span><span class="o">.</span><span class="n">Time_Bins</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">]</span>
+</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="n">deci_df</span> <span class="o">=</span> <span class="n">deci_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">deci_df</span><span class="o">.</span><span class="n">time_bins</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">]</span>
 </span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>
 </span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="c1"># Step 3: Plot time-evolving median probability curves</span>
 </span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a><span class="n">plot_node_state_median_curve</span><span class="p">(</span>
@@ -2325,7 +2325,7 @@ Target Nodes highlighted in YELLOW
 </span><span id="__span-8-31"><a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a>    <span class="n">deci_df</span><span class="o">=</span><span class="n">deci_df</span><span class="p">,</span>
 </span><span id="__span-8-32"><a id="__codelineno-8-32" name="__codelineno-8-32" href="#__codelineno-8-32"></a>    <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span>
 </span><span id="__span-8-33"><a id="__codelineno-8-33" name="__codelineno-8-33" href="#__codelineno-8-33"></a>    <span class="n">figure_ylimit</span><span class="o">=</span><span class="n">figure_ylimit</span><span class="p">,</span>
-</span><span id="__span-8-34"><a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a>    <span class="n">fig_title</span> <span class="o">=</span> <span class="s1">&#39;Median Probability of Ambulatory State&#39;</span>
+</span><span id="__span-8-34"><a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a>    <span class="n">fig_title</span> <span class="o">=</span> <span class="s1">'Median Probability of Ambulatory State'</span>
 </span><span id="__span-8-35"><a id="__codelineno-8-35" name="__codelineno-8-35" href="#__codelineno-8-35"></a><span class="p">)</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code>Figure saved at: /Users/luiztauffer/Github/CoMPASS-Labyrinth/notebooks/my_project_2/figures/temporal_median_state_probability_curve.pdf
@@ -2355,10 +2355,10 @@ Target Nodes highlighted in YELLOW
 </span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="p">)</span>
 </span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>
 </span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="c1"># Compute surveillance probability at Decision nodes by Bout type</span>
-</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="c1"># Successful-&gt; reached the target atleast once/Unsuccessful-&gt; doesn&#39;t reached the target</span>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="c1"># Successful-&gt; reached the target atleast once/Unsuccessful-&gt; doesn't reached the target</span>
 </span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="n">index_df</span><span class="p">,</span> <span class="n">median_df</span> <span class="o">=</span> <span class="n">compute_surveillance_probabilities</span><span class="p">(</span>
 </span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a>    <span class="n">df_hmm</span><span class="o">=</span><span class="n">df_hmm</span><span class="p">,</span>
-</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a>    <span class="n">decision_nodes</span><span class="o">=</span><span class="s2">&quot;decision_reward&quot;</span><span class="p">,</span>
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a>    <span class="n">decision_nodes</span><span class="o">=</span><span class="s2">"decision_reward"</span><span class="p">,</span>
 </span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="p">)</span>
 </span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a>
 </span><span id="__span-9-22"><a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a><span class="c1"># Barplot to depict the above with ttest-ind pvalue</span>
@@ -2378,7 +2378,7 @@ Target Nodes highlighted in YELLOW
 </span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">df_within</span> <span class="o">=</span> <span class="n">run_within_genotype_mixedlm_with_fdr</span><span class="p">(</span><span class="n">index_df</span><span class="p">)</span>
 </span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
 </span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1"># Print results</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Within-Genotype (Successful vs Unsuccessful):&quot;</span><span class="p">)</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"Within-Genotype (Successful vs Unsuccessful):"</span><span class="p">)</span>
 </span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="nb">print</span><span class="p">(</span><span class="n">df_within</span><span class="p">)</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code>Within-Genotype (Successful vs Unsuccessful):
@@ -2390,16 +2390,16 @@ Index: []
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># T-test across genotypes under Successful Bouts</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">df_across_success</span> <span class="o">=</span> <span class="n">test_across_genotypes_per_bout</span><span class="p">(</span><span class="n">median_df</span><span class="p">,</span> <span class="n">bout_type</span><span class="o">=</span><span class="s1">&#39;Successful&#39;</span><span class="p">)</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">df_across_success</span> <span class="o">=</span> <span class="n">test_across_genotypes_per_bout</span><span class="p">(</span><span class="n">median_df</span><span class="p">,</span> <span class="n">bout_type</span><span class="o">=</span><span class="s1">'Successful'</span><span class="p">)</span>
 </span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
 </span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="c1"># T-test across genotypes under Unsuccessful Bouts</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="n">df_across_unsuccess</span> <span class="o">=</span> <span class="n">test_across_genotypes_per_bout</span><span class="p">(</span><span class="n">median_df</span><span class="p">,</span> <span class="n">bout_type</span><span class="o">=</span><span class="s1">&#39;Unsuccessful&#39;</span><span class="p">)</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="n">df_across_unsuccess</span> <span class="o">=</span> <span class="n">test_across_genotypes_per_bout</span><span class="p">(</span><span class="n">median_df</span><span class="p">,</span> <span class="n">bout_type</span><span class="o">=</span><span class="s1">'Unsuccessful'</span><span class="p">)</span>
 </span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
 </span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="c1"># Print results</span>
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Across Genotypes (Successful only):&quot;</span><span class="p">)</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2"> Across Genotypes (Successful only):"</span><span class="p">)</span>
 </span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="nb">print</span><span class="p">(</span><span class="n">df_across_success</span><span class="p">)</span>
 </span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>
-</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Across Genotypes (Unsuccessful only):&quot;</span><span class="p">)</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2"> Across Genotypes (Unsuccessful only):"</span><span class="p">)</span>
 </span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="nb">print</span><span class="p">(</span><span class="n">df_across_unsuccess</span><span class="p">)</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code> Across Genotypes (Successful only):
@@ -2485,7 +2485,7 @@ Index: []
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
