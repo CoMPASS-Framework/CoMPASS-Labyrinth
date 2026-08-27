@@ -2,6 +2,10 @@ from pathlib import Path
 import yaml
 import os
 import pandas as pd
+import numpy as np
+import xarray as xr
+from shapely.geometry import Point
+import geopandas as gpd
 
 
 def load_project(project_path: Path | str) -> tuple[dict, pd.DataFrame]:
@@ -62,6 +66,33 @@ def load_cohort_metadata(config: dict) -> pd.DataFrame:
     return metadata_df
 
 
+def load_session_dataset(config: dict, session_name: str) -> xr.Dataset:
+    """
+    Loads the xarray Dataset for a specific session.
+
+    Parameters
+    ----------
+    config: dict
+        The project configuration dictionary.
+    session_name: str
+        The name of the session to load.
+
+    Returns
+    -------
+    ds: xr.Dataset
+        The xarray Dataset for the specified session.
+    """
+    if session_name not in config["session_names"]:
+        raise ValueError(f"Session name {session_name} not found in project configuration.")
+    project_path = Path(config["project_path_full"]).resolve()
+    nc_file_path = project_path / "data" / "dlc_results" / f"{session_name}.nc"
+    if not nc_file_path.exists():
+        raise FileNotFoundError(f"Dataset file not found at {nc_file_path}")
+
+    ds = xr.load_dataset(nc_file_path)
+    return ds
+
+
 def save_figure(
     config: dict,
     fig_name: str,
@@ -93,3 +124,93 @@ def save_figure(
     save_path = os.path.join(base_path, subdir, f"{fig_name}.{ext}")
     plt.savefig(save_path, bbox_inches="tight", dpi=dpi)
     print(f"Saved: {save_path}")
+
+
+def update_dataset_with_grid_positions(
+    ds: xr.Dataset,
+    grid_file_path: Path | str,
+) -> xr.Dataset:
+    """
+    Add grid position numbers to an xarray Dataset containing pose estimation data.
+    This function performs spatial joins between tracked body positions and a grid
+    shapefile to determine which grid cell each position falls within at each time point.
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        xarray Dataset containing pose estimation data.
+    grid_file_path : Path | str
+        Path to the grid shapefile (e.g., '{session}_grid.shp')
+
+    Returns
+    -------
+    xr.Dataset
+        Updated xarray Dataset with an additional data variable 'grid_number'
+        indicating the grid cell number for each tracked position.
+    """
+    # Load the Grid shapefile
+    grid_file_path = Path(grid_file_path)
+    if not grid_file_path.exists():
+        raise FileNotFoundError(f"Grid file not found at {grid_file_path}")
+    grid = gpd.read_file(str(grid_file_path))
+
+    # Initialize grid numbers array with NaNs
+    n_time = len(ds.time)
+    n_keypoints = len(ds.keypoints)
+    n_individuals = 1  # Assuming single individual 'individual_0'
+    grid_numbers_array = np.full((n_time, n_keypoints, n_individuals), np.nan)
+
+    # Get keypoint names
+    keypoints = ds.keypoints.values
+
+    # Process each keypoint
+    for kp_idx, keypoint in enumerate(keypoints):
+        # Extract x,y positions for this keypoint
+        # position has shape (time, space, keypoints, individuals)
+        xy = ds.sel(individuals="individual_0", keypoints=keypoint).position.values
+
+        # Create Point geometries for each time point
+        points = []
+        for x, y in xy:
+            if pd.notna(x) and pd.notna(y):
+                points.append(Point(x, y))
+            else:
+                points.append(None)
+
+        # Create GeoDataFrame of points
+        pnt_gpd = gpd.GeoDataFrame(
+            geometry=points,
+            index=np.arange(len(points)),
+            crs=grid.crs,
+        )
+
+        # Find which polygon each point is in
+        point_in_polys = gpd.tools.sjoin(
+            left_df=pnt_gpd,
+            right_df=grid,
+            predicate="within",
+            how="left",
+        )
+
+        # Extract grid numbers
+        # Use 'FID' column from grid or index_right if FID doesn't exist
+        if "FID" in point_in_polys.columns:
+            grid_nums = point_in_polys["FID"].values
+        else:
+            grid_nums = point_in_polys["index_right"].values
+
+        # Store in the array
+        grid_numbers_array[:, kp_idx, 0] = grid_nums
+
+    # Add grid_number as a new data variable to the dataset
+    ds["grid_number"] = xr.DataArray(
+        grid_numbers_array,
+        dims=["time", "keypoints", "individuals"],
+        coords={"time": ds.time, "keypoints": ds.keypoints, "individuals": ds.individuals},
+        attrs={
+            "description": "Grid cell number for each tracked position",
+            "grid_file": str(grid_file_path),
+        },
+    )
+
+    return ds

@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
 import pandas as pd
+import xarray as xr
 
 
 class TestInitProject:
@@ -44,11 +45,6 @@ class TestInitProject:
         assert metadata_path.exists()
         assert metadata_path.is_file()
 
-    def test_config_does_not_contain_metadata(self, create_project_fixture):
-        """Test that config does not contain cohort_metadata (it's now in a separate CSV)."""
-        config, metadata_df = create_project_fixture
-        assert "cohort_metadata" not in config
-
 
 class TestLoadProject:
 
@@ -75,3 +71,12 @@ class TestLoadProject:
         assert loaded_config["project_name"] == config["project_name"]
         assert loaded_config["trial_type"] == config["trial_type"]
         assert loaded_config["session_names"] == config["session_names"]
+
+    def test_load_dataset_function(self, create_project_fixture):
+        """Test that load_dataset can load the dataset."""
+        from compass_labyrinth.utils import load_session_dataset
+
+        config, metadata_df = create_project_fixture
+        dataset_df = load_session_dataset(config, config["session_names"][0])
+
+        assert isinstance(dataset_df, xr.Dataset)

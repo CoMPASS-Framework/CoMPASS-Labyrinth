@@ -11,9 +11,9 @@ from scipy.ndimage import gaussian_filter
 # ----------------------------
 # KDE Plot per Session
 # ----------------------------
-def plot_kde_per_session(df, best_sigma, kde_col="KDE"):
-    for session in df["Session"].unique():
-        sess_df = df[df["Session"] == session]
+def plot_kde_per_session(df, best_sigma, kde_col="kde"):
+    for session in df["session"].unique():
+        sess_df = df[df["session"] == session]
         if len(sess_df) < 5:
             continue
 
@@ -47,7 +47,7 @@ def plot_kde_per_session(df, best_sigma, kde_col="KDE"):
 # ----------------------------
 def compute_spatial_embedding(df: pd.DataFrame, sigma: float = 2) -> pd.DataFrame:
     df = df.copy()
-    df["spatial_value_raw"] = 1 - (df["Value"] / df["Value"].max())
+    df["spatial_value_raw"] = 1 - (df["value"] / df["value"].max())
 
     x_max = int(df["x"].max()) + 1
     y_max = int(df["y"].max()) + 1
@@ -163,18 +163,18 @@ def compute_detailed_bout_summary(
     df: pd.DataFrame,
     feature_cols: list[str],
     node_filter: str = "Decision (Reward)",
-    state_col: str = "HMM State",
+    state_col: str = "hmm_state",
     target_zone: str = "Target Zone",
     valid_bout_threshold: int = 10,
-    bout_col: str = "Bout_ID",
+    bout_col: str = "bout_id",
 ):
     """
     Compute per-bout median values of features and success/validity flags.
     """
     df = normalize_features(df, feature_cols)
-    cols = ["Session", "Genotype", "Bout_no"] + feature_cols + ["Valid_bout", "Successful_bout", "Probability_1"]
+    cols = ["session", "genotype", "bout_no"] + feature_cols + ["valid_bout", "successful_bout", "probability_1"]
     index_df = pd.DataFrame(columns=cols)
-    session_clusters = [x for _, x in df.groupby("Session")]
+    session_clusters = [x for _, x in df.groupby("session")]
 
     j = 0
     for session_df in session_clusters:
@@ -184,23 +184,22 @@ def compute_detailed_bout_summary(
         boutnum = 1
         prob_list = []
         for bout in bouts:
-            subset = bout[bout["NodeType"] == node_filter]
+            subset = bout[bout["node_type"] == node_filter]
             row = {
-                "Session": session_df["Session"].iloc[0],
-                "Genotype": session_df["Genotype"].iloc[0],
-                "Bout_no": boutnum,
+                "session": session_df["session"].iloc[0],
+                "genotype": session_df["genotype"].iloc[0],
+                "bout_no": boutnum,
             }
             for feat in feature_cols:
                 row[feat] = subset[feat].median()
 
             prob = subset[state_col].value_counts(normalize=True).get(1, np.nan)
             prob_list.append(prob)
-            row["Probability_1"] = np.nanmedian(prob_list)
+            row["probability_1"] = np.nanmedian(prob_list)
 
-            if bout["Grid Number"].nunique() > valid_bout_threshold:
-                row["Valid_bout"] = "Valid"
-            row["Successful_bout"] = "Successful" if target_zone in bout["Region"].values else "Unsuccessful"
-
+            if bout["grid_number"].nunique() > valid_bout_threshold:
+                row["valid_bout"] = "Valid"
+            row["successful_bout"] = "Successful" if target_zone in bout["region"].values else "Unsuccessful"
             index_df.loc[j] = row
             boutnum += 1
             j += 1
@@ -215,8 +214,8 @@ def plot_measures_by_bout_type(index_df, feature_cols=None):
     for col in feature_cols:
         index_df[col] = pd.to_numeric(index_df[col], errors="coerce")
 
-    df_melted = index_df.melt(id_vars=["Session", "Successful_bout"], value_vars=feature_cols)
-    df_melted = df_melted.groupby(["Session", "Successful_bout", "variable"])["value"].median().reset_index()
+    df_melted = index_df.melt(id_vars=["session", "successful_bout"], value_vars=feature_cols)
+    df_melted = df_melted.groupby(["session", "successful_bout", "variable"])["value"].median().reset_index()
 
     plt.figure(figsize=(8, 6))
     palette = {"Successful": "cornflowerblue", "Unsuccessful": "grey"}
@@ -225,7 +224,7 @@ def plot_measures_by_bout_type(index_df, feature_cols=None):
         data=df_melted,
         x="variable",
         y="value",
-        hue="Successful_bout",
+        hue="successful_bout",
         palette=palette,
         split=True,
         inner=None,
@@ -237,7 +236,7 @@ def plot_measures_by_bout_type(index_df, feature_cols=None):
         data=df_melted,
         x="variable",
         y="value",
-        hue="Successful_bout",
+        hue="successful_bout",
         palette=["blue", "black"],
         width=0.3,
         showcaps=True,
@@ -250,7 +249,7 @@ def plot_measures_by_bout_type(index_df, feature_cols=None):
         data=df_melted,
         x="variable",
         y="value",
-        hue="Successful_bout",
+        hue="successful_bout",
         palette=["blue", "black"],
         dodge=True,
         alpha=0.7,

@@ -37,7 +37,7 @@ def split_into_epochs_multi(df: pd.DataFrame, epoch_size: int) -> list:
         A list of tuples containing (session, epoch index, chunk DataFrame).
     """
     epochs = []
-    for session, sess_df in df.groupby("Session"):
+    for session, sess_df in df.groupby("session"):
         for i in range(0, len(sess_df), epoch_size):
             chunk = sess_df.iloc[i : i + epoch_size]
             if not chunk.empty:
@@ -73,15 +73,15 @@ def track_valid_transitions_multi(
     session_valid = {}
     session_optimal = {}
 
-    for session, group in df.groupby("Session"):
+    for session, group in df.groupby("session"):
         valid_dict = {}
         optimal_dict = {}
 
         for i in range(len(group) - 1):
-            if group.iloc[i]["NodeType"] == decision_label:
-                curr_grid = group.iloc[i]["Grid Number"]
-                next_grid = group.iloc[i + 1]["Grid Number"]
-                next_region = group.iloc[i + 1]["Region"]
+            if group.iloc[i]["node_type"] == decision_label:
+                curr_grid = group.iloc[i]["grid_number"]
+                next_grid = group.iloc[i + 1]["grid_number"]
+                next_region = group.iloc[i + 1]["region"]
 
                 valid_dict.setdefault(curr_grid, set()).add(next_grid)
 
@@ -128,9 +128,9 @@ def simulate_random_agent_multi(
     actual, random_perf = [], []
 
     for i in range(len(chunk) - 1):
-        if chunk.iloc[i]["NodeType"] == decision_label:
-            curr = chunk.iloc[i]["Grid Number"]
-            next_actual = chunk.iloc[i + 1]["Grid Number"]
+        if chunk.iloc[i]["node_type"] == decision_label:
+            curr = chunk.iloc[i]["grid_number"]
+            next_actual = chunk.iloc[i + 1]["grid_number"]
 
             is_opt = next_actual in optimal_dict.get(curr, set())
             actual.append(1 if is_opt else 0)
@@ -177,8 +177,8 @@ def simulate_binary_agent_multi(
     binary_perf = []
 
     for i in range(len(chunk) - 1):
-        if chunk.iloc[i]["NodeType"] == decision_label:
-            curr = chunk.iloc[i]["Grid Number"]
+        if chunk.iloc[i]["node_type"] == decision_label:
+            curr = chunk.iloc[i]["grid_number"]
             choices = list(valid_dict.get(curr, []))
 
             opt = [x for x in choices if x in optimal_dict.get(curr, set())]
@@ -227,8 +227,8 @@ def simulate_multiway_agent_multi(
     """
     perf = []
     for i in range(len(chunk) - 1):
-        if chunk.iloc[i]["NodeType"] == decision_label:
-            curr = chunk.iloc[i]["Grid Number"]
+        if chunk.iloc[i]["node_type"] == decision_label:
+            curr = chunk.iloc[i]["grid_number"]
             prob = None
             if curr in three_nodes:
                 prob = 1 / 3
@@ -282,7 +282,7 @@ def evaluate_epoch_multi(
     pd.Series
         Series containing performance metrics for the epoch.
     """
-    if chunk.empty or decision_label not in chunk["NodeType"].values:
+    if chunk.empty or decision_label not in chunk["node_type"].values:
         return pd.Series(dtype="float64")  # Empty metrics
 
     actual, random_perf = simulate_random_agent_multi(
@@ -317,22 +317,22 @@ def evaluate_epoch_multi(
 
     return pd.Series(
         {
-            "Actual Reward Path %": actual_boot.mean(),
-            "Random Agent Reward Path %": random_boot.mean(),
-            "Binary Agent Reward Path %": binary_boot.mean(),
-            "Three/Four Way Agent Reward Path %": multi_boot.mean(),
-            "Actual Reward Path % CI Lower": np.percentile(actual_boot, 5),
-            "Actual Reward Path % CI Upper": np.percentile(actual_boot, 95),
-            "Random Agent Reward Path % CI Lower": np.percentile(random_boot, 5),
-            "Random Agent Reward Path % CI Upper": np.percentile(random_boot, 95),
-            "Binary Agent Reward Path % CI Lower": np.percentile(binary_boot, 5),
-            "Binary Agent Reward Path % CI Upper": np.percentile(binary_boot, 95),
-            "Three/Four Way Agent Reward Path % CI Lower": np.percentile(multi_boot, 5),
-            "Three/Four Way Agent Reward Path % CI Upper": np.percentile(multi_boot, 95),
-            "Relative Performance (Actual/Random)": (
+            "actual_reward_path_pct": actual_boot.mean(),
+            "random_agent_reward_path_pct": random_boot.mean(),
+            "binary_agent_reward_path_pct": binary_boot.mean(),
+            "three_four_way_agent_reward_path_pct": multi_boot.mean(),
+            "actual_reward_path_pct_ci_lower": np.percentile(actual_boot, 5),
+            "actual_reward_path_pct_ci_upper": np.percentile(actual_boot, 95),
+            "random_agent_reward_path_pct_ci_lower": np.percentile(random_boot, 5),
+            "random_agent_reward_path_pct_ci_upper": np.percentile(random_boot, 95),
+            "binary_agent_reward_path_pct_ci_lower": np.percentile(binary_boot, 5),
+            "binary_agent_reward_path_pct_ci_upper": np.percentile(binary_boot, 95),
+            "three_four_way_agent_reward_path_pct_ci_lower": np.percentile(multi_boot, 5),
+            "three_four_way_agent_reward_path_pct_ci_upper": np.percentile(multi_boot, 95),
+            "relative_performance_actual_random": (
                 actual_boot.mean() / random_boot.mean() if random_boot.mean() > 0 else np.nan
             ),
-            "Relative Performance (Actual/Binary)": (
+            "relative_performance_actual_binary": (
                 actual_boot.mean() / binary_boot.mean() if binary_boot.mean() > 0 else np.nan
             ),
         }
@@ -406,8 +406,8 @@ def evaluate_agent_performance_multi(
             n_bootstrap=n_bootstrap,
             n_simulations=n_simulations,
         )
-        metrics["Session"] = int(session)
-        metrics["Epoch Number"] = int(idx)
+        metrics["session"] = int(session)
+        metrics["epoch_number"] = int(idx)
         all_results.append(metrics)
 
     results = pd.DataFrame(all_results)
@@ -458,16 +458,16 @@ def plot_agent_vs_mouse_performance_multi(
         The figure object if return_fig is True, otherwise None.
     """
     # --- Constants ---
-    x_col = "Epoch Number"
-    y_col_actual = "Actual Reward Path %"
-    y_col_random = "Random Agent Reward Path %"
-    y_col_binary = "Binary Agent Reward Path %"
-    y_col_multi = "Three/Four Way Agent Reward Path %"
+    x_col = "epoch_number"
+    y_col_actual = "actual_reward_path_pct"
+    y_col_random = "random_agent_reward_path_pct"
+    y_col_binary = "binary_agent_reward_path_pct"
+    y_col_multi = "three_four_way_agent_reward_path_pct"
     title = "Mouse vs. Agent Reward Path Transition Proportion"
 
     # --- Filter sessions by genotype ---
-    sessions_reqd = cohort_metadata.loc[cohort_metadata.Genotype == genotype, "Session #"].unique()
-    df_filtered = df_metrics[df_metrics["Session"].isin(sessions_reqd)].copy()
+    sessions_reqd = cohort_metadata.loc[cohort_metadata.genotype == genotype, "session"].unique()
+    df_filtered = df_metrics[df_metrics["session"].isin(sessions_reqd)].copy()
 
     # --- Plot ---
     fig = plt.figure(figsize=figsize)
@@ -575,35 +575,37 @@ def plot_cumulative_agent_comparison_boxplot_multi(
     """
     # --- Constants ---
     metric_cols = {
-        "Mouse": "Actual Reward Path %",
-        "Random Agent": "Random Agent Reward Path %",
-        "Binary Agent": "Binary Agent Reward Path %",
-        "3/4-Way Agent": "Three/Four Way Agent Reward Path %",
+        "Mouse": "actual_reward_path_pct",
+        "Random Agent": "random_agent_reward_path_pct",
+        "Binary Agent": "binary_agent_reward_path_pct",
+        "3/4-Way Agent": "three_four_way_agent_reward_path_pct",
     }
 
     # --- Filter sessions for the genotype ---
-    sessions_reqd = cohort_metadata.loc[cohort_metadata.Genotype == genotype, "Session #"].unique()
-    df_filtered = df_metrics[df_metrics["Session"].isin(sessions_reqd)].copy()
+    sessions_reqd = cohort_metadata.loc[cohort_metadata.genotype == genotype, "session"].unique()
+    df_filtered = df_metrics[df_metrics["session"].isin(sessions_reqd)].copy()
 
     # --- Aggregate to session level (mean across epochs) ---
-    df_agg = df_filtered.groupby("Session")[[*metric_cols.values()]].mean().reset_index()
+    df_agg = df_filtered.groupby("session")[[*metric_cols.values()]].mean().reset_index()
 
     # --- Melt for plotting ---
-    df_melt = df_agg.melt(id_vars="Session", var_name="Agent", value_name="Reward Path %")
-    df_melt["Agent"] = df_melt["Agent"].map({v: k for k, v in metric_cols.items()})
+    df_melt = df_agg.melt(id_vars="session", var_name="agent", value_name="reward_path_pct")
+    df_melt["agent"] = df_melt["agent"].map({v: k for k, v in metric_cols.items()})
 
     # --- Plot ---
     fig = plt.figure(figsize=figsize)
     sns.boxplot(
         data=df_melt,
-        x="Agent",
-        y="Reward Path %",
+        x="agent",
+        y="reward_path_pct",
+        hue="agent",
         palette="Set2",
+        legend=False,
     )
     sns.stripplot(
         data=df_melt,
-        x="Agent",
-        y="Reward Path %",
+        x="agent",
+        y="reward_path_pct",
         color="black",
         size=4,
         jitter=True,

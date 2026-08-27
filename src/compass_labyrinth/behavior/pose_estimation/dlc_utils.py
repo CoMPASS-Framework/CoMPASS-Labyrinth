@@ -20,77 +20,127 @@ from matplotlib.widgets import Cursor
 from shapely.geometry import Polygon, Point
 import geopandas as gpd
 from matplotlib.collections import LineCollection
-from typing import Optional
+from typing import List, Union, Optional, Dict, Any
 
+
+# def import_cohort_metadata(
+#     metadata_path: Path | str,
+#     trial_sheet_name: Optional[str] = None,
+# ) -> pd.DataFrame:
 
 def import_cohort_metadata(
-    metadata_path: Path | str,
+    metadata_path: Union[Path, str],
     trial_sheet_name: Optional[str] = None,
 ) -> pd.DataFrame:
     """
-    Import and process trial metadata from Excel file.
+    Import and process trial metadata from Excel or CSV file.
 
     Parameters
-    -----------
+    ----------
     metadata_path : str or Path
-        Path to the Excel file containing trial information
+        Path to the metadata file (.xlsx, .xls, or .csv)
     trial_sheet_name : str or None
-        Name of the sheet/tab containing the trial data, needed for multi-sheet files
+        Sheet name for Excel files with multiple sheets
 
     Returns
-    --------
+    -------
     pd.DataFrame
         Cleaned metadata dataframe
     """
+
     try:
-        # Load the Excel sheet
         metadata_path = Path(metadata_path)
-        if metadata_path.suffix in [".xlsx", ".xls"]:
+
+        # -------------------------------
+        # Load File
+        # -------------------------------
+        if metadata_path.suffix.lower() in [".xlsx", ".xls"]:
             mouseinfo = pd.read_excel(metadata_path, sheet_name=trial_sheet_name)
-        elif metadata_path.suffix == ".csv":
+        elif metadata_path.suffix.lower() == ".csv":
             mouseinfo = pd.read_csv(metadata_path)
+        else:
+            raise ValueError(f"Unsupported file type: {metadata_path.suffix}")
+
         print(f"Initial rows loaded: {len(mouseinfo)}")
 
-        # Remove rows with missing Session numbers or where it's 0
-        mouseinfo = mouseinfo[~mouseinfo["Session #"].isna() & (mouseinfo["Session #"] != 0)]
-
-        # Special processing for Probe Trial data
-        if trial_sheet_name == "Probe Trial":
-            if "Cropping Bounds" in mouseinfo.columns:
-                mouseinfo["Cropping Bounds"] = mouseinfo["Cropping Bounds"].apply(
-                    lambda x: [int(num.strip()) for num in x.split(",")] if pd.notna(x) else None
-                )
-                print("Processed cropping bounds for Probe Trial")
-
-        # Stringify timestamps
-        mouseinfo = mouseinfo.applymap(
-            lambda x: (
-                x.isoformat()
-                if isinstance(x, (pd.Timestamp, datetime, date))
-                else x.strftime("%H:%M:%S") if isinstance(x, time) else x
-            )
+        # -------------------------------
+        # Normalize Column Names
+        # -------------------------------
+        mouseinfo.columns = (
+            mouseinfo.columns
+            .str.strip()
+            .str.lower()
         )
 
-        # Exclude trials marked for exclusion
-        if "Exclude Trial" in mouseinfo.columns:
-            excluded_trials = mouseinfo["Exclude Trial"] == "yes"
-            excluded_count = excluded_trials.sum()
-            mouseinfo = mouseinfo.loc[~excluded_trials].reset_index(drop=True)
+        # -------------------------------
+        # Validate Required Columns
+        # -------------------------------
+        required_columns = ["session"]
+        missing_cols = [col for col in required_columns if col not in mouseinfo.columns]
+
+        if missing_cols:
+            raise ValueError(
+                f"Missing required columns: {missing_cols}. "
+                f"Found columns: {list(mouseinfo.columns)}"
+            )
+
+        # -------------------------------
+        # Remove invalid session rows
+        # -------------------------------
+        mouseinfo = mouseinfo[
+            ~mouseinfo["session"].isna() & (mouseinfo["session"] != 0)
+        ]
+
+        # -------------------------------
+        # Special Probe Trial Processing
+        # -------------------------------
+        if trial_sheet_name == "Probe Trial" and "cropping bounds" in mouseinfo.columns:
+            mouseinfo["cropping bounds"] = mouseinfo["cropping bounds"].apply(
+                lambda x: [int(num.strip()) for num in str(x).split(",")]
+                if pd.notna(x) else None
+            )
+            print("Processed cropping bounds for Probe Trial")
+
+        # -------------------------------
+        # Stringify timestamps (Pandas 3.0 safe)
+        # -------------------------------
+        def _stringify_cell(x):
+            if isinstance(x, (pd.Timestamp, datetime, date)):
+                return x.isoformat()
+            if isinstance(x, time):
+                return x.strftime("%H:%M:%S")
+            return x
+
+        mouseinfo = mouseinfo.map(_stringify_cell)
+
+        # -------------------------------
+        # Exclude Trials
+        # -------------------------------
+        if "exclude trial" in mouseinfo.columns:
+            excluded_mask = (
+                mouseinfo["exclude trial"]
+                .astype(str)
+                .str.strip()
+                .str.lower() == "yes"
+            )
+
+            excluded_count = int(excluded_mask.sum())
+            mouseinfo = mouseinfo.loc[~excluded_mask].reset_index(drop=True)
+
             print(f"Excluded {excluded_count} trials marked for exclusion")
 
         print(f"Final dataset: {len(mouseinfo)} trials")
+
         return mouseinfo
 
     except FileNotFoundError:
         raise FileNotFoundError(f"Metadata file not found at {metadata_path}")
-    except ValueError:
-        raise ValueError(
-            f"Sheet '{trial_sheet_name}' not found in Excel file",
-            f"Available sheets: {pd.ExcelFile(metadata_path).sheet_names}",
-        )
-    except Exception:
-        raise Exception(f"Error loading metadata from {metadata_path}")
 
+    except ValueError as e:
+        raise ValueError(f"Metadata validation error: {e}") from e
+
+    except Exception as e:
+        raise Exception(f"Error loading metadata from {metadata_path}") from e
 
 def validate_metadata(df: pd.DataFrame) -> bool:
     """
@@ -111,7 +161,7 @@ def validate_metadata(df: pd.DataFrame) -> bool:
         return False
 
     # Required columns for analysis
-    required_columns = ["Session #"]
+    required_columns = ["session"]
     missing_columns = [col for col in required_columns if col not in df.columns]
 
     if missing_columns:
@@ -119,12 +169,11 @@ def validate_metadata(df: pd.DataFrame) -> bool:
         return False
 
     # Check for duplicate sessions
-    duplicates = df.duplicated(subset=["Session #"], keep=False)
+    duplicates = df.duplicated(subset=["session"], keep=False)
     if duplicates.any():
-        print(f"Warning: Found {duplicates.sum()} duplicate Session # entries")
+        print(f"Warning: Found {duplicates.sum()} duplicate session entries")
         print("Duplicate sessions:")
-        print(df[duplicates][["Session #"]])
-
+        print(df[duplicates][["session"]])
     return True
 
 
@@ -140,8 +189,8 @@ def display_metadata_summary(df: pd.DataFrame) -> None:
     print(f"Columns: {list(df.columns)}")
 
     # Show session number range
-    if "Session #" in df.columns:
-        print(f"Session # range: {df['Session #'].min()} - {df['Session #'].max()}")
+    if "session" in df.columns:
+        print(f"Session range: {df['session'].min()} - {df['session'].max()}")
 
     # Show group distribution if available
     if "Group" in df.columns:
@@ -164,8 +213,8 @@ def display_metadata_summary(df: pd.DataFrame) -> None:
 
 
 def save_first_frame(
-    video_path: Path | str,
-    frames_dir: Path | str,
+    video_path: Union[Path, str],
+    frames_dir: Union[Path, str],
 ) -> None:
     """
     Saves the first frame of a video to the specified destination path.
@@ -203,187 +252,149 @@ def save_first_frame(
     cap.release()
 
 
-def create_organized_directory_structure(base_path):
-    """
-    Create an organized directory structure for the DeepLabCut project.
-
-    Parameters
-    -----------
-    base_path : str or Path
-        Base project directory
-
-    Returns
-    --------
-    dict
-        Dictionary of all directory paths
-    """
-    from pathlib import Path
-
-    base_path = Path(base_path)
-
-    # Define organized directory structure
-    DIRS = {
-        # Videos folder - original videos and frames
-        "videos": base_path / "videos",
-        "videos_original": base_path / "videos" / "original_videos",
-        "frames": base_path / "videos" / "frames",
-        # Data folder - analysis inputs and outputs
-        "data": base_path / "data",
-        "dlc_results": base_path / "data" / "dlc_results",
-        "dlc_cropping": base_path / "data" / "dlc_cropping_bounds",
-        "grid_files": base_path / "data" / "grid_files",
-        "grid_boundaries": base_path / "data" / "grid_boundaries",
-        "metadata": base_path / "data" / "metadata",
-        # Figures folder - all plots and visualizations
-        "figures": base_path / "figures",
-        # CSV's folder
-        "csvs": base_path / "csvs",
-        "csvs_individual": base_path / "csvs" / "individual",
-        "csvs_combined": base_path / "csvs" / "combined",
-        # Results folders
-        "results": base_path / "results",
-        "results_task_performance": base_path / "results" / "task_performance",
-        "results_simulation_agent": base_path / "results" / "simulation_agent",
-        "results_compass_level_1": base_path / "results" / "compass_level_1",
-        "results_compass_level_2": base_path / "results" / "compass_level_2",
-        "results_ephys_compass": base_path / "results" / "ephys_compass",
-    }
-
-    # Create all directories
-    print("Creating organized directory structure...")
-    for dir_name, dir_path in DIRS.items():
-        dir_path.mkdir(parents=True, exist_ok=True)
-        print(f"{dir_name}: {dir_path}")
-
-    return DIRS
-
-
-def copy_and_rename_videos(mouseinfo_df, video_paths, destination_path):
+# def copy_and_rename_videos(
+#     mouseinfo_df: pd.DataFrame,
+#     video_paths: list[str | Path],
+#     destination_path: Union[str, Path],
+#     source_naming: str = "trial",          # "trial" | "session-dash" | "session" | "format"
+#     source_format: str | None = None,      # used when source_naming="format", e.g. "Session-{}.mp4"
+#     source_ext: str = ".mp4",
+#     dest_name_format: str = "Session{session:04d}.mp4",
+# ) -> dict | None:
+def copy_and_rename_videos(
+    mouseinfo_df: pd.DataFrame,
+    video_paths: List[Union[str, Path]],
+    destination_path: Union[str, Path],
+    source_naming: str = "trial",
+    source_format: Optional[str] = None,
+    source_ext: str = ".mp4",
+    dest_name_format: str = "Session{session:04d}.mp4",
+) -> Optional[Dict[str, Any]]:
     """
     Copy videos from source paths and rename them according to session information.
 
-    Parameters
-    -----------
-    mouseinfo_df : pd.DataFrame
-        DataFrame containing session and Noldus trial information
-    video_paths : list
-        List of source video paths (handles multiple computers)
-    destination_path : Path
-        Destination directory for renamed videos (videos/original_videos)
+    Source filename can be based on:
+      - Noldus trial naming: Trial<spaces>{n}.mp4
+      - Session naming: Session-{session}.mp4 or Session{session}.mp4
+      - Custom format: provide source_format like "Session-{}.mp4"
 
-    Returns
-    --------
-    dict
-        Summary of copy operations
+    Destination filename defaults to Session0001.mp4, Session0002.mp4, ...
     """
     destination_path = Path(destination_path)
+    destination_path.mkdir(parents=True, exist_ok=True)
 
-    # Create destination directory if it doesn't exist
-    if not destination_path.exists():
-        print("Destination path doesn't exist. Creating folder for original videos...")
-        destination_path.mkdir(parents=True, exist_ok=True)
-
-    # Filter out empty video paths
-    valid_video_paths = [path for path in video_paths if path and Path(path).exists()]
-
+    # Filter valid source roots
+    valid_video_paths = [Path(p) for p in video_paths if p and Path(p).exists()]
     if not valid_video_paths:
         print("Error: No valid video source paths found!")
         return None
 
-    print(f"Source video paths: {valid_video_paths}")
-    print(f"Destination path: {destination_path}")
+    # Normalize columns (optional but recommended)
+    df = mouseinfo_df.copy()
+    df.columns = df.columns.str.strip().str.lower()
 
-    # Track copy operations
+    if "session" not in df.columns:
+        raise ValueError(f"Expected column 'session'. Found: {list(df.columns)}")
+
     copy_summary = {
-        "total_sessions": len(mouseinfo_df),
+        "total_sessions": len(df),
         "already_exists": 0,
         "successfully_copied": 0,
         "failed_copies": 0,
         "failed_files": [],
     }
 
-    # Process each session
-    for index, row in mouseinfo_df.iterrows():
+    def build_source_filename(row: pd.Series) -> str:
+        sess = int(row["session"])
+
+        if source_naming == "session-dash":
+            return f"Session-{sess}{source_ext}"
+        if source_naming == "session":
+            return f"Session{sess}{source_ext}"
+        if source_naming == "format":
+            if not source_format:
+                raise ValueError("source_format must be provided when source_naming='format'")
+            # allow either "{}" or "{session}"
+            if "{session" in source_format:
+                return source_format.format(session=sess)
+            return source_format.format(sess)
+
+        # default: "trial" naming based on noldus trial column
+        if "noldus trial" not in df.columns:
+            raise ValueError(
+                "source_naming='trial' requires column 'noldus trial' (after lowercasing)."
+            )
+        noldus_trial = int(row["noldus trial"])
+        if noldus_trial <= 9:
+            return f"Trial     {noldus_trial}{source_ext}"
+        return f"Trial    {noldus_trial}{source_ext}"
+
+    for _, row in df.iterrows():
+        session_int = int(row["session"])
+        dest_filename = dest_name_format.format(session=session_int)
+        destination_file = destination_path / dest_filename
+
         print("------------------------")
-        session_name = f"Session{int(row['Session #']):04d}"
-        destination_file = destination_path / f"{session_name}.mp4"
+        print(f"Processing session={session_int} -> {dest_filename}")
 
-        print(f"Processing {session_name}...")
-
-        # Check if video already exists
         if destination_file.exists():
-            print(f"{session_name}.mp4 already exists!")
+            print(f"{dest_filename} already exists!")
             copy_summary["already_exists"] += 1
             continue
 
-        # Get Noldus trial information
-        noldus_trial = int(row["Noldus Trial"])
+        # Choose which source root (computer)
+        computer_number = 1
+        if "computer" in row and pd.notna(row["computer"]):
+            computer_number = int(row["computer"])
 
-        # Handle Noldus filename formatting (different spacing for single vs double digits)
-        if noldus_trial <= 9:
-            noldus_filename = f"Trial     {noldus_trial}.mp4"  # More spaces for single digits
-        else:
-            noldus_filename = f"Trial    {noldus_trial}.mp4"  # Fewer spaces for double digits
-
-        print(f"Looking for: {noldus_filename}")
-
-        # Determine which computer/video path to use
-        computer_number = int(row["Computer"]) if "Computer" in row and pd.notna(row["Computer"]) else 1
-
-        # Select the appropriate video path based on computer number
         if computer_number == 1 and len(valid_video_paths) >= 1:
-            selected_video_path = valid_video_paths[0]  # VIDEO_PATH_1
+            selected_root = valid_video_paths[0]
         elif computer_number == 2 and len(valid_video_paths) >= 2:
-            selected_video_path = valid_video_paths[1]  # VIDEO_PATH_2
+            selected_root = valid_video_paths[1]
         elif len(valid_video_paths) == 1:
-            # Fallback: if only one path available, use it regardless of computer number
-            selected_video_path = valid_video_paths[0]
+            selected_root = valid_video_paths[0]
             print(f"Warning: Computer {computer_number} specified but only one video path available")
         else:
-            print(f"Error: Computer {computer_number} specified but corresponding video path not available")
+            err = f"Video path for computer {computer_number} not available"
+            print(f"Error: {err}")
             copy_summary["failed_copies"] += 1
             copy_summary["failed_files"].append(
-                {
-                    "session": session_name,
-                    "noldus_file": noldus_filename,
-                    "computer": computer_number,
-                    "error": f"Video path for computer {computer_number} not available",
-                }
+                {"session": session_int, "computer": computer_number, "error": err}
             )
             continue
 
-        # Build source file path
-        source_file = Path(selected_video_path) / noldus_filename
-        print(f"Computer {computer_number} -> Using path: {selected_video_path}")
+        source_filename = build_source_filename(row)
+        source_file = selected_root / source_filename
+
+        print(f"Computer {computer_number} -> Using path: {selected_root}")
         print(f"Looking for: {source_file}")
 
-        # Check if source file exists and copy it
         if source_file.exists():
             try:
-                # Copy and rename the file
                 shutil.copy2(source_file, destination_file)
-                print(f"Successfully copied {session_name}.mp4 from Computer {computer_number}")
+                print(f"Successfully copied -> {destination_file}")
                 copy_summary["successfully_copied"] += 1
             except Exception as e:
-                print(f"Error copying {noldus_filename}: {e}")
+                print(f"Error copying {source_file.name}: {e}")
                 copy_summary["failed_copies"] += 1
                 copy_summary["failed_files"].append(
                     {
-                        "session": session_name,
-                        "noldus_file": noldus_filename,
+                        "session": session_int,
+                        "source_file": str(source_file),
                         "computer": computer_number,
                         "error": str(e),
                     }
                 )
         else:
-            print(f"Warning: {noldus_filename} not found at {source_file}")
+            err = "File not found at specified path"
+            print(f"Warning: {err}")
             copy_summary["failed_copies"] += 1
             copy_summary["failed_files"].append(
                 {
-                    "session": session_name,
-                    "noldus_file": noldus_filename,
+                    "session": session_int,
+                    "source_file": str(source_file),
                     "computer": computer_number,
-                    "error": "File not found at specified path",
+                    "error": err,
                 }
             )
 
@@ -426,8 +437,8 @@ def batch_save_first_frames(mouseinfo_df, video_directory, frames_directory):
 
     # Process each session
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
-        session_name = f"Session{int(row['Session #']):04d}"
+        session_num = int(row["session"])
+        session_name = f"Session{int(row['session']):04d}"
 
         # Check if video exists
         video_path = video_directory / f"{session_name}.mp4"
@@ -719,7 +730,7 @@ def batch_get_boundary_and_cropping(
     print("Press 'c' to skip a session, or ESC to stop completely.")
 
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
 
         # Check if files already exist
@@ -740,8 +751,8 @@ def batch_get_boundary_and_cropping(
 
         # Display chamber information if available
         chamber_info = None
-        if "Noldus Chamber" in row and pd.notna(row["Noldus Chamber"]):
-            chamber_info = row["Noldus Chamber"]
+        if "noldus chamber" in row and pd.notna(row["noldus chamber"]):
+            chamber_info = row["noldus chamber"]
             print(f"Chamber: {chamber_info}")
 
         # Show what's missing or if reprocessing
@@ -1161,7 +1172,7 @@ def prepare_dlc_analysis(mouseinfo_df, video_directory, cropping_directory, resu
     }
 
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
         video_name = f"{session_name}.mp4"
         video_path = Path(video_directory) / video_name
@@ -1351,7 +1362,7 @@ def batch_create_grids(mouseinfo_df, boundaries_directory, grid_files_directory,
 
     # Process each session
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
 
         # Get chamber info if available
@@ -1648,7 +1659,7 @@ def batch_create_grid_scatter_plots(
 
     # Process each session
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
 
         print("-----------------------------")
@@ -1908,7 +1919,7 @@ def batch_create_trajectory_plots(
 
     # Process each session
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
 
         print("-----------------------------")
@@ -2068,7 +2079,7 @@ def append_grid_numbers_to_csv(
                 grid_numbers = pointInPolys["index_right"].values
 
             # Add grid number column to the original dataframe
-            df[dlc_scorer, bp, "Grid Number"] = grid_numbers
+            df[dlc_scorer, bp, "grid_number"] = grid_numbers
 
         except Exception as e:
             print(f"Error processing {bp}: {e}")
@@ -2123,12 +2134,19 @@ def batch_append_grid_numbers(
         Summary of grid annotation operations
     """
     from pathlib import Path
+    from datetime import datetime
 
     start_time = datetime.now()
     print(f"Batch grid annotation started: {start_time}")
 
+    # convert all directory inputs to Path
+    dlc_results_directory = Path(dlc_results_directory)
+    grid_files_directory = Path(grid_files_directory)
+
     if save_directory is None:
         save_directory = dlc_results_directory
+    else:
+        save_directory = Path(save_directory)
 
     # Track operations
     annotation_summary = {
@@ -2141,12 +2159,13 @@ def batch_append_grid_numbers(
 
     # Process each session
     for index, row in mouseinfo_df.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
         grid_numbers_file = save_directory / f"{session_name}_withGrids.csv"
 
         if grid_numbers_file.exists():
             continue
+
         try:
             # Append grid numbers for this session
             annotated_df = append_grid_numbers_to_csv(
@@ -2180,7 +2199,9 @@ def batch_append_grid_numbers(
     print("GRID ANNOTATION SUMMARY")
     print("=" * 60)
     print(f'Total sessions processed: {annotation_summary["total_sessions"]}')
+    print(f'Successfully annotated: {annotation_summary["successfully_annotated"]}')
     print(f'Failed annotation: {annotation_summary["failed_annotation"]}')
+    print(f"Duration: {duration}")
 
     if annotation_summary["failed_sessions"]:
         print(f'\nFailed sessions: {annotation_summary["failed_sessions"]}')
@@ -2189,10 +2210,9 @@ def batch_append_grid_numbers(
 
     return annotation_summary
 
-
 def run_grid_preprocessing(
-    source_data_path: Path | str,
-    user_metadata_file_path: Path | str,
+    source_data_path: Union[Path, str],
+    user_metadata_file_path: Union[Path, str],
     trial_type: str = "Labyrinth_DSI",
     video_type: str = ".mp4",
     dlc_scorer: str = "DLC_resnet50_LabyrinthMar13shuffle1_1000000",
@@ -2255,7 +2275,7 @@ def run_grid_preprocessing(
     sessions_in_directory = []
 
     for index, row in mouseinfo_full.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
 
         # Check if this session has a video or DLC file in the directory
@@ -2290,7 +2310,7 @@ def run_grid_preprocessing(
     if len(mouseinfo) < len(mouseinfo_full):
         print("Sessions to process:")
         for index, row in mouseinfo.iterrows():
-            session_num = int(row["Session #"])
+            session_num = int(row["session"])
             print(f"  - Session{session_num:04d}")
         print()
 
@@ -2302,7 +2322,7 @@ def run_grid_preprocessing(
     grid_numbers_needed = []
 
     for index, row in mouseinfo.iterrows():
-        session_num = int(row["Session #"])
+        session_num = int(row["session"])
         session_name = f"Session{session_num:04d}"
 
         frame_file = source_data_path / f"{session_name}Frame1.jpg"

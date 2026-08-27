@@ -48,12 +48,12 @@ def ensure_velocity_column(
     pd.DataFrame
         Updated DataFrame with 'Velocity' column.
     """
-    if "Velocity" not in df.columns:
+    if "velocity" not in df.columns:
         if x_col in df.columns and y_col in df.columns:
             dx = df[x_col].diff()
             dy = df[y_col].diff()
             displacement = np.sqrt(dx**2 + dy**2)
-            df["Velocity"] = displacement * frame_rate
+            df["velocity"] = displacement * frame_rate
         else:
             raise ValueError(f"Missing '{x_col}' or '{y_col}' columns required to compute velocity.")
     return df
@@ -77,15 +77,15 @@ def assign_bout_indices_from_entry_node(df: pd.DataFrame, delimiter_node: int = 
     """
     df = df.copy()
     all_sessions = []
-    for _, session_data in df.groupby("Session"):
+    for _, session_data in df.groupby("session"):
         session_data = session_data.reset_index(drop=True).copy()
-        session_data["Bout_ID"] = 0
+        session_data["bout_id"] = 0
         bout_counter = 1
         for row_idx in range(len(session_data)):
-            if session_data.loc[row_idx, "Grid Number"] != delimiter_node:
-                session_data.loc[row_idx, "Bout_ID"] = bout_counter
+            if session_data.loc[row_idx, "grid_number"] != delimiter_node:
+                session_data.loc[row_idx, "bout_id"] = bout_counter
             else:
-                session_data.loc[row_idx, "Bout_ID"] = 0
+                session_data.loc[row_idx, "bout_id"] = 0
                 bout_counter += 1
         all_sessions.append(session_data)
     return pd.concat(all_sessions, ignore_index=True)
@@ -107,7 +107,7 @@ def ensure_bout_indices(df: pd.DataFrame, delimiter_node: int = 47) -> pd.DataFr
     pd.DataFrame
         DataFrame with ensured bout indices.
     """
-    if "Bout_ID" not in df.columns:
+    if "bout_id" not in df.columns:
         return assign_bout_indices_from_entry_node(df, delimiter_node)
     return df.copy()
 
@@ -129,7 +129,7 @@ def compute_deviation_velocity(
     Parameters
     -----------
     df : pd.DataFrame
-        Input DataFrame with 'Session', 'Genotype', 'Region', 'Grid Number', and 'Velocity' columns.
+        Input DataFrame with 'session', 'genotype', 'region', 'grid_number', and 'velocity' columns.
     key_regions : list
         List of key regions to consider for deviation calculation.
 
@@ -138,11 +138,11 @@ def compute_deviation_velocity(
     pd.DataFrame
         DataFrame with computed deviation and velocity per bout.
     """
-    sessioncluster = [x for _, x in df.groupby("Session")]
+    sessioncluster = [x for _, x in df.groupby("session")]
     records = []
     for session_df in sessioncluster:
         ind = 1
-        bouts_in_session = [x for _, x in session_df.groupby("Bout_ID")]
+        bouts_in_session = [x for _, x in session_df.groupby("bout_id")]
         if bouts_in_session:
             bouts_in_session.pop(0)
         for bout in bouts_in_session:
@@ -150,10 +150,10 @@ def compute_deviation_velocity(
                 records.append(
                     {
                         "ind_no": ind,
-                        "session": session_df["Session"].iloc[0],
-                        "genotype": session_df["Genotype"].iloc[0],
-                        "deviation": len(bout.loc[~bout.Region.isin(key_regions), "Grid Number"]) / len(bout),
-                        "velocity": bout["Velocity"].mean(),
+                        "session": session_df["session"].iloc[0],
+                        "genotype": session_df["genotype"].iloc[0],
+                        "deviation": len(bout.loc[~bout.region.isin(key_regions), "grid_number"]) / len(bout),
+                        "velocity": bout["velocity"].mean(),
                     }
                 )
                 ind += 1
@@ -276,7 +276,7 @@ def plot_deviation_velocity_fit(
     if max_bouts:
         plt.xlim(0, max_bouts)
     else:
-        plt.xlim(0, df["Ind_no"].max() + 5)
+        plt.xlim(0, df["ind_no"].max() + 5)
 
     plt.legend(frameon=False)
     sns.despine()
@@ -318,7 +318,7 @@ def plot_deviation_velocity_all(
     config : dict
         Project configuration dictionary.
     index_df : pd.DataFrame
-        DataFrame with 'Deviation_smooth', 'Velocity_smooth_normalized', 'Genotype', and 'Ind_no' columns.
+        DataFrame with 'deviation_smooth', 'velocity_smooth_normalized', 'genotype', and 'ind_no' columns.
     max_bouts : int or None
         Maximum number of bouts to display on the x-axis.
     save_fig : bool, default True

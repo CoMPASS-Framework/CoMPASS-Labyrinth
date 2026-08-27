@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 
 class TestCompasPosthocAnalysis:
 
-    def test_compass_posthoc_heatmaps(self, create_project_fixture):
+    def test_compass_posthoc_heatmaps(self, create_project_fixture, hmm_results_fixture):
         from compass_labyrinth.post_hoc_analysis.level_1 import (
             plot_all_genotype_heatmaps,
             plot_all_genotype_interactive_heatmaps,
@@ -17,7 +17,7 @@ class TestCompasPosthocAnalysis:
         project_path = Path(config["project_path_full"])
         df_hmm = pd.read_csv(project_path / "results" / "compass_level_1" / "data_with_states.csv")
 
-        grid_filename = "Session-3 grid.shp"
+        grid_filename = "Session-3_grid.shp"
 
         fig = plot_all_genotype_heatmaps(
             config=config,
@@ -51,7 +51,7 @@ class TestCompasPosthocAnalysis:
         assert isinstance(interactive_fig, go.Figure)
         assert (project_path / "figures" / "all_genotypes_interactive_grid_heatmap.html").exists()
 
-    def test_compass_posthoc_surveillance(self, create_project_fixture):
+    def test_compass_posthoc_surveillance(self, create_project_fixture, hmm_results_fixture):
         from compass_labyrinth.post_hoc_analysis.level_1 import (
             compute_state_probability,
             plot_state_probability_boxplot,
@@ -62,7 +62,7 @@ class TestCompasPosthocAnalysis:
         project_path = Path(config["project_path_full"])
         df_hmm = pd.read_csv(project_path / "results" / "compass_level_1" / "data_with_states.csv")
 
-        column_of_interest = "NodeType"
+        column_of_interest = "node_type"
         values_displayed = [
             "3-way Decision (Reward)",
             "4-way Decision (Reward)",
@@ -107,7 +107,7 @@ class TestCompasPosthocAnalysis:
         assert isinstance(ttest_results, pd.DataFrame)
         assert not ttest_results.empty
 
-    def test_compass_posthoc_temporal_analysis(self, create_project_fixture):
+    def test_compass_posthoc_temporal_analysis(self, create_project_fixture, hmm_results_fixture):
         from compass_labyrinth.post_hoc_analysis.level_1 import (
             get_max_session_row_bracket,
             get_min_session_row_bracket,
@@ -132,7 +132,7 @@ class TestCompasPosthocAnalysis:
         )
 
         # Step 2: Optional filter to only plot early session bins
-        deci_df = deci_df.loc[deci_df.Time_Bins < threshold]
+        deci_df = deci_df.loc[deci_df.time_bins < threshold]
 
         # Step 3: Plot time-evolving median probability curves
         fig = plot_node_state_median_curve(
@@ -150,7 +150,7 @@ class TestCompasPosthocAnalysis:
         save_path = Path(config["project_path_full"]) / "figures" / "temporal_median_state_probability_curve.pdf"
         assert save_path.exists()
 
-    def test_compass_posthoc_surveillance_analysis(self, create_project_fixture):
+    def test_compass_posthoc_surveillance_analysis(self, create_project_fixture, hmm_results_fixture):
         from compass_labyrinth.post_hoc_analysis.level_1 import (
             assign_bout_indices,
             compute_surveillance_probabilities,
@@ -170,7 +170,7 @@ class TestCompasPosthocAnalysis:
         )
         assert isinstance(df_hmm, pd.DataFrame)
         assert not df_hmm.empty
-        assert "Bout_Index" in df_hmm.columns
+        assert "bout_id" in df_hmm.columns
 
         # Compute surveillance probability at Decision nodes by Bout type
         index_df, median_df = compute_surveillance_probabilities(
@@ -179,7 +179,7 @@ class TestCompasPosthocAnalysis:
         )
         assert isinstance(median_df, pd.DataFrame)
         assert not median_df.empty
-        for col in ["Genotype", "Session", "Successful_bout", "Probability_1"]:
+        for col in ["genotype", "session", "successful_bout", "probability_1"]:
             assert col in median_df.columns
 
         # Barplot to depict the above with ttest-ind pvalue

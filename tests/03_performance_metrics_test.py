@@ -57,9 +57,9 @@ class TestPerformanceMetrics:
         UPPER_LIMIT = get_max_session_row_bracket(df_all_csv)  # upper limit for bins
 
         # Store valid sessions post exclusion, specific to the genotype/group wanting to visualize
-        valid_sessions = df_all_csv[df_all_csv.Genotype == GENOTYPE_DISP]["Session"].unique().tolist()
+        valid_sessions = df_all_csv[df_all_csv.genotype == GENOTYPE_DISP]["session"].unique().tolist()
         if len(valid_sessions) == 0:
-            raise ValueError("Valid sessions list is empty! Choose a valid Genotype.")
+            raise ValueError("Valid sessions list is empty! Choose a valid genotype.")
 
         # Plot the region-based heatmap
         plot_region_heatmaps(
@@ -108,7 +108,7 @@ class TestPerformanceMetrics:
         entropy_df = shannon_entropy
         assert isinstance(entropy_df, pd.DataFrame)
         assert not entropy_df.empty
-        required_columns = ["Session", "Genotype", "Bin", "Entropy"]
+        required_columns = ["session", "genotype", "bin", "entropy"]
         for col in required_columns:
             assert col in entropy_df.columns
 
@@ -163,7 +163,7 @@ class TestPerformanceMetrics:
 
         assert isinstance(region_usage_df, pd.DataFrame)
         assert not region_usage_df.empty
-        required_columns = ["Session", "Genotype", "Bin", REGION]
+        required_columns = ["session", "genotype", "bin", REGION]
         for col in required_columns:
             assert col in region_usage_df.columns
 
@@ -309,16 +309,16 @@ class TestPerformanceMetrics:
         )
         assert isinstance(df_all_csv_wvelocity, pd.DataFrame)
         assert not df_all_csv_wvelocity.empty
-        assert "Velocity" in df_all_csv_wvelocity.columns
+        assert "velocity" in df_all_csv_wvelocity.columns
 
-        # Ensure Bout Index column Bout_ID exists
+        # Ensure Bout Index column bout_id exists
         df_all_csv_wbouts = ensure_bout_indices(
             df=df_all_csv_wvelocity,
             delimiter_node=47,
         )
         assert isinstance(df_all_csv_wbouts, pd.DataFrame)
         assert not df_all_csv_wbouts.empty
-        assert "Bout_ID" in df_all_csv_wbouts.columns
+        assert "bout_id" in df_all_csv_wbouts.columns
 
         # Compute deviation and velocity per bout
         df_deviation = compute_deviation_velocity(df=df_all_csv_wbouts)

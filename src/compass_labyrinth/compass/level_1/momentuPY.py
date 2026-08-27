@@ -323,7 +323,7 @@ class GammaHMM:
                     self.k_ang_[s] = np.exp(logk_a)
                     self.theta_ang_[s] = np.exp(logth_a)
 
-    def fit(self, df, id_col="Session", step_col="step", angle_col="angle"):
+    def fit(self, df, id_col="session", step_col="step", angle_col="angle"):
         ids = df[id_col].to_numpy()
         step = df[step_col].to_numpy(float)
         if self.angle_model == "vm":
@@ -386,7 +386,7 @@ class GammaHMM:
             self.turn_metric_ = ang_means
         return self
 
-    def score(self, df, id_col="Session", step_col="step", angle_col="angle"):
+    def score(self, df, id_col="session", step_col="step", angle_col="angle"):
         ids = df[id_col].to_numpy()
         step = df[step_col].to_numpy(float)
         ang_raw = df[angle_col].to_numpy(float)
@@ -502,7 +502,7 @@ def fit_best_hmm(
     stationary_flag: str | bool = "auto",
     use_data_driven_ranges: bool = True,
     angle_mean_biased: tuple[float, float] = (np.pi / 2, 0.0),  # only for VM branch
-    session_col: str = "Session",
+    session_col: str = "session",
     seed: int = 123,
     enforce_behavioral_constraints: bool = True,
     show_progress: bool = True,
@@ -564,9 +564,9 @@ def fit_best_hmm(
 
                     # attach states/posteriors back to the original df rows
                     out = preproc_df.copy()
-                    out["HMM_State"] = np.nan
+                    out["hmm_state"] = np.nan
                     for s in range(model.S):
-                        out[f"Post_Prob_{s+1}"] = np.nan
+                        out[f"post_prob_{s+1}"] = np.nan
                     # valid mask (same as fit)
                     m = np.isfinite(preproc_df["step"].to_numpy(float)) & np.isfinite(
                         (
@@ -575,9 +575,9 @@ def fit_best_hmm(
                             else preproc_df["angle"].to_numpy(float)
                         )
                     )
-                    out.loc[m, "HMM_State"] = (model.viterbi_ + 1).astype(int)  # 1/2 labeling
+                    out.loc[m, "hmm_state"] = (model.viterbi_ + 1).astype(int)  # 1/2 labeling
                     # for s in range(model.S):      # Optional add the State Probs
-                    #     out.loc[m, f"Post_Prob_{s+1}"] = model.posterior_[:, s]
+                    #     out.loc[m, f"post_prob_{s+1}"] = model.posterior_[:, s]
 
                     candidates.append((model, out, summ))
 
